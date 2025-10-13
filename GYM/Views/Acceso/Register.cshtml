@@ -1,0 +1,74 @@
+﻿@{
+    Layout = null;
+}
+@model GYM.ViewModels.UsuarioVM
+
+<head>
+    <meta charset="utf-8" />
+    <title>Registro - GYM</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card shadow-lg p-4 rounded" style="max-width: 400px; width: 100%;">
+            <div class="card-header text-center bg-success text-white fw-bold">
+                <i class="bi bi-person-plus-fill me-2"></i> Crear Cuenta
+            </div>
+            <div class="card-body">
+                <form asp-controller="Acceso" asp-action="Register" method="post">
+
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label">Nombre</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Tu nombre completo" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <!-- Correo -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Correo electrónico</label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="ejemplo@correo.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Mínimo 8 caracteres" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="mb-3">
+                        <label asp-for="ConfirmarPassword" class="form-label">Confirmar contraseña</label>
+                        <input asp-for="ConfirmarPassword" type="password" class="form-control" placeholder="Repite tu contraseña" />
+                        <span asp-validation-for="ConfirmarPassword" class="text-danger"></span>
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="mb-3">
+                        <label asp-for="Telefono" class="form-label">Teléfono (opcional)</label>
+                        <input asp-for="Telefono" class="form-control" placeholder="999-999-999" />
+                        <span asp-validation-for="Telefono" class="text-danger"></span>
+                    </div>
+
+                    <!-- Botón -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i> Registrarme
+                        </button>
+                    </div>
+
+                    <!-- Link a login -->
+                    <div class="text-center mt-3">
+                        ¿Ya tienes cuenta? <a asp-controller="Acceso" asp-action="Login" class="text-success fw-bold">Inicia sesión</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ValidationScriptsPartial" />
+</body>

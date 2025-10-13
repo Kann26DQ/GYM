@@ -1,0 +1,41 @@
+﻿@model List<GYM.Models.Proveedor>
+
+@{
+    ViewData["Title"] = "Lista de Proveedores";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+}
+
+<h2 class="mb-4">Lista de Proveedores</h2>
+
+<a asp-action="Create" class="btn btn-success mb-3">Nuevo Proveedor</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var proveedor in Model)
+        {
+            <tr>
+                <td>@proveedor.ProveedorId</td>
+                <td>@proveedor.Nombre</td>
+                <td>@proveedor.Telefono</td>
+                <td>@proveedor.Email</td>
+                <td>@proveedor.Direccion</td>
+                <td>@(proveedor.Estado ? "Activo" : "Inactivo")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@proveedor.ProveedorId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@proveedor.ProveedorId" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar este proveedor?');">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,36 @@
+﻿@model IEnumerable<GYM.Models.MovimientoStock>
+
+@{
+    Layout = "_LayoutSuperAdmin";
+    ViewData["Title"] = "Historial de Movimientos";
+}
+
+<h2 class="text-center my-4">Historial de Movimientos</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Fecha</th>
+            <th>Producto</th>
+            <th>Tipo</th>
+            <th>Cantidad</th>
+            <th>Empleado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model)
+        {
+            <tr>
+                <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@m.Producto?.Nombre</td>
+                <td>@m.TipoMovimiento</td>
+                <td>@m.Cantidad</td>
+                <td>@m.Empleado?.Nombre ?? "—"</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="text-end">
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>

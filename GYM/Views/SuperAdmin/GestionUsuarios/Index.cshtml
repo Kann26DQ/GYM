@@ -1,0 +1,56 @@
+﻿@model IEnumerable<GYM.Models.Usuario>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+}
+
+<h2 class="text-center mb-4">Gestión de Usuarios</h2>
+
+<div class="d-flex justify-content-end mb-3">
+    <a asp-action="Create" class="btn btn-success">
+        <i class="bi bi-person-plus"></i> Nuevo Usuario
+    </a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Nombre</td>
+                <td>@u.Email</td>
+                <td>@u.Telefono</td>
+                <td>@u.Rol.Nombre</td>
+                <td>
+                    @if (u.Activo)
+                    {
+                        <span class="badge bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactivo</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-primary">Editar</a>
+                    <a asp-action="Details" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-secondary">Detalles</a>
+                    <form asp-action="ToggleActivo" asp-route-id="@u.UsuarioId" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm @(u.Activo ? "btn-warning" : "btn-success")">
+                            @(u.Activo ? "Desactivar" : "Activar")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,19 @@
+﻿@model GYM.Models.Usuario
+@{
+    ViewData["Title"] = "Detalles del Usuario";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+}
+
+<h2 class="text-center mb-4">Detalles del Usuario</h2>
+
+<div class="card w-50 mx-auto shadow">
+    <div class="card-body">
+        <p><strong>Nombre:</strong> @Model.Nombre</p>
+        <p><strong>Email:</strong> @Model.Email</p>
+        <p><strong>Teléfono:</strong> @Model.Telefono</p>
+        <p><strong>Rol:</strong> @Model.Rol.Nombre</p>
+        <p><strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")</p>
+        <a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-primary">Editar</a>
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+﻿@model GYM.Models.Producto
+
+@{
+    Layout = "_LayoutSuperAdmin";
+    ViewData["Title"] = "Eliminar Producto";
+}
+
+<h2>¿Seguro que deseas eliminar este producto?</h2>
+
+<div class="alert alert-warning">
+    <strong>@Model.Nombre</strong> — Precio: S/@Model.Precio, Stock: @Model.Stock
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="ProductoId" />
+    <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

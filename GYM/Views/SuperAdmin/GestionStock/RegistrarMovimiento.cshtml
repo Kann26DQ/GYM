@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Registrar Movimiento";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+    var producto = ViewBag.Producto as GYM.Models.Producto;
+}
+
+<h2>Registrar Movimiento de Stock</h2>
+
+<div class="card p-4 shadow-sm mt-3">
+    <h4>@producto.Nombre</h4>
+    <p><strong>Stock actual:</strong> @producto.Stock</p>
+
+    <form asp-action="RegistrarMovimiento" method="post">
+        <input type="hidden" name="productoId" value="@producto.ProductoId" />
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de movimiento</label>
+            <select class="form-select" name="tipoMovimiento" required>
+                <option value="">Seleccione...</option>
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Cantidad</label>
+            <input type="number" class="form-control" name="cantidad" min="1" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

@@ -1,0 +1,60 @@
+﻿@model IEnumerable<GYM.Models.Producto>
+
+@{
+    Layout = "_LayoutSuperAdmin";
+    ViewData["Title"] = "Gestión de Stock";
+}
+
+<h2 class="text-center my-4">Gestión de Stock</h2>
+
+<div class="text-end mb-3">
+    <a asp-action="Create" class="btn btn-success"><i class="fa fa-plus"></i> Nuevo Producto</a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Precio (S/)</th>
+            <th>Stock</th>
+            <th>Proveedor</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Precio.ToString("0.00")</td>
+                <td>@p.Stock</td>
+                <td>@p.Proveedor?.Nombre ?? "—"</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">
+                        <i class="fa fa-edit"></i> Editar
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">
+                        <i class="fa fa-trash"></i> Eliminar
+                    </a>
+                    <a asp-action="RegistrarMovimiento" asp-route-id="@p.ProductoId" class="btn btn-info btn-sm">
+                        <i class="fa fa-exchange-alt"></i> Movimiento
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="text-end mt-3">
+    <a asp-action="Historial" class="btn btn-secondary"><i class="fa fa-clock"></i> Ver Historial</a>
+</div>
