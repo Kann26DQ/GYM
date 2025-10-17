@@ -107,9 +107,9 @@ namespace GYM.Data
             // MOVIMIENTO STOCK
             // -------------------
             modelBuilder.Entity<MovimientoStock>()
-                .HasOne(ms => ms.Empleado)
-                .WithMany(u => u.Movimientos)
-                .HasForeignKey(ms => ms.EmpleadoId)
+                .HasOne(ms => ms.Usuario)
+                .WithMany(u => u.Movimientos) // mapear hacia la colección existente
+                .HasForeignKey(ms => ms.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // -------------------

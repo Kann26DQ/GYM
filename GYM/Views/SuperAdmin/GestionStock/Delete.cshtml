@@ -11,8 +11,8 @@
     <strong>@Model.Nombre</strong> — Precio: S/@Model.Precio, Stock: @Model.Stock
 </div>
 
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" asp-for="ProductoId" />
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="id" value="@Model.ProductoId" />
     <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>

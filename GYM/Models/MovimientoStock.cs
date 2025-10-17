@@ -11,8 +11,9 @@
         public int ProductoId { get; set; }
         public Producto Producto { get; set; }
 
-        public int EmpleadoId { get; set; }
-        public Usuario Empleado { get; set; }
+        // Relación con Usuario: nullable para evitar cambios forzados en la BD
+        public int? UsuarioId { get; set; }
+        public Usuario? Usuario { get; set; }
     }
 
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYM.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251013014633_eliminacion")]
-    partial class eliminacion
+    [Migration("20251016231533_act")]
+    partial class act
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -190,9 +190,6 @@ namespace GYM.Migrations
                     b.Property<int>("Cantidad")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
@@ -203,11 +200,14 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("MovimientoStockId");
 
-                    b.HasIndex("EmpleadoId");
-
                     b.HasIndex("ProductoId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("MovimientosStock");
                 });
@@ -251,6 +251,13 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
 
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -285,6 +292,9 @@ namespace GYM.Migrations
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -544,21 +554,20 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.MovimientoStock", b =>
                 {
-                    b.HasOne("GYM.Models.Usuario", "Empleado")
-                        .WithMany("Movimientos")
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GYM.Models.Producto", "Producto")
                         .WithMany("Movimientos")
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Empleado");
+                    b.HasOne("GYM.Models.Usuario", "Usuario")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Producto");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("GYM.Models.PlanAlimenticio", b =>

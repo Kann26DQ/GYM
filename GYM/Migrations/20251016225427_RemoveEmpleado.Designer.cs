@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYM.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251006170317_cu")]
-    partial class cu
+    [Migration("20251016225427_RemoveEmpleado")]
+    partial class RemoveEmpleado
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -190,9 +190,6 @@ namespace GYM.Migrations
                     b.Property<int>("Cantidad")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
@@ -203,11 +200,14 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("MovimientoStockId");
 
-                    b.HasIndex("EmpleadoId");
-
                     b.HasIndex("ProductoId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("MovimientosStock");
                 });
@@ -251,6 +251,13 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
 
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -259,12 +266,46 @@ namespace GYM.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<int?>("ProveedorId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Stock")
                         .HasColumnType("int");
 
                     b.HasKey("ProductoId");
 
+                    b.HasIndex("ProveedorId");
+
                     b.ToTable("Productos");
+                });
+
+            modelBuilder.Entity("GYM.Models.Proveedor", b =>
+                {
+                    b.Property<int>("ProveedorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProveedorId"));
+
+                    b.Property<string>("Direccion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ProveedorId");
+
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("GYM.Models.Reporte", b =>
@@ -392,6 +433,9 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ProveedorId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RolId")
                         .HasColumnType("int");
 
@@ -399,6 +443,8 @@ namespace GYM.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UsuarioId");
+
+                    b.HasIndex("ProveedorId");
 
                     b.HasIndex("RolId");
 
@@ -508,19 +554,15 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.MovimientoStock", b =>
                 {
-                    b.HasOne("GYM.Models.Usuario", "Empleado")
-                        .WithMany("Movimientos")
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GYM.Models.Producto", "Producto")
                         .WithMany("Movimientos")
                         .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Empleado");
+                    b.HasOne("GYM.Models.Usuario", null)
+                        .WithMany("Movimientos")
+                        .HasForeignKey("UsuarioId");
 
                     b.Navigation("Producto");
                 });
@@ -542,6 +584,16 @@ namespace GYM.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("GYM.Models.Producto", b =>
+                {
+                    b.HasOne("GYM.Models.Proveedor", "Proveedor")
+                        .WithMany("Productos")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("GYM.Models.Reporte", b =>
@@ -576,11 +628,17 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Usuario", b =>
                 {
+                    b.HasOne("GYM.Models.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId");
+
                     b.HasOne("GYM.Models.Rol", "Rol")
                         .WithMany("Usuarios")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Proveedor");
 
                     b.Navigation("Rol");
                 });
@@ -619,6 +677,11 @@ namespace GYM.Migrations
                     b.Navigation("Detalles");
 
                     b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("GYM.Models.Proveedor", b =>
+                {
+                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("GYM.Models.Rol", b =>

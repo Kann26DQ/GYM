@@ -15,7 +15,6 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
-
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">@TempData["Success"]</div>
@@ -28,6 +27,7 @@
             <th>Precio (S/)</th>
             <th>Stock</th>
             <th>Proveedor</th>
+            <th>En venta</th>
             <th>Acciones</th>
         </tr>
     </thead>
@@ -40,13 +40,31 @@
                 <td>@p.Stock</td>
                 <td>@p.Proveedor?.Nombre ?? "—"</td>
                 <td>
+                    @if (p.Disponible)
+                    {
+                        <span class="badge bg-success">Sí</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </td>
+                <td>
                     <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">
                         <i class="fa fa-edit"></i> Editar
                     </a>
                     <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">
                         <i class="fa fa-trash"></i> Eliminar
                     </a>
-                    <a asp-action="RegistrarMovimiento" asp-route-id="@p.ProductoId" class="btn btn-info btn-sm">
+
+                    <form asp-action="ToggleDisponibilidad" asp-route-id="@p.ProductoId" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm @(p.Disponible ? "btn-outline-danger" : "btn-outline-success")">
+                            @(p.Disponible ? "Quitar de venta" : "Poner a la venta")
+                        </button>
+                    </form>
+
+                    <a asp-action="RegistrarMovimiento" asp-route-productoId="@p.ProductoId" class="btn btn-info btn-sm">
                         <i class="fa fa-exchange-alt"></i> Movimiento
                     </a>
                 </td>
@@ -56,5 +74,7 @@
 </table>
 
 <div class="text-end mt-3">
-    <a asp-action="Historial" class="btn btn-secondary"><i class="fa fa-clock"></i> Ver Historial</a>
+    <a href="@Url.Action("Historial", "GestionStock")" class="btn btn-outline-primary mb-3">
+        📜 Ver historial de entradas
+    </a>
 </div>

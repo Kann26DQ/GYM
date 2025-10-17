@@ -187,9 +187,6 @@ namespace GYM.Migrations
                     b.Property<int>("Cantidad")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
@@ -200,11 +197,14 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("MovimientoStockId");
 
-                    b.HasIndex("EmpleadoId");
-
                     b.HasIndex("ProductoId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("MovimientosStock");
                 });
@@ -247,6 +247,13 @@ namespace GYM.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -544,21 +551,20 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.MovimientoStock", b =>
                 {
-                    b.HasOne("GYM.Models.Usuario", "Empleado")
-                        .WithMany("Movimientos")
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GYM.Models.Producto", "Producto")
                         .WithMany("Movimientos")
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Empleado");
+                    b.HasOne("GYM.Models.Usuario", "Usuario")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Producto");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("GYM.Models.PlanAlimenticio", b =>

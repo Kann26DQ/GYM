@@ -1,23 +1,39 @@
 using GYM.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<AppDBContext>(options => {
+
+// Configurar autenticación por cookie (esquema por defecto)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Acceso/Login";
+        options.AccessDeniedPath = "/Acceso/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
+    });
+
+// (Opcional) políticas / autorización
+builder.Services.AddAuthorization();
+
+builder.Services.AddDbContext<AppDBContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("CadenaSQL"));
 });
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tiempo de vida de la sesión
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddControllersWithViews();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -30,14 +46,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Autenticación debe ir antes de Authorization
 app.UseAuthentication();
-
 app.UseAuthorization();
-
 app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Acceso}/{action=Login}/{id?}");
-
 app.Run();

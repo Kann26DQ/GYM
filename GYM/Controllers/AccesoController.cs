@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using GYM.Data;
 using GYM.Models;
 using GYM.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace GYM.Controllers
 {
@@ -56,6 +59,21 @@ namespace GYM.Controllers
             HttpContext.Session.SetInt32("UsuarioId", usuario.UsuarioId);
             HttpContext.Session.SetString("Nombre", usuario.Nombre);
             HttpContext.Session.SetString("Rol", usuario.Rol.Nombre);
+
+            // Crear claims e iniciar sesión con cookie authentication
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.Role, usuario.Rol.Nombre) // crucial para User.IsInRole(...)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
 
             // Redirigir según rol
             if (usuario.Rol.Nombre == "SuperAdmin")
@@ -113,10 +131,20 @@ namespace GYM.Controllers
 
             return RedirectToAction("Login", "Acceso");
         }
-        public IActionResult Logout()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
+        }
+
+        // Ruta usada por la configuración de AccessDeniedPath
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return StatusCode(403, "Acceso denegado");
         }
     }
 }

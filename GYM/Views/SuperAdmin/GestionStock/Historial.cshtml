@@ -7,31 +7,36 @@
 
 <h2 class="text-center my-4">Historial de Movimientos</h2>
 
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Fecha</th>
-            <th>Producto</th>
-            <th>Tipo</th>
-            <th>Cantidad</th>
-            <th>Fecha</th>
-            <th>Tipo Movimiento</th>
-            <th>Empleado</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var m in Model)
-        {
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">No hay movimientos registrados.</div>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
             <tr>
-                <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@m.Producto?.Nombre</td>
-                <td>@m.TipoMovimiento</td>
-                <td>@m.Cantidad</td>
-                <td>@m.Empleado?.Nombre ?? "—"</td>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td>@(m.Fecha == default ? "—" : m.Fecha.ToString("dd/MM/yyyy HH:mm"))</td>
+                    <td>@(m.Producto?.Nombre ?? "—")</td>
+                    <td>@m.TipoMovimiento</td>
+                    <td>@m.Cantidad</td>
+                    <td>@(m.Usuario != null ? (string.IsNullOrWhiteSpace(m.Usuario.Nombre) ? m.Usuario.Email : m.Usuario.Nombre) : "—")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 <div class="text-end">
     <a asp-action="Index" class="btn btn-secondary">Volver</a>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYM.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251013005154_AgregarRolProveedor")]
-    partial class AgregarRolProveedor
+    [Migration("20251016220908_sup")]
+    partial class sup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -251,6 +251,13 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
 
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -286,6 +293,9 @@ namespace GYM.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Estado")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -293,14 +303,7 @@ namespace GYM.Migrations
                     b.Property<string>("Telefono")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("int");
-
                     b.HasKey("ProveedorId");
-
-                    b.HasIndex("UsuarioId")
-                        .IsUnique()
-                        .HasFilter("[UsuarioId] IS NOT NULL");
 
                     b.ToTable("Proveedores");
                 });
@@ -367,11 +370,6 @@ namespace GYM.Migrations
                         {
                             RolId = 3,
                             Nombre = "SuperAdmin"
-                        },
-                        new
-                        {
-                            RolId = 4,
-                            Nombre = "Proveedor"
                         });
                 });
 
@@ -435,6 +433,9 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ProveedorId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RolId")
                         .HasColumnType("int");
 
@@ -442,6 +443,8 @@ namespace GYM.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UsuarioId");
+
+                    b.HasIndex("ProveedorId");
 
                     b.HasIndex("RolId");
 
@@ -597,15 +600,6 @@ namespace GYM.Migrations
                     b.Navigation("Proveedor");
                 });
 
-            modelBuilder.Entity("GYM.Models.Proveedor", b =>
-                {
-                    b.HasOne("GYM.Models.Usuario", "Usuario")
-                        .WithOne("Proveedor")
-                        .HasForeignKey("GYM.Models.Proveedor", "UsuarioId");
-
-                    b.Navigation("Usuario");
-                });
-
             modelBuilder.Entity("GYM.Models.Reporte", b =>
                 {
                     b.HasOne("GYM.Models.Usuario", "Empleado")
@@ -638,11 +632,17 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Usuario", b =>
                 {
+                    b.HasOne("GYM.Models.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId");
+
                     b.HasOne("GYM.Models.Rol", "Rol")
                         .WithMany("Usuarios")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Proveedor");
 
                     b.Navigation("Rol");
                 });
@@ -705,8 +705,6 @@ namespace GYM.Migrations
                     b.Navigation("Movimientos");
 
                     b.Navigation("PlanesAlimenticios");
-
-                    b.Navigation("Proveedor");
 
                     b.Navigation("Reportes");
 
