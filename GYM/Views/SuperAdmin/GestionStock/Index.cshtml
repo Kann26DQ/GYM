@@ -5,8 +5,6 @@
     ViewData["Title"] = "Gestión de Stock";
 }
 
-<h2 class="text-center my-4">Gestión de Stock</h2>
-
 <div class="text-end mb-3">
     <a asp-action="Create" class="btn btn-success"><i class="fa fa-plus"></i> Nuevo Producto</a>
 </div>
@@ -26,6 +24,7 @@
             <th>Nombre</th>
             <th>Precio (S/)</th>
             <th>Stock</th>
+            <th>En venta (cupo)</th>
             <th>Proveedor</th>
             <th>En venta</th>
             <th>Acciones</th>
@@ -34,13 +33,15 @@
     <tbody>
         @foreach (var p in Model)
         {
-            <tr>
+            var id = $"p{p.ProductoId}";
+            <tr class="@(p.Stock <= 0 ? "table-danger" : "")">
                 <td>@p.Nombre</td>
-                <td>@p.Precio.ToString("0.00")</td>
+                <td>@p.Precio</td>
                 <td>@p.Stock</td>
-                <td>@p.Proveedor?.Nombre ?? "—"</td>
+                <td>@p.StockVenta</td>
+                <td>@p.Proveedor?.Nombre</td>
                 <td>
-                    @if (p.Disponible)
+                    @if (p.StockVenta > 0 && p.Stock > 0)
                     {
                         <span class="badge bg-success">Sí</span>
                     }
@@ -50,22 +51,57 @@
                     }
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">
-                        <i class="fa fa-edit"></i> Editar
-                    </a>
-                    <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">
-                        <i class="fa fa-trash"></i> Eliminar
-                    </a>
+                    <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-danger btn-sm">Eliminar</a>
 
-                    <form asp-action="ToggleDisponibilidad" asp-route-id="@p.ProductoId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm @(p.Disponible ? "btn-outline-danger" : "btn-outline-success")">
-                            @(p.Disponible ? "Quitar de venta" : "Poner a la venta")
-                        </button>
-                    </form>
+                    <!-- Botón que despliega input para Poner a la venta -->
+                    <button type="button"
+                            class="btn btn-outline-success btn-sm ms-1"
+                            data-toggle="venta" data-target="#poner-@id">
+                        Poner a la venta
+                    </button>
+                    <div id="poner-@id" class="d-none mt-2">
+                        <form asp-action="AjustarStockVenta" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.ProductoId" />
+                            <input type="hidden" name="accion" value="poner" />
+                            <label class="form-label form-label-sm me-1">Unidades</label>
+                            <input name="cantidad" type="number" class="form-control d-inline-block"
+                                   style="width: 90px;" min="1" max="@(Math.Max(0, p.Stock - p.StockVenta))" value="1" />
+                            <button type="submit" class="btn btn-success btn-sm ms-1">Confirmar</button>
+                        </form>
+                    </div>
 
-                    <a asp-action="RegistrarMovimiento" asp-route-productoId="@p.ProductoId" class="btn btn-info btn-sm">
-                        <i class="fa fa-exchange-alt"></i> Movimiento
+                    <!-- Botón que despliega input para Quitar de la venta -->
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm ms-1"
+                            data-toggle="venta" data-target="#quitar-@id">
+                        Quitar de la venta
+                    </button>
+                    <div id="quitar-@id" class="d-none mt-2">
+                        <!-- Poner a la venta -->
+                        <form asp-action="AjustarStockVenta" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.ProductoId" />
+                            <input type="hidden" name="accion" value="poner" />
+                            <input name="cantidad" type="number" class="form-control d-inline-block"
+                                   style="width: 120px;" min="1" max="@p.Stock" value="1" />
+                            <button type="submit" class="btn btn-outline-success btn-sm ms-1">Poner</button>
+                        </form>
+
+                        <!-- Retirar de la venta -->
+                        <form asp-action="AjustarStockVenta" method="post" class="d-inline ms-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.ProductoId" />
+                            <input type="hidden" name="accion" value="retirar" />
+                            <input name="cantidad" type="number" class="form-control d-inline-block"
+                                   style="width: 120px;" min="1" max="@p.StockVenta" value="1" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm ms-1">Retirar</button>
+                        </form>
+                    </div>
+
+                    <a asp-action="RegistrarMovimiento" asp-route-productoId="@p.ProductoId" class="btn btn-info btn-sm ms-1">
+                        Movimiento
                     </a>
                 </td>
             </tr>
@@ -73,8 +109,29 @@
     </tbody>
 </table>
 
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-toggle="venta"]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const target = document.querySelector(this.dataset.target);
+                    if (target) target.classList.toggle('d-none');
+                });
+            });
+        });
+    </script>
+}
+
 <div class="text-end mt-3">
     <a href="@Url.Action("Historial", "GestionStock")" class="btn btn-outline-primary mb-3">
         📜 Ver historial de entradas
     </a>
 </div>
+
+<!-- Botón flotante: Proveedores -->
+<a asp-controller="GestionProveedor" asp-action="Index"
+   class="btn btn-primary rounded-circle shadow"
+   title="Proveedores" aria-label="Proveedores"
+   style="position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 1030;">
+    <i class="fa fa-truck"></i>
+</a>

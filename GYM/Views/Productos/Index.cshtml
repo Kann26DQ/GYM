@@ -1,0 +1,114 @@
+﻿@model IEnumerable<GYM.Models.Producto>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Productos disponibles";
+    var cartItems = ViewBag.CartItems as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<h2 class="my-4">Productos disponibles</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="text-end mb-3">
+    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-primary">Carrito</a>
+</div>
+
+<div class="row">
+    <!-- Columna principal: productos o mensaje -->
+    <div class="col-lg-9">
+        @{
+            var enVenta = (Model ?? Enumerable.Empty<GYM.Models.Producto>()).Where(p => p.StockVenta > 0).ToList();
+        }
+        @if (!enVenta.Any())
+        {
+            <div class="alert alert-info">No hay productos en venta por el momento.</div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var p in enVenta)
+                {
+                    var cantidadEnCarrito = cartItems.ContainsKey(p.ProductoId) ? cartItems[p.ProductoId] : 0;
+                    var estaEnCarrito = cantidadEnCarrito > 0;
+
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 product-card @(estaEnCarrito ? "in-cart" : "")"
+                             data-product-id="@p.ProductoId"
+                             data-cupo="@p.StockVenta">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@p.Nombre</h5>
+                                <p class="card-text text-truncate">@p.Descripcion</p>
+                                <p class="mb-1"><strong>Precio:</strong> S/ @p.Precio</p>
+                                <p class="mb-1"><strong>En venta:</strong> @p.StockVenta</p>
+
+                                @if (estaEnCarrito)
+                                {
+                                    <p class="text-success cart-qty"><strong>En el carrito: @cantidadEnCarrito</strong></p>
+                                }
+                                else
+                                {
+                                    <p class="text-success cart-qty d-none"><strong>En el carrito: 0</strong></p>
+                                }
+
+                                <div class="mt-auto">
+                                    <a asp-controller="Productos" asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-outline-secondary btn-sm">Ver</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Columna derecha: historial SIEMPRE visible -->
+    <div class="col-lg-3">
+        @await Component.InvokeAsync("HistorialCompras", new { max = 5 })
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .product-card.in-cart {
+            border: 2px solid #28a745;
+            box-shadow: 0 0 10px rgba(40,167,69,.5);
+        }
+
+        .d-none {
+            display: none !important;
+        }
+    </style>
+
+    <script>
+        (async function () {
+            try {
+                const res = await fetch('/Cart/CartMap', { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const map = await res.json();
+
+                document.querySelectorAll('.product-card').forEach(card => {
+                    const pid = parseInt(card.dataset.productId, 10);
+                    const qty = map[pid] || 0;
+                    const qtyP = card.querySelector('.cart-qty');
+
+                    if (qty > 0) {
+                        card.classList.add('in-cart');
+                        qtyP?.classList.remove('d-none');
+                        if (qtyP) qtyP.innerHTML = `<strong>En el carrito: ${qty}</strong>`;
+                    } else {
+                        card.classList.remove('in-cart');
+                        qtyP?.classList.add('d-none');
+                    }
+                });
+            } catch (e) { console.warn('No se pudo cargar el mapa del carrito', e); }
+        })();
+    </script>
+}

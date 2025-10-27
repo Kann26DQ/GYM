@@ -95,18 +95,18 @@ namespace GYM.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(UsuarioVM model)
         {
-            if (!ModelState.IsValid)
-                {
-                    return View(model);
-                }
+            if (!ModelState.IsValid) return View(model);
 
-            // Verificar si ya existe correo
-            var existe = await _appDBContext.Usuarios.AnyAsync(u => u.Email == model.Email);
-            if (existe)
+            // Validación servidor: email único
+            var exists = await _appDBContext.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Email.ToLower() == model.Email.ToLower());
+            if (exists)
             {
-                ModelState.AddModelError("Email", "Este correo ya está registrado.");
+                ModelState.AddModelError(nameof(model.Email), "Este correo ya está registrado");
                 return View(model);
             }
+
 
             var usuario = new Usuario
             {
@@ -146,5 +146,7 @@ namespace GYM.Controllers
         {
             return StatusCode(403, "Acceso denegado");
         }
+
+
     }
 }

@@ -19,6 +19,7 @@ namespace GYM.Controllers.SuperAdmin
         // ------------------------------
         // LISTAR PRODUCTOS
         // ------------------------------
+        // ...
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -26,6 +27,16 @@ namespace GYM.Controllers.SuperAdmin
                 .Include(p => p.Proveedor)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
+
+            // Agotado por nombre: solo si todos los registros con ese nombre tienen stock 0
+            var productosAgotados = productos
+                .GroupBy(p => p.Nombre)
+                .Where(g => g.All(x => x.Stock <= 0))
+                .Select(g => g.First())
+                .ToList();
+
+            ViewBag.ProductosAgotados = productosAgotados;
+            ViewBag.ProductosBajoStock = productos.Where(p => p.Stock > 0 && p.Stock <= 5).ToList();
 
             return View("~/Views/SuperAdmin/GestionStock/Index.cshtml", productos);
         }
@@ -49,11 +60,21 @@ namespace GYM.Controllers.SuperAdmin
         public async Task<IActionResult> Create(Producto producto)
         {
             ViewBag.Proveedores = _context.Proveedores.ToList();
+            producto.Descripcion = producto.Descripcion ?? string.Empty;
+            producto.FechaRegistro = DateTime.Now;
+            producto.StockVenta = 0;                // no se expone nada por defecto
+            producto.Disponible = producto.StockVenta > 0;
 
-            // Validaciones simples
-            if (string.IsNullOrWhiteSpace(producto.Nombre) || producto.Stock < 0)
+            if (string.IsNullOrWhiteSpace(producto.Nombre))
+                ModelState.AddModelError(nameof(producto.Nombre), "El nombre es obligatorio.");
+            if (producto.Precio < 0)
+                ModelState.AddModelError(nameof(producto.Precio), "El precio no puede ser negativo.");
+            if (producto.Stock < 0)
+                ModelState.AddModelError(nameof(producto.Stock), "El stock no puede ser negativo.");
+
+            if (!ModelState.IsValid)
             {
-                ViewBag.Mensaje = "Todos los campos son obligatorios y el stock no puede ser negativo.";
+                ViewBag.Mensaje = "Corrige los errores del formulario.";
                 return View("~/Views/SuperAdmin/GestionStock/Create.cshtml", producto);
             }
 
@@ -61,13 +82,11 @@ namespace GYM.Controllers.SuperAdmin
             producto.Descripcion = producto.Descripcion ?? string.Empty;
             producto.FechaRegistro = DateTime.Now;
 
-            // DEBUG TEMPORAL: inspeccionar autenticación y claims en POST
             var isAuth = User.Identity?.IsAuthenticated ?? false;
             var isRole = User.IsInRole("SuperAdmin");
             var claims = string.Join(" | ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
             if (!isAuth || !isRole)
             {
-                // devuelve información para que la inspecciones en el navegador / Network
                 return Content($"POST debug - IsAuthenticated={isAuth}\nIsInRoleSuperAdmin={isRole}\nClaims={claims}");
             }
 
@@ -84,7 +103,6 @@ namespace GYM.Controllers.SuperAdmin
                     Cantidad = producto.Stock,
                 };
 
-                // si tienes claim NameIdentifier, rellena UsuarioId
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (int.TryParse(userIdClaim, out int usuarioId))
                     movimiento.UsuarioId = usuarioId;
@@ -101,6 +119,7 @@ namespace GYM.Controllers.SuperAdmin
                 return View("~/Views/SuperAdmin/GestionStock/Create.cshtml", producto);
             }
         }
+
 
 
         // ------------------------------
@@ -120,6 +139,7 @@ namespace GYM.Controllers.SuperAdmin
         // ------------------------------
         // EDITAR - POST
         // ------------------------------
+        // EDITAR - POST: valida precio y stock no negativos
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Producto producto)
@@ -129,7 +149,14 @@ namespace GYM.Controllers.SuperAdmin
 
             ViewBag.Proveedores = _context.Proveedores.ToList();
 
-            if (string.IsNullOrWhiteSpace(producto.Nombre) || producto.Stock < 0)
+            if (string.IsNullOrWhiteSpace(producto.Nombre))
+                ModelState.AddModelError(nameof(producto.Nombre), "El nombre es obligatorio.");
+            if (producto.Precio < 0)
+                ModelState.AddModelError(nameof(producto.Precio), "El precio no puede ser negativo.");
+            if (producto.Stock < 0)
+                ModelState.AddModelError(nameof(producto.Stock), "El stock no puede ser negativo.");
+
+            if (!ModelState.IsValid)
             {
                 ViewBag.Mensaje = "Verifica los datos ingresados.";
                 return View("~/Views/SuperAdmin/GestionStock/Edit.cshtml", producto);
@@ -137,6 +164,9 @@ namespace GYM.Controllers.SuperAdmin
 
             try
             {
+                // coherencia: disponible solo si hay stock
+                producto.Disponible = producto.Stock > 0;
+
                 _context.Update(producto);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Producto actualizado correctamente.";
@@ -200,7 +230,7 @@ namespace GYM.Controllers.SuperAdmin
             }
             else
             {
-               
+
                 query = query.Where(m => m.TipoMovimiento == "Entrada");
             }
 
@@ -253,7 +283,13 @@ namespace GYM.Controllers.SuperAdmin
             using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
-                producto.Stock = tipoMovimiento == "Entrada" ? producto.Stock + cantidad : producto.Stock - cantidad;
+                var nuevoStock = tipoMovimiento == "Entrada"
+                    ? producto.Stock + cantidad
+                    : producto.Stock - cantidad;
+
+                producto.Stock = Math.Max(0, nuevoStock);
+                producto.Disponible = producto.Stock > 0;
+
                 _context.Productos.Update(producto);
 
                 var movimiento = new MovimientoStock
@@ -316,6 +352,83 @@ namespace GYM.Controllers.SuperAdmin
                 ? $"Producto '{producto.Nombre}' puesto a la venta."
                 : $"Producto '{producto.Nombre}' retirado de la venta.";
 
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReconciliarStockDesdeCarritos()
+        {
+            // Suma de cantidades por producto que actualmente están en carritos
+            var enCarritos = await _context.CartItems
+                .GroupBy(ci => ci.ProductoId)
+                .Select(g => new { ProductoId = g.Key, Cantidad = g.Sum(x => x.Cantidad) })
+                .ToListAsync();
+
+            foreach (var g in enCarritos)
+            {
+                var p = await _context.Productos.FindAsync(g.ProductoId);
+                if (p == null) continue;
+
+                // Devuelve al stock lo retenido en carritos (pasado)
+                p.Stock += g.Cantidad;
+
+                // Si hay stock, márcalo disponible
+                if (p.Stock > 0) p.Disponible = true;
+
+                _context.Productos.Update(p);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Stock reconciliado desde carritos. A partir de ahora el stock solo se descuenta al comprar.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // NUEVO: ajustar cupo de venta (poner/retirar)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AjustarStockVenta(int id, string accion, int cantidad)
+        {
+            if (cantidad <= 0) { TempData["Error"] = "La cantidad debe ser mayor a 0."; return RedirectToAction(nameof(Index)); }
+
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto == null) return NotFound();
+
+            accion = (accion ?? "").Trim().ToLowerInvariant();
+            if (accion == "poner")
+            {
+                if (cantidad > producto.Stock)
+                {
+                    TempData["Error"] = $"Solo puedes poner hasta {producto.Stock} unidad(es).";
+                    return RedirectToAction(nameof(Index));
+                }
+                producto.Stock -= cantidad;          // sale de bodega
+                producto.StockVenta += cantidad;     // entra al cupo en venta
+            }
+            else if (accion == "retirar")
+            {
+                if (cantidad > producto.StockVenta)
+                {
+                    TempData["Error"] = $"Solo puedes retirar hasta {producto.StockVenta} unidad(es).";
+                    return RedirectToAction(nameof(Index));
+                }
+                producto.Stock += cantidad;          // vuelve a bodega
+                producto.StockVenta -= cantidad;     // sale del cupo
+            }
+            else
+            {
+                TempData["Error"] = "Acción inválida.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            producto.Disponible = producto.StockVenta > 0;
+            _context.Productos.Update(producto);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = accion == "poner"
+                ? $"Pusiste {cantidad} a la venta. Stock: {producto.Stock}, En venta: {producto.StockVenta}."
+                : $"Retiraste {cantidad} de la venta. Stock: {producto.Stock}, En venta: {producto.StockVenta}.";
             return RedirectToAction(nameof(Index));
         }
     }

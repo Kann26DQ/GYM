@@ -21,6 +21,8 @@ namespace GYM.Data
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
         public DbSet<Reporte> Reportes { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<CartItem> CartItems { get; set; } // Agregar DbSet para CartItem
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -132,6 +134,21 @@ namespace GYM.Data
                 .WithOne(p => p.Proveedor)
                 .HasForeignKey(p => p.ProveedorId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+
+            // Configuración para CartItem
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Producto)
+                .WithMany(p => p.CartItems) // Relación con Producto
+                .HasForeignKey(ci => ci.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Usuario)
+                .WithMany(u => u.CartItems) // Relación con Usuario
+                .HasForeignKey(ci => ci.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
+    
 }

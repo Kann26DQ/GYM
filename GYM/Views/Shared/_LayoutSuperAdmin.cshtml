@@ -33,7 +33,7 @@
                 margin-bottom: 30px;
             }
 
-            .sidebar a {
+            .sidebar a, .sidebar form {
                 color: #ccc;
                 text-decoration: none;
                 padding: 12px 20px;
@@ -41,7 +41,7 @@
                 transition: 0.3s;
             }
 
-                .sidebar a:hover {
+                .sidebar a:hover, .sidebar form:hover {
                     background: #e63946;
                     color: white;
                 }
@@ -75,13 +75,18 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>GYM Admin 🏋️‍♂️</h2>
-        <a asp-controller="SuperAdmin" asp-action="Index"><i class="fa fa-home"></i> Dashboard</a>
+        <a asp-controller="GestionUsuarios" asp-action="Index"><i class="fa fa-home"></i> Gestion Usuarios</a>
         <a asp-controller="GestionStock" asp-action="Index"><i class="fa fa-boxes"></i> Gestión Stock</a>
-        <a asp-controller="Productos Venta" asp-action="Index"><i class="fa fa-tags"></i> Publicar / Quitar de venta</a>
-        <a asp-controller="Productos" asp-action="Index"><i class="fa fa-store"></i> Ver Tienda (pública)</a>
         <a asp-controller="Ventas" asp-action="Index"><i class="fa fa-cash-register"></i> Ventas</a>
         <a asp-controller="Membresias" asp-action="Index"><i class="fa fa-id-card"></i> Membresías</a>
-        <a asp-controller="Acceso" asp-action="Logout"><i class="fa fa-sign-out-alt"></i> Salir</a>
+
+        @* Logout: usar formulario POST con antiforgery para evitar HTTP 405 *@
+        <form asp-area="" asp-controller="Acceso" asp-action="Logout" method="post" style="margin:0;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-link text-start w-100 p-0" style="color:inherit; text-decoration:none;">
+                <i class="fa fa-sign-out-alt" style="margin-right:10px;"></i> Salir
+            </button>
+        </form>
     </div>
 
     <!-- Main -->
@@ -92,7 +97,7 @@
                 <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-primary btn-sm me-2">
                     <i class="fa fa-store"></i> Ver Tienda
                 </a>
-                <span>👤 @User.Identity?.Name ?? "SuperAdmin"</span>
+                <span>@User.Identity?.Name</span>
             </div>
         </div>
         <div class="content">

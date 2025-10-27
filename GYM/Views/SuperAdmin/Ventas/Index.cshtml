@@ -1,0 +1,41 @@
+﻿@model IEnumerable<GYM.Models.Venta>
+
+@{
+    Layout = "_LayoutSuperAdmin"; // Ajusta si usas otro layout
+    ViewData["Title"] = "Ventas";
+}
+
+<h2 class="my-4">Ventas</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Comprador</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var venta in Model)
+        {
+            <tr>
+                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    @if (venta.Cliente != null)
+                    {
+                        <span>Cliente: @venta.Cliente.Nombre</span>
+                    }
+                    else if (venta.Empleado != null)
+                    {
+                        <span>Empleado: @venta.Empleado.Nombre</span>
+                    }
+                </td>
+                <td>S/ @venta.Total.ToString("0.00")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@venta.VentaId" class="btn btn-info btn-sm">Detalles</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

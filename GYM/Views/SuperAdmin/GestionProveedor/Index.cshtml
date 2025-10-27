@@ -5,8 +5,6 @@
     Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
 }
 
-<h2 class="mb-4">Lista de Proveedores</h2>
-
 <a asp-action="Create" class="btn btn-success mb-3">Nuevo Proveedor</a>
 
 <table class="table table-bordered table-striped">
@@ -32,7 +30,10 @@
                 <td>@proveedor.Direccion</td>
                 <td>@(proveedor.Estado ? "Activo" : "Inactivo")</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@proveedor.ProveedorId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-controller="GestionProveedor"
+                       asp-action="Edit"
+                       asp-route-id="@proveedor.ProveedorId"
+                       class="btn btn-warning btn-sm">Editar</a>
                     <a asp-action="Delete" asp-route-id="@proveedor.ProveedorId" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar este proveedor?');">Eliminar</a>
                 </td>
             </tr>

@@ -70,30 +70,31 @@ namespace GYM.Controllers.SuperAdmin
             if (proveedor == null)
                 return NotFound();
 
-            return View("~/Views/Superadmin/GestionProveedor/Create.cshtml");
+            return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
         }
 
         // EDITAR - POST
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Proveedor proveedor)
         {
             if (string.IsNullOrWhiteSpace(proveedor.Nombre) ||
                 string.IsNullOrWhiteSpace(proveedor.Telefono))
             {
                 ViewBag.Mensaje = "Todos los campos son obligatorios.";
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor);
+                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
             }
 
             if (proveedor.Telefono == "000000000")
             {
                 ViewBag.Mensaje = "El número de teléfono no puede ser 000000000.";
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor);
+                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
             }
 
             if (proveedor.Telefono.Length != 9 || !proveedor.Telefono.All(char.IsDigit))
             {
                 ViewBag.Mensaje = "El número de teléfono debe tener exactamente 9 dígitos numéricos.";
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor); 
+                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
             }
 
             var existente = await _context.Proveedores.FindAsync(proveedor.ProveedorId);

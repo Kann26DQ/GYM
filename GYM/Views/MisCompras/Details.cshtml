@@ -1,0 +1,38 @@
+﻿@model GYM.Models.Venta
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Detalle de compra";
+}
+
+<h2 class="my-4">Detalle de compra</h2>
+
+<p><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+<p><strong>Total:</strong> S/ @Model.Total.ToString("0.00")</p>
+
+<h5>Productos</h5>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio unitario</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model.Detalles)
+        {
+            <tr>
+                <td>@d.Producto?.Nombre</td>
+                <td>@d.Cantidad</td>
+                <td>S/ @d.PrecioUnitario.ToString("0.00")</td>
+                <td>S/ @(d.Cantidad* d.PrecioUnitario).ToString("0.00")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex gap-2">
+    <a asp-controller="MisCompras" asp-action="Index" class="btn btn-secondary">Volver al historial</a>
+    <a asp-controller="Cart" asp-action="Productos" class="btn btn-primary">Ir a la tienda</a>
+</div>

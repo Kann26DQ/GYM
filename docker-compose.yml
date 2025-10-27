@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: gym-sql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Your_password123   # cambia esto (mín. 8, complejo)
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  web:
+    build:
+      context: .
+      dockerfile: GYM/Dockerfile
+    container_name: gym-web
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      # Sobrescribe tu cadena "CadenaSQL" con el host del servicio db
+      - ConnectionStrings__CadenaSQL=Server=db,1433;Database=GYM;User ID=sa;Password=Your_password123;TrustServerCertificate=True;Encrypt=True;MultipleActiveResultSets=True;
+    ports:
+      - "8080:8080"
+
+volumes:
+  mssql_data:

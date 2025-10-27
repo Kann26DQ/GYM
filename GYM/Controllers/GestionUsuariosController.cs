@@ -20,10 +20,21 @@ namespace GYM.Controllers
             _hasher = new PasswordHasher<Usuario>();
         }
 
-        // GET: /GestionUsuarios/
+        // Validación remota: true => disponible, false => ya existe
+        [AcceptVerbs("GET", "POST")]
+        public async Task<IActionResult> CheckEmailUnique(string email, int? usuarioId)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return Json(true);
+
+            var exists = await _context.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Email.ToLower() == email.ToLower() && (usuarioId == null || u.UsuarioId != usuarioId.Value));
+
+            return Json(!exists);
+        }
+
         public async Task<IActionResult> Index()
         {
-            // Solo el SuperAdmin puede acceder
             var rolSesion = HttpContext.Session.GetString("Rol");
             if (rolSesion != null && rolSesion != "SuperAdmin")
                 return Forbid();
@@ -35,7 +46,7 @@ namespace GYM.Controllers
                 .ThenBy(u => u.Nombre)
                 .ToListAsync();
 
-            return View("~/Views/SuperAdmin/GestionUsuarios/Index.cshtml", usuarios); 
+            return View("~/Views/SuperAdmin/GestionUsuarios/Index.cshtml", usuarios);
         }
 
         // GET: /GestionUsuarios/Details/5
@@ -49,14 +60,12 @@ namespace GYM.Controllers
             return View("~/Views/SuperAdmin/GestionUsuarios/Details.cshtml", usuario);
         }
 
-        // GET: /GestionUsuarios/Create
         public IActionResult Create()
         {
             ViewBag.Roles = _context.Roles.Where(r => r.RolId == 1 || r.RolId == 2).ToList();
             return View("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml");
         }
 
-        // POST: /GestionUsuarios/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UsuarioCreateVM model)
@@ -67,11 +76,13 @@ namespace GYM.Controllers
                 return View("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml", model);
             }
 
-            // Validar email único
-            bool exists = await _context.Usuarios.AnyAsync(u => u.Email == model.Email);
+            // Email único (servidor)
+            var exists = await _context.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Email.ToLower() == model.Email.ToLower());
             if (exists)
             {
-                ModelState.AddModelError("Email", "El email ya está registrado.");
+                ModelState.AddModelError(nameof(model.Email), "El email ya está registrado.");
                 ViewBag.Roles = _context.Roles.Where(r => r.RolId == 1 || r.RolId == 2).ToList();
                 return View("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml", model);
             }
@@ -86,7 +97,6 @@ namespace GYM.Controllers
                 Activo = true
             };
 
-            // Contraseña con hash
             usuario.Password = _hasher.HashPassword(usuario, model.Password);
 
             _context.Usuarios.Add(usuario);
@@ -94,7 +104,6 @@ namespace GYM.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
         // GET: /GestionUsuarios/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
@@ -115,13 +124,23 @@ namespace GYM.Controllers
             return View("~/Views/SuperAdmin/GestionUsuarios/Edit.cshtml", model);
         }
 
-        // POST: /GestionUsuarios/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UsuarioEditVM model)
         {
             if (!ModelState.IsValid)
             {
+                ViewBag.Roles = _context.Roles.Where(r => r.RolId == 1 || r.RolId == 2).ToList();
+                return View("~/Views/SuperAdmin/GestionUsuarios/Edit.cshtml", model);
+            }
+
+            // Email único excluyendo este usuario
+            var emailTaken = await _context.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Email.ToLower() == model.Email.ToLower() && u.UsuarioId != model.UsuarioId);
+            if (emailTaken)
+            {
+                ModelState.AddModelError(nameof(model.Email), "El email ya está registrado.");
                 ViewBag.Roles = _context.Roles.Where(r => r.RolId == 1 || r.RolId == 2).ToList();
                 return View("~/Views/SuperAdmin/GestionUsuarios/Edit.cshtml", model);
             }
@@ -135,7 +154,6 @@ namespace GYM.Controllers
             usuario.RolId = model.RolId;
             usuario.Activo = model.Activo;
 
-            // Re-hash si hay nueva contraseña
             if (!string.IsNullOrWhiteSpace(model.NewPassword))
                 usuario.Password = _hasher.HashPassword(usuario, model.NewPassword);
 

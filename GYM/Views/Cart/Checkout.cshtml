@@ -1,0 +1,50 @@
+﻿@model IEnumerable<GYM.Models.CartItem>
+
+@{
+    Layout = "_Layout"; // Ajusta si usas otro layout
+    ViewData["Title"] = "Confirmar Compra";
+    var total = ViewBag.Total as decimal? ?? 0m;
+}
+
+<h2 class="my-4">Confirmar Compra</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Tu carrito está vacío.</div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Producto.Nombre</td>
+                    <td>S/ @item.Producto.Precio.ToString("0.00")</td>
+                    <td>@item.Cantidad</td>
+                    <td>S/ @(item.Producto.Precio* item.Cantidad).ToString("0.00")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                <td><strong>S/ @total.ToString("0.00")</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <form asp-action="CheckoutConfirm" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-success">Confirmar Compra</button>
+        <a asp-action="Index" class="btn btn-secondary">Volver al Carrito</a>
+    </form>
+}

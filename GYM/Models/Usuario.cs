@@ -23,6 +23,8 @@
         public ICollection<Venta> Ventas { get; set; }
         public ICollection<MovimientoStock> Movimientos { get; set; }
         public ICollection<Reporte> Reportes { get; set; }
+
+        public ICollection<CartItem> CartItems { get; set; }
     }
 
 }

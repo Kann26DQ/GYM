@@ -1,0 +1,45 @@
+﻿@model GYM.Models.Venta
+
+@{
+    Layout = "_LayoutSuperAdmin"; // Ajusta si usas otro layout
+    ViewData["Title"] = "Detalles de la Venta";
+}
+
+<h2 class="my-4">Detalles de la Venta</h2>
+
+<p><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
+<p>
+    <strong>Comprador:</strong>
+    @if (Model.Cliente != null)
+    {
+        <span>Cliente: @Model.Cliente.Nombre</span>
+    }
+    else if (Model.Empleado != null)
+    {
+        <span>Empleado: @Model.Empleado.Nombre</span>
+    }
+</p>
+<p><strong>Total:</strong> S/ @Model.Total.ToString("0.00")</p>
+
+<h4>Productos</h4>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var detalle in Model.Detalles)
+        {
+            <tr>
+                <td>@detalle.Producto?.Nombre</td>
+                <td>@detalle.Cantidad</td>
+                <td>S/ @detalle.PrecioUnitario.ToString("0.00")</td>
+                <td>S/ @(detalle.Cantidad* detalle.PrecioUnitario).ToString("0.00")</td>
+            </tr>
+        }
+    </tbody>
+</table>

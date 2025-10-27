@@ -44,6 +44,32 @@ namespace GYM.Migrations
                     b.ToTable("Beneficios");
                 });
 
+            modelBuilder.Entity("GYM.Models.CartItem", b =>
+                {
+                    b.Property<int>("CartItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartItemId"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CartItemId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("CartItems");
+                });
+
             modelBuilder.Entity("GYM.Models.Comida", b =>
                 {
                     b.Property<int>("ComidaId")
@@ -252,6 +278,9 @@ namespace GYM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Disponible")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("datetime2");
 
@@ -267,6 +296,9 @@ namespace GYM.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Stock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockVenta")
                         .HasColumnType("int");
 
                     b.HasKey("ProductoId");
@@ -459,7 +491,7 @@ namespace GYM.Migrations
                     b.Property<int>("ClienteId")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmpleadoId")
+                    b.Property<int?>("EmpleadoId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Fecha")
@@ -487,6 +519,24 @@ namespace GYM.Migrations
                         .IsRequired();
 
                     b.Navigation("Membresia");
+                });
+
+            modelBuilder.Entity("GYM.Models.CartItem", b =>
+                {
+                    b.HasOne("GYM.Models.Producto", "Producto")
+                        .WithMany("CartItems")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GYM.Models.Usuario", "Usuario")
+                        .WithMany("CartItems")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("GYM.Models.Comida", b =>
@@ -654,8 +704,7 @@ namespace GYM.Migrations
                     b.HasOne("GYM.Models.Usuario", "Empleado")
                         .WithMany()
                         .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Cliente");
 
@@ -674,6 +723,8 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Producto", b =>
                 {
+                    b.Navigation("CartItems");
+
                     b.Navigation("Detalles");
 
                     b.Navigation("Movimientos");
@@ -696,6 +747,8 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Usuario", b =>
                 {
+                    b.Navigation("CartItems");
+
                     b.Navigation("Membresias");
 
                     b.Navigation("Movimientos");

@@ -1,0 +1,35 @@
+﻿@model IEnumerable<GYM.Models.Venta>
+
+<div class="card position-sticky" style="top: 1rem;">
+    <div class="card-header">
+        <strong>Historial de compras</strong>
+    </div>
+
+    <div class="card-body p-2">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-muted small">Aún no tienes compras.</div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var v in Model)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div class="small text-muted">Total: S/ @v.Total.ToString("0.00")</div>
+                        </div>
+                        <a asp-controller="MisCompras" asp-action="Details" asp-route-id="@v.VentaId" class="btn btn-sm btn-outline-primary">
+                            Ver
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="card-footer text-end p-2">
+        <a asp-controller="MisCompras" asp-action="Index" class="btn btn-sm btn-link">Ver todo</a>
+    </div>
+</div>

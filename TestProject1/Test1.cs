@@ -1,130 +1,260 @@
-﻿using GYM.Data;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using GYM.Controllers;
+using GYM.Data;
 using GYM.Models;
+using GYM.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestProject1
 {
     [TestClass]
-    public class UsuarioDbTests
+    public class GestionUsuariosControllerTests
     {
-        private AppDBContext GetContext()
+        private static AppDBContext BuildContext(string DBGYMPRO)
         {
             var options = new DbContextOptionsBuilder<AppDBContext>()
-                .UseSqlServer("Data Source=DESKTOP-VNV590R\\SQLEXPREZZZ;Initial Catalog=GYM;Integrated Security=True;TrustServerCertificate=True")
+                .UseInMemoryDatabase(databaseName: DBGYMPRO)
+                .EnableSensitiveDataLogging()
                 .Options;
 
-            return new AppDBContext(options);
+            var ctx = new AppDBContext(options);
+
+            // Semilla mínima de Roles (por si el HasData no se aplica en InMemory)
+            if (!ctx.Roles.Any())
+            {
+                ctx.Roles.AddRange(
+                    new Rol { RolId = 1, Nombre = "Cliente" },
+                    new Rol { RolId = 2, Nombre = "Empleado" },
+                    new Rol { RolId = 3, Nombre = "SuperAdmin" }
+                );
+                ctx.SaveChanges();
+            }
+
+            return ctx;
         }
 
         [TestMethod]
-        public void ListaDeClientesNoDebeEstarVacia()
+        public async Task Create_ModelStateInvalido_RetornaVistaConErrores()
         {
-            using var context = GetContext();
-            var empleados = context.Usuarios.Include(u => u.Rol).Where(u => u.Rol.Nombre == "Cliente").ToList();
+            var ctx = BuildContext(nameof(Create_ModelStateInvalido_RetornaVistaConErrores));
+            var controller = new GestionUsuariosController(ctx);
 
-            Assert.AreNotEqual(0, empleados.Count);
+            var vm = new UsuarioCreateVM
+            {
+                // Forzar error: nombre vacío
+                Nombre = "",
+                Email = "user@correo.com",
+                Password = "12345678",
+                ConfirmarPassword = "12345678",
+                Telefono = "123456789",
+                RolId = 1
+            };
+            controller.ModelState.AddModelError("Nombre", "El nombre es obligatorio");
 
-        }
-        [TestMethod]
-        public void ListaDeClientesVacia()
-        {
-            using var context = GetContext();
-            var empleados = context.Usuarios.Include(u => u.Rol).Where(u => u.Rol.Nombre == "Empleado").ToList();
+            var result = await controller.Create(vm);
 
-            Assert.AreEqual(0, empleados.Count);
-
-        }
-        [TestMethod]
-        public void MarkDebeSerCliente()
-        {
-            using var context = GetContext();
-            var usuario = context.Usuarios.Include(u => u.Rol).FirstOrDefault(u => u.Nombre == "mark");
-
-            Assert.IsNotNull(usuario, "El usuario 'mark' no existe.");
-
-            bool esCliente = usuario.Rol.Nombre == "Cliente";
-            Assert.IsTrue(true, esCliente ? "mark es Cliente." : "mark NO es Cliente.");
+            var view = result as ViewResult;
+            Assert.IsNotNull(view);
+            Assert.AreEqual("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml", view.ViewName);
+            Assert.IsFalse(controller.ModelState.IsValid);
+            Assert.AreSame(vm, view.Model);
         }
 
         [TestMethod]
-        public void MarkNoDebeSerEmpleado()
+        public async Task Create_EmailDuplicado_MuestraErrorYNoCrea()
         {
-            using var context = GetContext();
-            var usuario = context.Usuarios.Include(u => u.Rol).FirstOrDefault(u => u.Nombre == "mark");
+            var ctx = BuildContext(nameof(Create_EmailDuplicado_MuestraErrorYNoCrea));
+            ctx.Usuarios.Add(new Usuario
+            {
+                Nombre = "Existente",
+                Email = "dup@correo.com",
+                Password = "HASH",
+                Telefono = "900000001",
+                FechaRegistro = DateTime.Now,
+                RolId = 1,
+                Activo = true
+            });
+            await ctx.SaveChangesAsync();
 
-            Assert.IsNotNull(usuario, "El usuario 'mark' no existe.");
+            var controller = new GestionUsuariosController(ctx);
+            var vm = new UsuarioCreateVM
+            {
+                Nombre = "Nuevo",
+                Email = "dup@correo.com", // Duplicado
+                Password = "12345678",
+                ConfirmarPassword = "12345678",
+                Telefono = "900000002",
+                RolId = 1
+            };
 
-            bool esEmpleado = usuario.Rol.Nombre == "Empleado";
-            Assert.IsTrue(true, esEmpleado ? "mark fue Empleado (error forzado, pero validado)." : "mark NO es Empleado.");
+            var result = await controller.Create(vm);
+
+            var view = result as ViewResult;
+            Assert.IsNotNull(view);
+            Assert.AreEqual("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml", view.ViewName);
+            Assert.IsTrue(controller.ModelState.ContainsKey(nameof(vm.Email)));
+            Assert.AreEqual(1, ctx.Usuarios.Count(u => u.Email == "dup@correo.com")); // no se crea otro
         }
 
         [TestMethod]
-        public void SuperAdDebeSerSuperAdmin()
+        public async Task Create_Valido_CreaUsuarioHasheado_YRedirigeIndex()
         {
-            using var context = GetContext();
-            var usuario = context.Usuarios.Include(u => u.Rol).FirstOrDefault(u => u.Nombre == "SuperAd");
+            var ctx = BuildContext(nameof(Create_Valido_CreaUsuarioHasheado_YRedirigeIndex));
+            var controller = new GestionUsuariosController(ctx);
+            var plain = "12345678";
 
-            Assert.IsNotNull(usuario, "El usuario 'SuperAd' no existe.");
+            var vm = new UsuarioCreateVM
+            {
+                Nombre = "Valido",
+                Email = "valido@correo.com",
+                Password = plain,
+                ConfirmarPassword = plain,
+                Telefono = "987654321",
+                RolId = 1
+            };
 
-            bool esSuperAdmin = usuario.Rol.Nombre == "SuperAdmin";
-            Assert.IsTrue(true, esSuperAdmin ? "SuperAd es SuperAdmin." : "SuperAd NO es SuperAdmin (error esperado).");
-        }
+            var result = await controller.Create(vm);
 
+            var redirect = result as RedirectToActionResult;
+            Assert.IsNotNull(redirect);
+            Assert.AreEqual(nameof(GestionUsuariosController.Index), redirect.ActionName);
 
-        [TestMethod]
-        public void ClienteNoEsSuperAdmin()
-        {
-            using var context = GetContext();
-            var cliente = context.Usuarios.Include(u => u.Rol).FirstOrDefault(u => u.UsuarioId == 1);
-
-            Assert.IsNotNull(cliente, "El cliente con ID 1 no existe.");
-
-            bool esSuperAdmin = cliente.Rol.Nombre == "SuperAdmin";
-            Assert.IsTrue(true, esSuperAdmin
-                ? "El cliente fue detectado como SuperAdmin."
-                : "El cliente con ID 1 NO es SuperAdmin.");
-        }
-
-        [TestMethod]
-        public void SuperAdminNoEsCliente()
-        {
-            using var context = GetContext();
-            var superAdmin = context.Usuarios.Include(u => u.Rol).FirstOrDefault(u => u.UsuarioId == 9);
-
-            Assert.IsNotNull(superAdmin, "El SuperAdmin con ID 9 no existe.");
-
-            bool esCliente = superAdmin.Rol.Nombre == "Cliente";
-            Assert.IsTrue(true, esCliente
-                ? "El SuperAdmin fue detectado como Cliente."
-                : "El SuperAdmin con ID 9 NO es Cliente.");
+            var creado = await ctx.Usuarios.AsNoTracking().SingleAsync(u => u.Email == vm.Email);
+            Assert.AreEqual(vm.Nombre, creado.Nombre);
+            Assert.IsTrue(creado.Activo);
+            Assert.AreNotEqual(plain, creado.Password); // hasheado
         }
 
         [TestMethod]
-        public void TodosLosUsuariosTienenRolAsignado()
+        public async Task CheckEmailUnique_Existente_RetornaFalse()
         {
-            using var context = GetContext();
-            var usuarios = context.Usuarios.Include(u => u.Rol).ToList();
+            var ctx = BuildContext(nameof(CheckEmailUnique_Existente_RetornaFalse));
+            ctx.Usuarios.Add(new Usuario
+            {
+                Nombre = "Existente",
+                Email = "existe@correo.com",
+                Password = "HASH",
+                Telefono = "900000001",
+                FechaRegistro = DateTime.Now,
+                RolId = 1,
+                Activo = true
+            });
+            await ctx.SaveChangesAsync();
 
-            bool todosConRol = usuarios.All(u => u.Rol != null);
+            var controller = new GestionUsuariosController(ctx);
 
-            Assert.IsTrue(true, todosConRol
-                ? "Todos los usuarios tienen un rol asignado."
-                : "Se encontraron usuarios sin rol");
+            var result = await controller.CheckEmailUnique("existe@correo.com", null) as JsonResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(false, result.Value);
         }
 
         [TestMethod]
-        public void RegistroDeUsuarioNoEsDuplicado()
+        public async Task Edit_EmailDuplicado_MuestraErrorYNoActualiza()
         {
-            using var context = GetContext();
-            var usuarios = context.Usuarios.ToList();
+            var ctx = BuildContext(nameof(Edit_EmailDuplicado_MuestraErrorYNoActualiza));
+            var a = new Usuario
+            {
+                Nombre = "A",
+                Email = "a@correo.com",
+                Password = "HASH",
+                Telefono = "900000001",
+                FechaRegistro = DateTime.Now,
+                RolId = 1,
+                Activo = true
+            };
+            var b = new Usuario
+            {
+                Nombre = "B",
+                Email = "b@correo.com",
+                Password = "HASH",
+                Telefono = "900000002",
+                FechaRegistro = DateTime.Now,
+                RolId = 1,
+                Activo = true
+            };
+            ctx.Usuarios.AddRange(a, b);
+            await ctx.SaveChangesAsync();
 
-            bool hayDuplicados = usuarios.GroupBy(u => u.Nombre).Any(g => g.Count() > 1);
+            var controller = new GestionUsuariosController(ctx);
+            var vm = new UsuarioEditVM
+            {
+                UsuarioId = a.UsuarioId,
+                Nombre = "A Edit",
+                Email = "b@correo.com", // colisiona con B
+                Telefono = "900000003",
+                RolId = 2,
+                Activo = false
+            };
 
-            Assert.IsTrue(true, hayDuplicados
-                ? "Se detectaron usuarios duplicados"
-                : "No hay usuarios duplicados.");
+            var result = await controller.Edit(vm);
+
+            var view = result as ViewResult;
+            Assert.IsNotNull(view);
+            Assert.AreEqual("~/Views/SuperAdmin/GestionUsuarios/Edit.cshtml", view.ViewName);
+            Assert.IsTrue(controller.ModelState.ContainsKey(nameof(vm.Email)));
+
+            var aDb = await ctx.Usuarios.FindAsync(a.UsuarioId);
+            Assert.AreEqual("a@correo.com", aDb!.Email); // sin cambios
         }
 
+        [TestMethod]
+        public async Task Edit_Valido_ActualizaCampos_YRedirige()
+        {
+            var ctx = BuildContext(nameof(Edit_Valido_ActualizaCampos_YRedirige));
+            var user = new Usuario
+            {
+                Nombre = "Original",
+                Email = "orig@correo.com",
+                Password = "HASH",
+                Telefono = "900000000",
+                FechaRegistro = DateTime.Now,
+                RolId = 1,
+                Activo = true
+            };
+            ctx.Usuarios.Add(user);
+            await ctx.SaveChangesAsync();
+
+            var controller = new GestionUsuariosController(ctx);
+            var vm = new UsuarioEditVM
+            {
+                UsuarioId = user.UsuarioId,
+                Nombre = "Nuevo",
+                Email = "nuevo@correo.com",
+                Telefono = "999999999",
+                RolId = 2,
+                Activo = false,
+                NewPassword = "NuevaClave123"
+            };
+
+            var result = await controller.Edit(vm);
+
+            var redirect = result as RedirectToActionResult;
+            Assert.IsNotNull(redirect);
+            Assert.AreEqual(nameof(GestionUsuariosController.Index), redirect.ActionName);
+
+            var updated = await ctx.Usuarios.FindAsync(user.UsuarioId);
+            Assert.AreEqual("Nuevo", updated!.Nombre);
+            Assert.AreEqual("nuevo@correo.com", updated.Email);
+            Assert.AreEqual("999999999", updated.Telefono);
+            Assert.AreEqual(2, updated.RolId);
+            Assert.IsFalse(updated.Activo);
+            Assert.AreNotEqual("NuevaClave123", updated.Password); // hasheada
+        }
+
+        [TestMethod]
+        public async Task ToggleActivo_IdNoExiste_NotFound()
+        {
+            var ctx = BuildContext(nameof(ToggleActivo_IdNoExiste_NotFound));
+            var controller = new GestionUsuariosController(ctx);
+
+            var result = await controller.ToggleActivo(99999);
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+        }
     }
 }

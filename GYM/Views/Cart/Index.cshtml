@@ -1,0 +1,66 @@
+﻿@model IEnumerable<GYM.Models.CartItem>
+
+@{
+    Layout = "_Layout"; // Ajusta si usas otro layout
+    ViewData["Title"] = "Carrito de Compras";
+    var total = ViewBag.Total as decimal? ?? 0m;
+}
+
+<h2 class="my-4">Carrito de Compras</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Tu carrito está vacío.</div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Producto.Nombre</td>
+                    <td>S/ @item.Producto.Precio</td>
+                    <td>@item.Cantidad</td>
+                    <td>S/ @(item.Producto.Precio* item.Cantidad)</td>
+                    <td>
+                        <form asp-action="Remove" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartItemId" value="@item.CartItemId" />
+                            <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                <td><strong>S/ @total</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="text-end">
+        <a asp-action="Checkout" class="btn btn-success">Finalizar Compra</a>
+    </div>
+}

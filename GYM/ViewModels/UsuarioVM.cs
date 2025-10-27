@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GYM.ViewModels
 {
@@ -9,6 +10,8 @@ namespace GYM.ViewModels
 
         [Required(ErrorMessage = "El correo es obligatorio")]
         [EmailAddress(ErrorMessage = "El formato del correo no es válido")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.com$", ErrorMessage = "El correo debe ser válido y terminar en .com")]
+        [Remote(action: "CheckEmail", controller: "Acceso", ErrorMessage = "Este correo ya está registrado")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La contraseña es obligatoria")]
@@ -19,9 +22,8 @@ namespace GYM.ViewModels
         [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
         public string ConfirmarPassword { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "El teléfono es obligatorio")]
+        [RegularExpression(@"^\d{9}$", ErrorMessage = "El teléfono debe tener exactamente 9 dígitos")]
         public string? Telefono { get; set; }
     }
-
- 
-
 }
