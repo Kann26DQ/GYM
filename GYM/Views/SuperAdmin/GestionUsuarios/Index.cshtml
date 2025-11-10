@@ -1,54 +1,236 @@
 ﻿@model IEnumerable<GYM.Models.Usuario>
 @{
     ViewData["Title"] = "Gestión de Usuarios";
-    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+    Layout = "_LayoutSuperAdmin";
 }
 
-<div class="d-flex justify-content-end mb-3">
-    <a asp-action="Create" class="btn btn-success">
-        <i class="bi bi-person-plus"></i> Nuevo Usuario
-    </a>
-</div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill me-2"></i>Gestión de Usuarios</h2>
+        <a asp-action="Create" class="btn btn-success btn-lg">
+            <i class="bi bi-person-plus-fill me-2"></i>Nuevo Usuario
+        </a>
+    </div>
 
-<table class="table table-striped table-hover align-middle">
-    <thead class="table-dark">
-        <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Teléfono</th>
-            <th>Rol</th>
-            <th>Activo</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var u in Model)
-        {
-            <tr>
-                <td>@u.Nombre</td>
-                <td>@u.Email</td>
-                <td>@u.Telefono</td>
-                <td>@u.Rol.Nombre</td>
-                <td>
-                    @if (u.Activo)
-                    {
-                        <span class="badge bg-success">Activo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Inactivo</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-primary">Editar</a>
-                    <a asp-action="Details" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-secondary">Detalles</a>
-                    <form asp-action="ToggleActivo" asp-route-id="@u.UsuarioId" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm @(u.Activo ? "btn-warning" : "btn-success")">
-                            @(u.Activo ? "Desactivar" : "Activar")
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle me-2"></i>@TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Fecha Registro</th>
+                            <th class="text-center" style="width: 380px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@usuario.Nombre</strong>
+                                </td>
+                                <td>@usuario.Email</td>
+                                <td>@usuario.Telefono</td>
+                                <td>
+                                    @if (usuario.Rol.Nombre == "Cliente")
+                                    {
+                                        <span class="badge bg-primary fs-6 px-3 py-2">Cliente</span>
+                                    }
+                                    else if (usuario.Rol.Nombre == "Gymbro")
+                                    {
+                                        <span class="badge bg-info fs-6 px-3 py-2">Gymbro</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (usuario.Activo)
+                                    {
+                                        <span class="badge bg-success fs-6 px-3 py-2">
+                                            <i class="bi bi-check-circle me-1"></i>Activo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6 px-3 py-2">
+                                            <i class="bi bi-x-circle me-1"></i>Inactivo
+                                        </span>
+                                    }
+                                </td>
+                                <td>@usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                        <a asp-action="Details" asp-route-id="@usuario.UsuarioId"
+                                           class="btn btn-info" title="Ver Detalles">
+                                            <i class="bi bi-eye-fill me-1"></i>Ver
+                                        </a>
+
+                                        <a asp-action="Edit" asp-route-id="@usuario.UsuarioId"
+                                           class="btn btn-warning" title="Editar">
+                                            <i class="bi bi-pencil-fill me-1"></i>Editar
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn @(usuario.Activo ? "btn-secondary" : "btn-success")"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#toggleModal@(usuario.UsuarioId)"
+                                                title="@(usuario.Activo ? "Desactivar" : "Activar")">
+                                            <i class="bi bi-@(usuario.Activo ? "x-circle" : "check-circle") me-1"></i>
+                                            @(usuario.Activo ? "Desactivar" : "Activar")
+                                        </button>
+
+                                        <!-- 👇 NUEVO: Botón de Eliminar -->
+                                        <button type="button"
+                                                class="btn btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal@(usuario.UsuarioId)"
+                                                title="Eliminar Permanentemente">
+                                            <i class="bi bi-trash-fill me-1"></i>Eliminar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Modal de Activar/Desactivar -->
+                            <div class="modal fade" id="toggleModal@(usuario.UsuarioId)" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header @(usuario.Activo ? "bg-secondary" : "bg-success") text-white">
+                                            <h5 class="modal-title">
+                                                <i class="bi bi-@(usuario.Activo ? "exclamation-triangle" : "check-circle") me-2"></i>
+                                                @(usuario.Activo ? "Desactivar" : "Activar") Cuenta
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            @if (usuario.Activo)
+                                            {
+                                                <p class="fs-5">¿Estás seguro de que deseas <strong class="text-danger">desactivar</strong> la cuenta de <strong>@usuario.Nombre</strong>?</p>
+                                                <div class="alert alert-warning">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    <strong>Importante:</strong> Al desactivar esta cuenta:
+                                                    <ul class="mb-0 mt-2">
+                                                        <li>Se desactivarán todas sus membresías activas</li>
+                                                        <li>El usuario no podrá iniciar sesión</li>
+                                                        <li>Deberá comprar una nueva membresía para reactivar su cuenta</li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <p class="fs-5">¿Estás seguro de que deseas <strong class="text-success">activar</strong> la cuenta de <strong>@usuario.Nombre</strong>?</p>
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Nota:</strong> Aunque se active la cuenta, el usuario necesitará una membresía activa para usar el sistema completamente.
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-lg me-2"></i>Cancelar
+                                            </button>
+                                            <form asp-action="ToggleActivo" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@usuario.UsuarioId" />
+                                                <button type="submit" class="btn @(usuario.Activo ? "btn-secondary" : "btn-success") btn-lg">
+                                                    <i class="bi bi-@(usuario.Activo ? "x-circle" : "check-circle") me-2"></i>
+                                                    @(usuario.Activo ? "Desactivar" : "Activar")
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 👇 NUEVO: Modal de Eliminar -->
+                            <div class="modal fade" id="deleteModal@(usuario.UsuarioId)" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">
+                                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                ⚠️ Eliminar Usuario Permanentemente
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="alert alert-danger">
+                                                <i class="bi bi-exclamation-octagon me-2"></i>
+                                                <strong>¡ADVERTENCIA!</strong> Esta acción es <strong>IRREVERSIBLE</strong>.
+                                            </div>
+                                            <p class="fs-5">¿Estás completamente seguro de que deseas <strong class="text-danger">ELIMINAR PERMANENTEMENTE</strong> a:</p>
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <p class="mb-1"><strong>Nombre:</strong> @usuario.Nombre</p>
+                                                    <p class="mb-1"><strong>Email:</strong> @usuario.Email</p>
+                                                    <p class="mb-0"><strong>Rol:</strong> @usuario.Rol.Nombre</p>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-warning mt-3">
+                                                <strong>Se eliminarán:</strong>
+                                                <ul class="mb-0 mt-2">
+                                                    <li>Todas sus membresías</li>
+                                                    <li>Su carrito de compras</li>
+                                                    <li>Relaciones con rutinas y planes alimenticios</li>
+                                                    <li>Referencias en ventas</li>
+                                                    <li><strong>El usuario será BORRADO de la base de datos</strong></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-lg me-2"></i>Cancelar
+                                            </button>
+                                            <form asp-action="EliminarPermanente" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@usuario.UsuarioId" />
+                                                <button type="submit" class="btn btn-danger btn-lg">
+                                                    <i class="bi bi-trash-fill me-2"></i>
+                                                    SÍ, ELIMINAR PERMANENTEMENTE
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>No hay usuarios registrados.
+                </div>
+            }
+        </div>
+    </div>
+</div>

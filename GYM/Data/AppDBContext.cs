@@ -1,5 +1,6 @@
 ﻿using GYM.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace GYM.Data
 {
@@ -9,7 +10,13 @@ namespace GYM.Data
 
         public DbSet<Rol> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Membresia> Membresias { get; set; }
+
+        // Catálogo de planes (usa tabla existente "Membresias")
+        public DbSet<MembresiaPlan> MembresiaPlanes { get; set; }
+
+        // Asignaciones por usuario (historial)
+        public DbSet<MembresiaUsuario> MembresiasUsuarios { get; set; }
+
         public DbSet<Beneficio> Beneficios { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
         public DbSet<Ejercicio> Ejercicios { get; set; }
@@ -21,134 +28,150 @@ namespace GYM.Data
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
         public DbSet<Reporte> Reportes { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
-        public DbSet<CartItem> CartItems { get; set; } // Agregar DbSet para CartItem
-
+        public DbSet<CartItem> CartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // Roles seed
             modelBuilder.Entity<Rol>().HasData(
-            new Rol { RolId = 1, Nombre = "Cliente" },
-            new Rol { RolId = 2, Nombre = "Gymbro" },
-            new Rol { RolId = 3, Nombre = "SuperAdmin" }
-             );
-            // -------------------
-            // MEMBRESIA
-            // -------------------
-            modelBuilder.Entity<Membresia>()
-                .HasOne(m => m.Cliente)
-                .WithMany(u => u.Membresias)
-                .HasForeignKey(m => m.ClienteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                new Rol { RolId = 1, Nombre = "Cliente" },
+                new Rol { RolId = 2, Nombre = "Gymbro" },
+                new Rol { RolId = 3, Nombre = "SuperAdmin" }
+            );
 
-            modelBuilder.Entity<Membresia>()
-                .HasOne(m => m.Empleado)
+            // MembresiaPlan -> tabla "Membresias"
+            modelBuilder.Entity<MembresiaPlan>().ToTable("Membresias");
+
+            // Seed de planes (2 Mensuales + 2 Anuales)
+            modelBuilder.Entity<MembresiaPlan>().HasData(
+                // PLANES MENSUALES
+                new MembresiaPlan
+                {
+                    MembresiaPlanId = 1,
+                    Nombre = "Membresía Básica",
+                    Descripcion = "Acceso a rutinas de entrenamiento personalizadas diseñadas por nuestros profesionales.",
+                    Precio = 50m,
+                    PermiteRutina = true,
+                    PermiteAlimentacion = false,
+                    Activo = true,
+                    DuracionDias = 30,
+                    BeneficiosTexto = "Acceso a rutinas personalizadas; Actualización semanal de ejercicios; Seguimiento de progreso"
+                },
+                new MembresiaPlan
+                {
+                    MembresiaPlanId = 2,
+                    Nombre = "Membresía Completa",
+                    Descripcion = "Acceso total a rutinas de entrenamiento y planes alimenticios personalizados para alcanzar tus objetivos.",
+                    Precio = 120m,
+                    PermiteRutina = true,
+                    PermiteAlimentacion = true,
+                    Activo = true,
+                    DuracionDias = 30,
+                    BeneficiosTexto = "Acceso a rutinas personalizadas; Plan alimenticio adaptado a tus metas; Actualización semanal de ejercicios y comidas; Seguimiento completo de progreso; Asesoría nutricional básica"
+                },
+                // PLANES ANUALES
+                new MembresiaPlan
+                {
+                    MembresiaPlanId = 3,
+                    Nombre = "Membresía Básica Anual",
+                    Descripcion = "Ahorra con nuestro plan anual. Acceso a rutinas de entrenamiento durante todo el año.",
+                    Precio = 500m,
+                    PermiteRutina = true,
+                    PermiteAlimentacion = false,
+                    Activo = true,
+                    DuracionDias = 365,
+                    BeneficiosTexto = "Acceso ilimitado a rutinas personalizadas; Actualización semanal de ejercicios; Seguimiento de progreso; Descuento especial anual; Sin renovaciones mensuales"
+                },
+                new MembresiaPlan
+                {
+                    MembresiaPlanId = 4,
+                    Nombre = "Membresía Completa Anual",
+                    Descripcion = "El mejor valor del año. Acceso completo a rutinas y planes alimenticios con ahorro significativo.",
+                    Precio = 1200m,
+                    PermiteRutina = true,
+                    PermiteAlimentacion = true,
+                    Activo = true,
+                    DuracionDias = 365,
+                    BeneficiosTexto = "Acceso a rutinas personalizadas; Plan alimenticio adaptado a tus metas; Actualización semanal de ejercicios y comidas; Seguimiento completo de progreso; Asesoría nutricional completa; Descuento anual del 16%; Prioridad en reservas"
+                }
+            );
+
+            // Precisión decimales
+            modelBuilder.Entity<Producto>().Property(p => p.Precio).HasPrecision(18, 2);
+            modelBuilder.Entity<DetalleVenta>().Property(dv => dv.PrecioUnitario).HasPrecision(18, 2);
+            modelBuilder.Entity<Venta>().Property(v => v.Total).HasPrecision(18, 2);
+            modelBuilder.Entity<Reporte>().Property(r => r.TotalVentas).HasPrecision(18, 2);
+            modelBuilder.Entity<MembresiaPlan>().Property(mp => mp.Precio).HasPrecision(18, 2);
+            modelBuilder.Entity<MembresiaUsuario>().Property(mu => mu.Precio).HasPrecision(18, 2);
+
+            // Relación de asignaciones
+            modelBuilder.Entity<MembresiaUsuario>()
+                .HasOne(mu => mu.Usuario)
                 .WithMany()
-                .HasForeignKey(m => m.EmpleadoId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<Membresia>()
-                .Property(m => m.Precio)
-                .HasPrecision(10, 2);
-            modelBuilder.Entity<Producto>()
-                .Property(p => p.Precio)
-                .HasPrecision(10, 2);
-            modelBuilder.Entity<DetalleVenta>()
-                .Property(dv => dv.PrecioUnitario)
-                .HasPrecision(10, 2);
+                .HasForeignKey(mu => mu.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // -------------------
+            modelBuilder.Entity<MembresiaUsuario>()
+                .HasOne(mu => mu.Plan)
+                .WithMany()
+                .HasForeignKey(mu => mu.MembresiaPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MembresiaUsuario>()
+                .HasIndex(mu => new { mu.UsuarioId, mu.FechaFin });
+
             // RUTINA
-            // -------------------
             modelBuilder.Entity<Rutina>()
-                .HasOne(r => r.Cliente)
-                .WithMany(u => u.Rutinas)
-                .HasForeignKey(r => r.ClienteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(r => r.Cliente).WithMany(u => u.Rutinas)
+                .HasForeignKey(r => r.ClienteId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Rutina>()
-                .HasOne(r => r.Empleado)
-                .WithMany()
-                .HasForeignKey(r => r.EmpleadoId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(r => r.Empleado).WithMany()
+                .HasForeignKey(r => r.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------
             // PLAN ALIMENTICIO
-            // -------------------
             modelBuilder.Entity<PlanAlimenticio>()
-                .HasOne(p => p.Cliente)
-                .WithMany(u => u.PlanesAlimenticios)
-                .HasForeignKey(p => p.ClienteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.Cliente).WithMany(u => u.PlanesAlimenticios)
+                .HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PlanAlimenticio>()
-                .HasOne(p => p.Empleado)
-                .WithMany()
-                .HasForeignKey(p => p.EmpleadoId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.Empleado).WithMany()
+                .HasForeignKey(p => p.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------
             // VENTA
-            // -------------------
             modelBuilder.Entity<Venta>()
-                .HasOne(v => v.Cliente)
-                .WithMany(u => u.Ventas)
-                .HasForeignKey(v => v.ClienteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(v => v.Cliente).WithMany(u => u.Ventas)
+                .HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Venta>()
-                .HasOne(v => v.Empleado)
-                .WithMany()
-                .HasForeignKey(v => v.EmpleadoId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<Venta>()
-    .Property(v => v.Total)
-    .HasPrecision(10, 2);
+                .HasOne(v => v.Empleado).WithMany()
+                .HasForeignKey(v => v.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------
             // MOVIMIENTO STOCK
-            // -------------------
             modelBuilder.Entity<MovimientoStock>()
-                .HasOne(ms => ms.Usuario)
-                .WithMany(u => u.Movimientos) // mapear hacia la colección existente
-                .HasForeignKey(ms => ms.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ms => ms.Usuario).WithMany(u => u.Movimientos)
+                .HasForeignKey(ms => ms.UsuarioId).OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------
             // REPORTE
-            // -------------------
             modelBuilder.Entity<Reporte>()
-                .HasOne(r => r.Empleado)
-                .WithMany(u => u.Reportes)
-                .HasForeignKey(r => r.EmpleadoId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<Reporte>()
-    .Property(r => r.TotalVentas)
-    .HasPrecision(10, 2);
+                .HasOne(r => r.Empleado).WithMany(u => u.Reportes)
+                .HasForeignKey(r => r.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
 
-            // -------------------
             // PROVEEDOR
-            // -------------------
             modelBuilder.Entity<Proveedor>()
-                .HasMany(p => p.Productos)
-                .WithOne(p => p.Proveedor)
-                .HasForeignKey(p => p.ProveedorId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasMany(p => p.Productos).WithOne(p => p.Proveedor)
+                .HasForeignKey(p => p.ProveedorId).OnDelete(DeleteBehavior.SetNull);
 
-
-            // Configuración para CartItem
+            // CartItem
             modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Producto)
-                .WithMany(p => p.CartItems) // Relación con Producto
-                .HasForeignKey(ci => ci.ProductoId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ci => ci.Producto).WithMany(p => p.CartItems)
+                .HasForeignKey(ci => ci.ProductoId).OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Usuario)
-                .WithMany(u => u.CartItems) // Relación con Usuario
-                .HasForeignKey(ci => ci.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ci => ci.Usuario).WithMany(u => u.CartItems)
+                .HasForeignKey(ci => ci.UsuarioId).OnDelete(DeleteBehavior.Restrict);
         }
     }
-    
 }

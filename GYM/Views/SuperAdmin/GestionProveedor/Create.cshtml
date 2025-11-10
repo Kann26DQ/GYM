@@ -7,30 +7,41 @@
 
 <h2 class="mb-4">Registrar Proveedor</h2>
 
-@if (ViewBag.Mensaje != null)
-{
-    <div class="alert alert-danger">@ViewBag.Mensaje</div>
-}
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
     <div class="form-group mb-3">
         <label asp-for="Nombre" class="form-label">Nombre del Proveedor</label>
-        <input asp-for="Nombre" class="form-control" />
+        <input asp-for="Nombre" class="form-control" required />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
     </div>
 
     <div class="form-group mb-3">
         <label asp-for="Telefono" class="form-label">Número de Teléfono</label>
-        <input asp-for="Telefono" class="form-control" />
+        <input asp-for="Telefono" class="form-control"
+               type="tel" inputmode="numeric" maxlength="9"
+               pattern="^[0-9]{9}$"
+               title="Debe contener exactamente 9 dígitos numéricos"
+               required />
+        <span asp-validation-for="Telefono" class="text-danger"></span>
     </div>
 
-    <div class="form-group mb-3">
+      <div class="form-group mb-3">
         <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
+        <input asp-for="Email" class="form-control"
+               type="email" placeholder="ejemplo@correo.com"
+               pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$"
+               title="Debe ser un correo válido que termine en .com"
+               required />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="form-group mb-3">
-        <label asp-for="Direccion" class="form-label"></label>
+        <label asp-for="Direccion" class="form-label">Dirección</label>
         <input asp-for="Direccion" class="form-control" />
+        <span asp-validation-for="Direccion" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-3">
@@ -42,3 +53,6 @@
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

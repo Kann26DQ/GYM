@@ -24,9 +24,14 @@ namespace GYM.ViewModels
 
         [Required(ErrorMessage = "El teléfono es obligatorio")]
         [RegularExpression(@"^\d{9}$", ErrorMessage = "El teléfono debe tener exactamente 9 dígitos")]
+        [Remote(action: "CheckTelefonoUnique", controller: "GestionUsuarios", ErrorMessage = "Este número de teléfono ya está registrado")]
         public string? Telefono { get; set; }
 
         [Required(ErrorMessage = "Debe seleccionar un rol")]
         public int RolId { get; set; }
+
+        // 👇 NUEVO: Membresía opcional
+        [Display(Name = "Membresía (Opcional)")]
+        public int? MembresiaPlanId { get; set; }
     }
 }

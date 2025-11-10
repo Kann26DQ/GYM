@@ -1,0 +1,132 @@
+﻿@model IEnumerable<GYM.Models.MembresiaPlan>
+@{
+    Layout = "_LayoutSuperAdmin";
+    ViewData["Title"] = "Membresías";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Membresías</h2>
+    <a asp-action="Create" class="btn btn-success">
+        <i class="fa fa-plus"></i> Nueva membresía
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Duración</th>
+                <th>Permisos</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><strong>@p.Nombre</strong></td>
+                    <td>@p.Descripcion</td>
+                    <td>S/ @p.Precio.ToString("0.00")</td>
+                    <td>@p.DuracionDias días</td>
+                    <td>
+                        @if (p.PermiteRutina)
+                        {
+                            <span class="badge bg-info">Rutina</span>
+                        }
+                        @if (p.PermiteAlimentacion)
+                        {
+                            <span class="badge bg-success">Alimentación</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p.Activo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group" role="group">
+                            <a asp-action="Edit" asp-route-id="@p.MembresiaPlanId"
+                               class="btn btn-sm btn-warning" title="Editar">
+                                <i class="fa fa-edit"></i>
+                            </a>
+
+                            <form asp-action="Toggle" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@p.MembresiaPlanId" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        title="@(p.Activo ? "Desactivar" : "Activar")">
+                                    <i class="fa fa-@(p.Activo ? "toggle-on" : "toggle-off")"></i>
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal@(p.MembresiaPlanId)"
+                                    title="Eliminar">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Modal de confirmación de eliminación -->
+                <div class="modal fade" id="deleteModal@(p.MembresiaPlanId)" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmar eliminación</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>¿Estás seguro de que deseas eliminar la membresía <strong>@p.Nombre</strong>?</p>
+                                <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción no se puede deshacer.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.MembresiaPlanId" />
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fa fa-trash"></i> Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <i class="fa fa-info-circle"></i> No hay membresías registradas.
+    </div>
+}

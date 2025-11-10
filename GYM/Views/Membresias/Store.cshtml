@@ -1,0 +1,310 @@
+﻿@model IEnumerable<GYM.Models.MembresiaPlan>
+@{
+    ViewData["Title"] = "Membresías Disponibles";
+    Layout = null;
+    var tipoMembresia = ViewData["TipoMembresia"] as string ?? "mensual";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GYM</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                        url("https://images.unsplash.com/photo-1571019613914-85f342c9b30e") no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px 0;
+            padding-bottom: 150px; /* 👈 NUEVO: Espaciado inferior para barra de Somee */
+        }
+
+        .card-custom {
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            color: white;
+            max-width: 1400px;
+            margin: 0 auto;
+            margin-bottom: 3rem; /* 👈 NUEVO: Margen inferior adicional */
+        }
+
+        .card-header-custom {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffc107;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .lead-custom {
+            color: #f8f9fa;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .membership-card {
+            backdrop-filter: blur(15px);
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ffc107;
+            border-radius: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            min-height: 550px;
+            margin-bottom: 2rem; /* 👈 NUEVO: Espaciado entre tarjetas */
+        }
+
+        .membership-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.5);
+        }
+
+        .membership-card .card-header {
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+            border-radius: 0.9rem 0.9rem 0 0;
+            padding: 1rem;
+        }
+
+        .membership-card.annual {
+            border-color: #28a745;
+        }
+
+        .membership-card.annual .card-header {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .membership-card .card-body {
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .price-display {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .price-display.annual {
+            color: #28a745;
+        }
+
+        .btn-warning {
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: 0.3s;
+            color: #000;
+            margin-bottom: 1rem; /* 👈 NUEVO: Margen inferior en botones */
+        }
+
+        .btn-warning:hover {
+            background-color: #ffcd39;
+            transform: scale(1.05);
+        }
+
+        .btn-success {
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: 0.3s;
+            margin-bottom: 1rem; /* 👈 NUEVO: Margen inferior en botones */
+        }
+
+        .btn-success:hover {
+            transform: scale(1.05);
+        }
+
+        .badge-custom {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .benefit-item {
+            color: #f8f9fa;
+            font-size: 0.95rem;
+        }
+
+        .benefit-icon {
+            color: #ffc107;
+        }
+
+        .btn-toggle-group {
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            margin-bottom: 2rem; /* 👈 NUEVO: Margen inferior */
+        }
+
+        .savings-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff0000 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        /* 👇 NUEVO: Contenedor con espaciado adicional */
+        .plans-container {
+            padding-bottom: 3rem;
+        }
+
+        .card-footer {
+            padding-bottom: 1.5rem; /* 👈 NUEVO: Espaciado en footer de tarjetas */
+        }
+    </style>
+</head>
+<body class="d-flex justify-content-center align-items-center">
+    <div class="container-fluid px-4">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-award me-2"></i>Membresías Disponibles
+            </div>
+            <p class="lead-custom">Elige el plan perfecto para alcanzar tus objetivos</p>
+
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Botones para cambiar entre Mensuales y Anuales -->
+            <div class="text-center mb-4">
+                <div class="btn-group btn-group-lg btn-toggle-group" role="group">
+                    <a asp-action="Store" asp-route-tipo="mensual"
+                       class="btn @(tipoMembresia == "mensual" ? "btn-warning" : "btn-outline-warning")">
+                        <i class="bi bi-calendar me-2"></i>Planes Mensuales
+                    </a>
+                    <a asp-action="Store" asp-route-tipo="anual"
+                       class="btn @(tipoMembresia == "anual" ? "btn-success" : "btn-outline-success")">
+                        <i class="bi bi-calendar-check me-2"></i>Planes Anuales - ¡Ahorra!
+                    </a>
+                </div>
+            </div>
+
+            <div class="row justify-content-center g-4 plans-container">
+                @foreach (var plan in Model)
+                {
+                    var isAnual = plan.DuracionDias >= 300;
+                    var ahorroMensual = isAnual ? ((plan.Precio / 12) - 50).ToString("0") : null;
+                    
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="card membership-card h-100 @(isAnual ? "annual" : "") position-relative">
+                            @if (isAnual)
+                            {
+                                <span class="savings-badge">
+                                    <i class="bi bi-tag-fill me-1"></i>¡Ahorra!
+                                </span>
+                            }
+                            
+                            <div class="card-header text-center">
+                                <h5 class="mb-0">@plan.Nombre</h5>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <div class="text-center mb-3">
+                                    <h2 class="display-5 price-display @(isAnual ? "annual" : "") mb-0">
+                                        S/ @plan.Precio.ToString("0.00")
+                                    </h2>
+                                    <p class="text-white-50 mb-0">
+                                        @if (isAnual)
+                                        {
+                                            <span>1 año completo</span><br />
+                                            <small class="text-success">≈ S/@((plan.Precio/12).ToString("0.00"))/mes</small>
+                                        }
+                                        else
+                                        {
+                                            <span>@plan.DuracionDias días</span>
+                                        }
+                                    </p>
+                                </div>
+
+                                <p class="text-white-50 mb-3" style="font-size: 0.9rem;">@plan.Descripcion</p>
+
+                                <h6 class="mb-3">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>Beneficios:
+                                </h6>
+                                <ul class="list-unstyled flex-grow-1">
+                                    @foreach (var beneficio in plan.Beneficios)
+                                    {
+                                        <li class="mb-2 benefit-item">
+                                            <i class="bi bi-check-circle-fill benefit-icon me-2"></i>@beneficio
+                                        </li>
+                                    }
+                                </ul>
+
+                                <div class="mt-3 text-center">
+                                    @if (plan.PermiteRutina)
+                                    {
+                                        <span class="badge bg-info badge-custom me-1 mb-2">
+                                            <i class="bi bi-heart-pulse me-1"></i>Rutinas
+                                        </span>
+                                    }
+                                    @if (plan.PermiteAlimentacion)
+                                    {
+                                        <span class="badge bg-success badge-custom mb-2">
+                                            <i class="bi bi-apple me-1"></i>Alimentación
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pb-3 px-3">
+                                <form asp-action="IniciarPago" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@plan.MembresiaPlanId" />
+                                    <button type="submit" class="btn @(isAnual ? "btn-success" : "btn-warning") w-100 py-3">
+                                        <i class="bi bi-cart-check me-2"></i>Adquirir Ahora
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-warning text-center py-4 mt-4 mb-5">
+                    <i class="bi bi-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>No hay membresías @tipoMembresia disponibles en este momento.</h5>
+                    <p class="mb-0">Por favor, contacta con el administrador.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- 👇 NUEVO: Espaciador aumentado para barra de Somee -->
+    <div style="height: 150px;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

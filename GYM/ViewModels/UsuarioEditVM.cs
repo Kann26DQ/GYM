@@ -17,7 +17,9 @@ namespace GYM.ViewModels
         [Remote(action: "CheckEmailUnique", controller: "GestionUsuarios", AdditionalFields = nameof(UsuarioId), ErrorMessage = "Este correo ya está registrado")]
         public string Email { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "El teléfono es obligatorio")]
         [RegularExpression(@"^\d{9}$", ErrorMessage = "El teléfono debe tener exactamente 9 dígitos")]
+        [Remote(action: "CheckTelefonoUnique", controller: "GestionUsuarios", AdditionalFields = nameof(UsuarioId), ErrorMessage = "Este número de teléfono ya está registrado")]
         public string? Telefono { get; set; }
 
         [Required(ErrorMessage = "Debe seleccionar un rol")]

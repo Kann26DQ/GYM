@@ -1,4 +1,6 @@
 using GYM.Data;
+using GYM.Middleware;
+using GYM.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System;
@@ -18,7 +20,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// (Opcional) políticas / autorización
 builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<AppDBContext>(options =>
@@ -34,6 +35,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// ?? NUEVO: Registrar servicios personalizados
+builder.Services.AddScoped<MembresiaPermisosService>();
+builder.Services.AddHostedService<MembresiaExpiradaBackgroundService>();
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
@@ -41,7 +46,6 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -51,8 +55,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Autenticación debe ir antes de Authorization
 app.UseAuthentication();
+app.UseMembresiaExpiradaCheck();
 app.UseAuthorization();
 app.UseSession();
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYM.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251027162151_data")]
-    partial class data
+    [Migration("20251110035214_plan")]
+    partial class plan
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,8 +115,8 @@ namespace GYM.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("PrecioUnitario")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProductoId")
                         .HasColumnType("int");
@@ -168,19 +168,114 @@ namespace GYM.Migrations
                     b.ToTable("Ejercicios");
                 });
 
-            modelBuilder.Entity("GYM.Models.Membresia", b =>
+            modelBuilder.Entity("GYM.Models.MembresiaPlan", b =>
                 {
-                    b.Property<int>("MembresiaId")
+                    b.Property<int>("MembresiaPlanId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MembresiaId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MembresiaPlanId"));
 
-                    b.Property<int>("ClienteId")
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BeneficiosTexto")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("DuracionDias")
                         .HasColumnType("int");
 
-                    b.Property<int>("EmpleadoId")
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<bool>("PermiteAlimentacion")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PermiteRutina")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Precio")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("UsuarioId")
                         .HasColumnType("int");
+
+                    b.HasKey("MembresiaPlanId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Membresias", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            MembresiaPlanId = 1,
+                            Activo = true,
+                            BeneficiosTexto = "Acceso a rutinas personalizadas; Actualización semanal de ejercicios; Seguimiento de progreso",
+                            Descripcion = "Acceso a rutinas de entrenamiento personalizadas diseñadas por nuestros profesionales.",
+                            DuracionDias = 30,
+                            Nombre = "Membresía Básica",
+                            PermiteAlimentacion = false,
+                            PermiteRutina = true,
+                            Precio = 50m
+                        },
+                        new
+                        {
+                            MembresiaPlanId = 2,
+                            Activo = true,
+                            BeneficiosTexto = "Acceso a rutinas personalizadas; Plan alimenticio adaptado a tus metas; Actualización semanal de ejercicios y comidas; Seguimiento completo de progreso; Asesoría nutricional básica",
+                            Descripcion = "Acceso total a rutinas de entrenamiento y planes alimenticios personalizados para alcanzar tus objetivos.",
+                            DuracionDias = 30,
+                            Nombre = "Membresía Completa",
+                            PermiteAlimentacion = true,
+                            PermiteRutina = true,
+                            Precio = 120m
+                        },
+                        new
+                        {
+                            MembresiaPlanId = 3,
+                            Activo = true,
+                            BeneficiosTexto = "Acceso ilimitado a rutinas personalizadas; Actualización semanal de ejercicios; Seguimiento de progreso; Descuento especial anual; Sin renovaciones mensuales",
+                            Descripcion = "Ahorra con nuestro plan anual. Acceso a rutinas de entrenamiento durante todo el año.",
+                            DuracionDias = 365,
+                            Nombre = "Membresía Básica Anual",
+                            PermiteAlimentacion = false,
+                            PermiteRutina = true,
+                            Precio = 500m
+                        },
+                        new
+                        {
+                            MembresiaPlanId = 4,
+                            Activo = true,
+                            BeneficiosTexto = "Acceso a rutinas personalizadas; Plan alimenticio adaptado a tus metas; Actualización semanal de ejercicios y comidas; Seguimiento completo de progreso; Asesoría nutricional completa; Descuento anual del 16%; Prioridad en reservas",
+                            Descripcion = "El mejor valor del año. Acceso completo a rutinas y planes alimenticios con ahorro significativo.",
+                            DuracionDias = 365,
+                            Nombre = "Membresía Completa Anual",
+                            PermiteAlimentacion = true,
+                            PermiteRutina = true,
+                            Precio = 1200m
+                        });
+                });
+
+            modelBuilder.Entity("GYM.Models.MembresiaUsuario", b =>
+                {
+                    b.Property<int>("MembresiaUsuarioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MembresiaUsuarioId"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("FechaFin")
                         .HasColumnType("datetime2");
@@ -188,21 +283,23 @@ namespace GYM.Migrations
                     b.Property<DateTime>("FechaInicio")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("MembresiaPlanId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Precio")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
 
-                    b.HasKey("MembresiaId");
+                    b.HasKey("MembresiaUsuarioId");
 
-                    b.HasIndex("ClienteId");
+                    b.HasIndex("MembresiaPlanId");
 
-                    b.HasIndex("EmpleadoId");
+                    b.HasIndex("UsuarioId", "FechaFin");
 
-                    b.ToTable("Membresias");
+                    b.ToTable("MembresiasUsuarios");
                 });
 
             modelBuilder.Entity("GYM.Models.MovimientoStock", b =>
@@ -292,8 +389,8 @@ namespace GYM.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Precio")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("ProveedorId")
                         .HasColumnType("int");
@@ -320,9 +417,11 @@ namespace GYM.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProveedorId"));
 
                     b.Property<string>("Direccion")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Estado")
@@ -330,9 +429,11 @@ namespace GYM.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
 
                     b.Property<string>("Telefono")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProveedorId");
@@ -361,8 +462,8 @@ namespace GYM.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("TotalVentas")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("ReporteId");
 
@@ -501,8 +602,8 @@ namespace GYM.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("Total")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("VentaId");
 
@@ -515,8 +616,8 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Beneficio", b =>
                 {
-                    b.HasOne("GYM.Models.Membresia", "Membresia")
-                        .WithMany("Beneficios")
+                    b.HasOne("GYM.Models.MembresiaPlan", "Membresia")
+                        .WithMany()
                         .HasForeignKey("MembresiaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -583,23 +684,30 @@ namespace GYM.Migrations
                     b.Navigation("Rutina");
                 });
 
-            modelBuilder.Entity("GYM.Models.Membresia", b =>
+            modelBuilder.Entity("GYM.Models.MembresiaPlan", b =>
                 {
-                    b.HasOne("GYM.Models.Usuario", "Cliente")
+                    b.HasOne("GYM.Models.Usuario", null)
                         .WithMany("Membresias")
-                        .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("UsuarioId");
+                });
 
-                    b.HasOne("GYM.Models.Usuario", "Empleado")
+            modelBuilder.Entity("GYM.Models.MembresiaUsuario", b =>
+                {
+                    b.HasOne("GYM.Models.MembresiaPlan", "Plan")
                         .WithMany()
-                        .HasForeignKey("EmpleadoId")
+                        .HasForeignKey("MembresiaPlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Cliente");
+                    b.HasOne("GYM.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Empleado");
+                    b.Navigation("Plan");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("GYM.Models.MovimientoStock", b =>
@@ -712,11 +820,6 @@ namespace GYM.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Empleado");
-                });
-
-            modelBuilder.Entity("GYM.Models.Membresia", b =>
-                {
-                    b.Navigation("Beneficios");
                 });
 
             modelBuilder.Entity("GYM.Models.PlanAlimenticio", b =>

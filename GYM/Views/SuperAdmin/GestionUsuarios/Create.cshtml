@@ -2,61 +2,171 @@
 @{
     ViewData["Title"] = "Nuevo Usuario";
     Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+    var planes = ViewBag.Planes as IEnumerable<GYM.Models.MembresiaPlan>;
 }
 
-<h2 class="text-center mb-4">Registrar Usuario</h2>
+<div class="container-fluid mt-4 mb-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-plus-fill me-2"></i>Registrar Usuario
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
 
-<form asp-action="Create" method="post" class="w-50 mx-auto">
-    <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" required />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
+                        <!-- Fila 1: Nombre y Email -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Nombre" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Nombre Completo
+                                </label>
+                                <input asp-for="Nombre" class="form-control" required />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Correo Electrónico
+                                </label>
+                                <input asp-for="Email" class="form-control"
+                                       type="email" placeholder="ejemplo@correo.com"
+                                       pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$"
+                                       title="Debe ser un correo válido que termine en .com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Fila 2: Contraseña y Confirmar Contraseña -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label">
+                                    <i class="bi bi-lock me-1"></i>Contraseña
+                                </label>
+                                <input asp-for="Password" type="password" class="form-control" minlength="8" required />
+                                <small class="text-muted">Mínimo 8 caracteres.</small>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmarPassword" class="form-label">
+                                    <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña
+                                </label>
+                                <input asp-for="ConfirmarPassword" type="password" class="form-control" required />
+                                <span asp-validation-for="ConfirmarPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Fila 3: Teléfono y Rol -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Telefono" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Teléfono
+                                </label>
+                                <input asp-for="Telefono" class="form-control"
+                                       type="tel" inputmode="numeric" maxlength="9"
+                                       pattern="^[0-9]{9}$"
+                                       title="Debe contener exactamente 9 dígitos"
+                                       required />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-shield-check me-1"></i>Rol
+                                </label>
+                                <select asp-for="RolId" class="form-select" required>
+                                    <option value="">-- Seleccione un rol --</option>
+                                    <option value="1">Cliente</option>
+                                    <option value="2">Gymbro (Empleado)</option>
+                                </select>
+                                <span asp-validation-for="RolId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <!-- Fila 4: Membresía (Opcional) - Ocupa todo el ancho -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label asp-for="MembresiaPlanId" class="form-label">
+                                    <i class="bi bi-card-checklist me-1"></i>Membresía (Opcional)
+                                </label>
+                                <select asp-for="MembresiaPlanId" class="form-select" id="membresiaPlanSelect">
+                                    <option value="">-- Sin Membresía (Cuenta Inactiva) --</option>
+                                    @if (planes != null && planes.Any())
+                                    {
+                                        @foreach (var plan in planes)
+                                        {
+                                            <option value="@plan.MembresiaPlanId">
+                                                @plan.Nombre - S/@plan.Precio.ToString("0.00") (@plan.DuracionDias días)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Si seleccionas una membresía, la cuenta se activará automáticamente.
+                                    Si no seleccionas ninguna, la cuenta quedará inactiva hasta que el usuario compre una.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Información visual del estado de la cuenta -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="alert alert-info d-none" id="infoActivacion">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <strong>Cuenta se activará automáticamente</strong> con la membresía seleccionada.
+                                </div>
+
+                                <div class="alert alert-warning" id="infoDesactivada">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Cuenta quedará inactiva.</strong> El usuario deberá comprar una membresía para activarla.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones - Espaciado adicional para evitar que la barra los tape -->
+                        <div class="d-flex gap-2 justify-content-end mt-4 pb-3">
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-lg me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-save me-2"></i>Guardar Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control"
-               type="email" placeholder="ejemplo@correo.com"
-               pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$"
-               title="Debe ser un correo válido que termine en .com" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" type="password" class="form-control" minlength="8" required />
-        <small class="text-muted">Mínimo 8 caracteres.</small>
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ConfirmarPassword" class="form-label"></label>
-        <input asp-for="ConfirmarPassword" type="password" class="form-control" required />
-        <span asp-validation-for="ConfirmarPassword" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Telefono" class="form-label"></label>
-        <input asp-for="Telefono" class="form-control"
-               type="tel" inputmode="numeric" maxlength="9"
-               pattern="^[0-9]{9}$"
-               title="Debe contener exactamente 9 dígitos" />
-        <span asp-validation-for="Telefono" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Rol</label>
-        <select asp-for="RolId" class="form-select">
-            <option value="1">Cliente</option>
-            <option value="2">Empleado</option>
-        </select>
-        <span asp-validation-for="RolId" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-success">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+<!-- Espaciador adicional al final de la página -->
+<div style="height: 100px;"></div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Mostrar/ocultar alertas según la selección de membresía
+        document.getElementById('membresiaPlanSelect').addEventListener('change', function() {
+            const infoActivacion = document.getElementById('infoActivacion');
+            const infoDesactivada = document.getElementById('infoDesactivada');
+
+            if (this.value) {
+                // Si seleccionó una membresía
+                infoActivacion.classList.remove('d-none');
+                infoDesactivada.classList.add('d-none');
+            } else {
+                // Si NO seleccionó membresía
+                infoActivacion.classList.add('d-none');
+                infoDesactivada.classList.remove('d-none');
+            }
+        });
+    </script>
 }

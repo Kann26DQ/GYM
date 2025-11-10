@@ -18,11 +18,13 @@ namespace GYM.Controllers
         {
             _appDBContext = appDBContext;
         }
+
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
+
         // POST: Login
         [HttpPost]
         public async Task<IActionResult> Login(LoginVM model)
@@ -31,9 +33,11 @@ namespace GYM.Controllers
             {
                 return View(model);
             }
+
             var usuario = await _appDBContext.Usuarios
-            .Include(u => u.Rol) // 👈 incluye la relación Rol
-            .FirstOrDefaultAsync(u => u.Email == model.Email);
+                .Include(u => u.Rol)
+                .FirstOrDefaultAsync(u => u.Email == model.Email);
+
             if (usuario == null)
             {
                 ViewData["Mensaje"] = "La cuenta no existe, por favor regístrese.";
@@ -45,6 +49,7 @@ namespace GYM.Controllers
                 ViewData["Mensaje"] = "El rol 'Proveedor' no tiene acceso al sistema.";
                 return View(model);
             }
+
             // Verificar contraseña
             var hasher = new PasswordHasher<Usuario>();
             var result = hasher.VerifyHashedPassword(usuario, usuario.Password, model.password);
@@ -53,6 +58,33 @@ namespace GYM.Controllers
             {
                 ViewData["Mensaje"] = "Contraseña incorrecta.";
                 return View(model);
+            }
+
+            // Verificar si el usuario está activo (solo para Cliente y Gymbro)
+            if (!usuario.Activo && (usuario.Rol.Nombre == "Cliente" || usuario.Rol.Nombre == "Gymbro"))
+            {
+                // 👈 En lugar de mostrar mensaje, redirigir a membresías
+                // Crear sesión temporal para que pueda comprar
+                HttpContext.Session.SetInt32("UsuarioId", usuario.UsuarioId);
+                HttpContext.Session.SetString("Nombre", usuario.Nombre);
+                HttpContext.Session.SetString("Rol", usuario.Rol.Nombre);
+
+                // Crear claims temporales
+                var claimsTemp = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.Nombre),
+                    new Claim(ClaimTypes.Email, usuario.Email),
+                    new Claim(ClaimTypes.Role, usuario.Rol.Nombre)
+                };
+
+                var identityTemp = new ClaimsIdentity(claimsTemp, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principalTemp = new ClaimsPrincipal(identityTemp);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principalTemp);
+
+                TempData["Warning"] = "Tu cuenta está inactiva. Por favor, adquiere una membresía para activarla.";
+                return RedirectToAction("Store", "Membresias");
             }
 
             // Guardamos sesión
@@ -66,7 +98,7 @@ namespace GYM.Controllers
                 new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Nombre),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Rol.Nombre) // crucial para User.IsInRole(...)
+                new Claim(ClaimTypes.Role, usuario.Rol.Nombre)
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -74,17 +106,15 @@ namespace GYM.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-
             // Redirigir según rol
             if (usuario.Rol.Nombre == "SuperAdmin")
                 return RedirectToAction("Index", "SuperAdmin");
-            else if (usuario.Rol.Nombre == "Empleado")
+            else if (usuario.Rol.Nombre == "Gymbro")
                 return RedirectToAction("Index", "gymbro");
             else
                 return RedirectToAction("Index", "Home");
-
-
         }
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -107,14 +137,14 @@ namespace GYM.Controllers
                 return View(model);
             }
 
-
             var usuario = new Usuario
             {
                 Nombre = model.Nombre,
                 Email = model.Email,
                 Telefono = model.Telefono,
                 FechaRegistro = DateTime.Now,
-                RolId = 1 // Cliente por defecto
+                RolId = 1, // Cliente por defecto
+                Activo = false // 👈 Cuenta desactivada hasta que compre membresía
             };
 
             // Encriptar contraseña
@@ -124,13 +154,10 @@ namespace GYM.Controllers
             _appDBContext.Usuarios.Add(usuario);
             await _appDBContext.SaveChangesAsync();
 
-            // Crear sesión automática después de registro
-            HttpContext.Session.SetInt32("UsuarioId", usuario.UsuarioId);
-            HttpContext.Session.SetString("Nombre", usuario.Nombre);
-            HttpContext.Session.SetString("Rol", "Cliente");
-
+            TempData["RegistroExitoso"] = "Cuenta creada exitosamente. Inicia sesión para ver las membresías disponibles.";
             return RedirectToAction("Login", "Acceso");
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -147,6 +174,13 @@ namespace GYM.Controllers
             return StatusCode(403, "Acceso denegado");
         }
 
-
+        // Validación remota para el email
+        [HttpGet]
+        public async Task<IActionResult> CheckEmail(string email)
+        {
+            var existe = await _appDBContext.Usuarios
+                .AnyAsync(u => u.Email.ToLower() == email.ToLower());
+            return Json(!existe);
+        }
     }
 }

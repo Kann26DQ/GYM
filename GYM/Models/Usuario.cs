@@ -9,7 +9,11 @@
         public string? Telefono { get; set; }
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
-        public bool Activo { get; set; } = true;
+        public bool Activo { get; set; } = false;
+
+        // 👇 NUEVO: Control para mensaje de ascenso
+        public bool MostrarMensajeAscenso { get; set; } = false;
+        public DateTime? FechaAscenso { get; set; }
 
         // Relaciones
         public int RolId { get; set; }
@@ -17,7 +21,7 @@
 
         public Proveedor? Proveedor { get; set; }
 
-        public ICollection<Membresia> Membresias { get; set; }
+        public ICollection<MembresiaPlan> Membresias { get; set; }
         public ICollection<Rutina> Rutinas { get; set; }
         public ICollection<PlanAlimenticio> PlanesAlimenticios { get; set; }
         public ICollection<Venta> Ventas { get; set; }
@@ -26,5 +30,4 @@
 
         public ICollection<CartItem> CartItems { get; set; }
     }
-
 }

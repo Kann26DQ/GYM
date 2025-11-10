@@ -18,43 +18,39 @@ namespace GYM.Controllers.SuperAdmin
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-
             var proveedores = await _context.Proveedores.ToListAsync();
-            return View("~/Views/Superadmin/GestionProveedor/Index.cshtml", proveedores);
-
-
+            return View("~/Views/SuperAdmin/GestionProveedor/Index.cshtml", proveedores);
         }
 
         // NUEVO - GET
         [HttpGet]
         public IActionResult Create()
         {
-            return View("~/Views/Superadmin/GestionProveedor/Create.cshtml");
+            return View("~/Views/SuperAdmin/GestionProveedor/Create.cshtml");
         }
 
         // NUEVO - POST
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Proveedor proveedor)
         {
             if (string.IsNullOrWhiteSpace(proveedor.Nombre) ||
                 string.IsNullOrWhiteSpace(proveedor.Telefono))
             {
                 ViewBag.Mensaje = "Todos los campos son obligatorios.";
-            
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor);
-
+                return View("~/Views/SuperAdmin/GestionProveedor/Create.cshtml", proveedor);
             }
 
             if (proveedor.Telefono == "000000000")
             {
                 ViewBag.Mensaje = "El número de teléfono no puede ser 000000000.";
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor);
+                return View("~/Views/SuperAdmin/GestionProveedor/Create.cshtml", proveedor);
             }
 
             if (proveedor.Telefono.Length != 9 || !proveedor.Telefono.All(char.IsDigit))
             {
                 ViewBag.Mensaje = "El número de teléfono debe tener exactamente 9 dígitos numéricos.";
-                return View("~/Views/Superadmin/GestionProveedor/Editar.cshtml", proveedor);
+                return View("~/Views/SuperAdmin/GestionProveedor/Create.cshtml", proveedor);
             }
 
             await _context.Proveedores.AddAsync(proveedor);
@@ -78,31 +74,19 @@ namespace GYM.Controllers.SuperAdmin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Proveedor proveedor)
         {
-            if (string.IsNullOrWhiteSpace(proveedor.Nombre) ||
-                string.IsNullOrWhiteSpace(proveedor.Telefono))
-            {
-                ViewBag.Mensaje = "Todos los campos son obligatorios.";
-                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
-            }
 
-            if (proveedor.Telefono == "000000000")
-            {
-                ViewBag.Mensaje = "El número de teléfono no puede ser 000000000.";
-                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
-            }
+            // Normaliza
+            proveedor.Nombre = proveedor.Nombre?.Trim() ?? string.Empty;
+            proveedor.Telefono = proveedor.Telefono?.Trim() ?? string.Empty;
+            proveedor.Email = proveedor.Email?.Trim() ?? string.Empty;
+            proveedor.Direccion = string.IsNullOrWhiteSpace(proveedor.Direccion) ? null : proveedor.Direccion.Trim();
 
-            if (proveedor.Telefono.Length != 9 || !proveedor.Telefono.All(char.IsDigit))
-            {
-                ViewBag.Mensaje = "El número de teléfono debe tener exactamente 9 dígitos numéricos.";
-                return View("~/Views/SuperAdmin/GestionProveedor/Edit.cshtml", proveedor);
-            }
+            if (!ModelState.IsValid)
+                return View("~/Views/SuperAdmin/GestionProveedor/Create.cshtml", proveedor);
 
-            var existente = await _context.Proveedores.FindAsync(proveedor.ProveedorId);
-            if (existente == null)
-                return NotFound();
-
-            _context.Entry(existente).CurrentValues.SetValues(proveedor);
+            _context.Proveedores.Add(proveedor);
             await _context.SaveChangesAsync();
+            TempData["Success"] = "Proveedor registrado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 

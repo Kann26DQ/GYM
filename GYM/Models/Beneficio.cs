@@ -7,7 +7,7 @@
 
         // Relaciones
         public int MembresiaId { get; set; }
-        public Membresia Membresia { get; set; }
+        public MembresiaPlan Membresia { get; set; }
     }
 
 }
