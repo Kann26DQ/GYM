@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYM.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20251110221357_reserv")]
-    partial class reserv
+    [Migration("20251110224216_nuevo")]
+    partial class nuevo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
