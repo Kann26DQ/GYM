@@ -1,0 +1,184 @@
+﻿@model IEnumerable<GYM.Models.Reserva>
+@{
+    ViewData["Title"] = "Mis Reservas";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        <i class="bi bi-calendar-check text-primary me-2" aria-hidden="true"></i>
+                        <span>Mis Reservas</span>
+                    </h1>
+                    <p class="text-muted mb-0">Gestiona tus sesiones en el gimnasio</p>
+                </div>
+                <div
+                    <a asp-action="Historial" class="btn btn-success btn-lg me-2" aria-label="Ver historial de asistencia">
+            <i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>
+            <span>Mi Asistencia</span>
+        </a>
+                    <a asp-action="Calendario" class="btn btn-primary btn-lg me-2" aria-label="Ver calendario de reservas">
+                        <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
+                        <span>Ver Calendario</span>
+                    </a>
+                    <a asp-action="Crear" class="btn btn-success btn-lg" aria-label="Nueva reserva">
+                        <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
+                        <span>Nueva Reserva</span>
+                    </a>
+                </div>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                    <span>@TempData["Success"]</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    <span>@TempData["Error"]</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            }
+
+            <!-- Información del horario -->
+            <div class="alert alert-info mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle fs-3 me-3" aria-hidden="true"></i>
+                    <div>
+                        <strong>Horario del Gimnasio:</strong> Lunes a Sábado, 8:00 AM - 11:00 PM
+                        <br>
+                        <small>Los domingos permanecemos cerrados</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de reservas -->
+            @if (Model.Any())
+            {
+                <div class="row g-4">
+                    @foreach (var reserva in Model)
+                    {
+                        var esPasada = reserva.FechaReserva.Date + reserva.HoraInicio < DateTime.Now;
+                        var esHoy = reserva.FechaReserva.Date == DateTime.Today;
+                        var cardClass = reserva.Estado == EstadoReserva.Cancelada ? "border-danger" :
+                        esPasada ? "border-secondary" :
+                        esHoy ? "border-warning" : "border-primary";
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm @cardClass">
+                                <div class="card-header @(reserva.Estado == EstadoReserva.Cancelada ? "bg-danger" :
+                                                                                               esPasada ? "bg-secondary" :
+                                                                                               esHoy ? "bg-warning" : "bg-primary") text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>
+                                    <span>@reserva.FechaReserva.ToString("dddd, dd/MM/yyyy")</span>
+                                </h5>
+                                @if (esHoy && reserva.Estado != EstadoReserva.Cancelada)
+                                        {
+                                            <span class="badge bg-light text-dark">HOY</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <i class="bi bi-clock text-primary me-2" aria-hidden="true"></i>
+                                        <strong>Horario:</strong>
+                                        <div class="fs-4 text-primary fw-bold mt-2">
+                                            @reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <i class="bi bi-info-circle text-secondary me-2" aria-hidden="true"></i>
+                                        <strong>Estado:</strong>
+                                        @switch (reserva.Estado)
+                                        {
+                                            case EstadoReserva.Confirmada:
+                                                <span class="badge bg-success ms-2">Confirmada</span>
+                                                break;
+                                            case EstadoReserva.Completada:
+                                                <span class="badge bg-primary ms-2">Completada</span>
+                                                break;
+                                            case EstadoReserva.Cancelada:
+                                                <span class="badge bg-danger ms-2">Cancelada</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-warning ms-2">Pendiente</span>
+                                                break;
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(reserva.Notas))
+                                    {
+                                        <div class="mb-3">
+                                            <i class="bi bi-sticky text-warning me-2" aria-hidden="true"></i>
+                                            <strong>Notas:</strong>
+                                            <p class="mb-0 mt-1 text-muted">@reserva.Notas</p>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="card-footer bg-white">
+                                    @if (reserva.Estado != EstadoReserva.Cancelada && !esPasada)
+                                    {
+                                        <form asp-action="Cancelar" method="post" class="d-inline"
+                                              onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@reserva.ReservaId" />
+                                            <button type="submit" class="btn btn-danger w-100" aria-label="Cancelar reserva">
+                                                <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
+                                                <span>Cancelar Reserva</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (reserva.Estado == EstadoReserva.Cancelada)
+                                    {
+                                        <button class="btn btn-secondary w-100" disabled>
+                                            <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
+                                            <span>Cancelada</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary w-100" disabled>
+                                            <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                                            <span>Completada</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-muted mb-3" aria-hidden="true"></i>
+                    <h3 class="text-muted mb-4">No tienes reservas aún</h3>
+                    <p class="lead text-muted mb-4">¡Reserva tu primera sesión en el gimnasio!</p>
+                    <a asp-action="Calendario" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
+                        <span>Ver Calendario</span>
+                    </a>
+                    <a asp-action="Crear" class="btn btn-success btn-lg">
+                        <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
+                        <span>Nueva Reserva</span>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador -->
+<div style="height: 100px;"></div>

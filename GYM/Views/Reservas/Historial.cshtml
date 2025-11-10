@@ -1,0 +1,412 @@
+﻿@model IEnumerable<GYM.Models.Reserva>
+@{
+    ViewData["Title"] = "Historial de Asistencia";
+    var mesSeleccionado = (int)(ViewData["MesSeleccionado"] ?? DateTime.Now.Month);
+    var anioSeleccionado = (int)(ViewData["AnioSeleccionado"] ?? DateTime.Now.Year);
+    var totalDias = (int)(ViewData["TotalDias"] ?? 0);
+    var totalHoras = (double)(ViewData["TotalHoras"] ?? 0);
+
+    var nombresMeses = new[] { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                               "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+
+    var reservasPorDia = Model.GroupBy(r => r.FechaReserva.Date)
+                              .ToDictionary(g => g.Key, g => g.ToList());
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        <i class="bi bi-bar-chart-line text-success me-2" aria-hidden="true"></i>
+                        <span>Mi Historial de Asistencia</span>
+                    </h1>
+                    <p class="text-muted mb-0">Días que has entrenado en el gimnasio</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-primary btn-lg" aria-label="Volver a reservas">
+                        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                        <span>Mis Reservas</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Selector de Mes y Año -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <form method="get" asp-action="Historial" class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label for="mes" class="form-label fw-bold">
+                                <i class="bi bi-calendar-month text-primary me-2" aria-hidden="true"></i>
+                                <span>Mes</span>
+                            </label>
+                            <select name="mes" id="mes" class="form-select form-select-lg">
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    <option value="@m" selected="@(m == mesSeleccionado)">@nombresMeses[m]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="anio" class="form-label fw-bold">
+                                <i class="bi bi-calendar-range text-primary me-2" aria-hidden="true"></i>
+                                <span>Año</span>
+                            </label>
+                            <select name="anio" id="anio" class="form-select form-select-lg">
+                                @for (int a = DateTime.Now.Year; a >= DateTime.Now.Year - 2; a--)
+                                {
+                                    <option value="@a" selected="@(a == anioSeleccionado)">@a</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" aria-label="Filtrar">
+                                <i class="bi bi-search me-2" aria-hidden="true"></i>
+                                <span>Filtrar</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 80px; height: 80px;">
+                                <i class="bi bi-calendar-check fs-1" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="display-4 text-success mb-0">@totalDias</h2>
+                            <p class="text-muted mb-0">Días Entrenados</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 80px; height: 80px;">
+                                <i class="bi bi-clock-history fs-1" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="display-4 text-primary mb-0">@totalHoras.ToString("0")</h2>
+                            <p class="text-muted mb-0">Horas Totales</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 80px; height: 80px;">
+                                <i class="bi bi-trophy fs-1" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="display-4 text-warning mb-0">@Model.Count()</h2>
+                            <p class="text-muted mb-0">Sesiones Totales</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Asistencia -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-table me-2" aria-hidden="true"></i>
+                        <span>Detalle de Asistencia - @nombresMeses[mesSeleccionado] @anioSeleccionado</span>
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0" role="table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="text-center" style="width: 5%;">
+                                            <i class="bi bi-hash" aria-hidden="true"></i>
+                                        </th>
+                                        <th scope="col" style="width: 25%;">
+                                            <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
+                                            <span>Fecha</span>
+                                        </th>
+                                        <th scope="col" style="width: 15%;">
+                                            <i class="bi bi-calendar-day me-2" aria-hidden="true"></i>
+                                            <span>Día</span>
+                                        </th>
+                                        <th scope="col" style="width: 20%;">
+                                            <i class="bi bi-clock me-2" aria-hidden="true"></i>
+                                            <span>Horario</span>
+                                        </th>
+                                        <th scope="col" style="width: 15%;">
+                                            <i class="bi bi-hourglass-split me-2" aria-hidden="true"></i>
+                                            <span>Duración</span>
+                                        </th>
+                                        <th scope="col" style="width: 15%;">
+                                            <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
+                                            <span>Estado</span>
+                                        </th>
+                                        <th scope="col" style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int contador = 1;
+                                    }
+                                    @foreach (var reserva in Model.OrderBy(r => r.FechaReserva).ThenBy(r => r.HoraInicio))
+                                    {
+                                        var duracion = (reserva.HoraFin - reserva.HoraInicio).TotalHours;
+                                        var esHoy = reserva.FechaReserva.Date == DateTime.Today;
+                                        var rowClass = esHoy ? "table-warning" : "";
+
+                                        <tr class="@rowClass">
+                                            <td class="text-center fw-bold">@contador</td>
+                                            <td>
+                                                <strong>@reserva.FechaReserva.ToString("dd/MM/yyyy")</strong>
+                                                @if (esHoy)
+                                                {
+                                                    <span class="badge bg-warning text-dark ms-2">HOY</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <i class="bi bi-calendar-day text-primary me-2" aria-hidden="true"></i>
+                                                <span>@reserva.FechaReserva.ToString("dddd")</span>
+                                            </td>
+                                            <td>
+                                                <strong>@reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@duracion.ToString("0.0") hora(s)</span>
+                                            </td>
+                                            <td>
+                                                @switch (reserva.Estado)
+                                                {
+                                                    case EstadoReserva.Confirmada:
+                                                        <span class="badge bg-success">Confirmada</span>
+                                                        break;
+                                                    case EstadoReserva.Completada:
+                                                        <span class="badge bg-primary">Completada</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@reserva.Estado</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (!string.IsNullOrEmpty(reserva.Notas))
+                                                {
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-secondary" 
+                                                            data-bs-toggle="tooltip" 
+                                                            title="@reserva.Notas"
+                                                            aria-label="Ver notas">
+                                                        <i class="bi bi-sticky" aria-hidden="true"></i>
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                        contador++;
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">TOTALES:</td>
+                                        <td>
+                                            <strong class="text-primary">@totalHoras.ToString("0.0") horas</strong>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">@totalDias días</strong>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x display-1 text-muted mb-3" aria-hidden="true"></i>
+                            <h4 class="text-muted">No hay registros de asistencia</h4>
+                            <p class="text-muted">No has realizado ninguna sesión en @nombresMeses[mesSeleccionado] @anioSeleccionado</p>
+                            <a asp-action="Calendario" class="btn btn-primary mt-3">
+                                <i class="bi bi-calendar-plus me-2" aria-hidden="true"></i>
+                                <span>Reservar Sesión</span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Gráfico Visual (Calendario del Mes) -->
+            @if (Model.Any())
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h4 class="mb-0">
+                            <i class="bi bi-calendar-week me-2" aria-hidden="true"></i>
+                            <span>Vista de Calendario - @nombresMeses[mesSeleccionado] @anioSeleccionado</span>
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="calendario-mes">
+                            @{
+                                var primerDia = new DateTime(anioSeleccionado, mesSeleccionado, 1);
+                                var ultimoDia = primerDia.AddMonths(1).AddDays(-1);
+                                var diasMes = ultimoDia.Day;
+                                var diaSemanaInicio = (int)primerDia.DayOfWeek;
+                            }
+
+                            <div class="row mb-3">
+                                <div class="col text-center fw-bold">Dom</div>
+                                <div class="col text-center fw-bold">Lun</div>
+                                <div class="col text-center fw-bold">Mar</div>
+                                <div class="col text-center fw-bold">Mié</div>
+                                <div class="col text-center fw-bold">Jue</div>
+                                <div class="col text-center fw-bold">Vie</div>
+                                <div class="col text-center fw-bold">Sáb</div>
+                            </div>
+
+                            <div class="row g-2">
+                                @{
+                                    // Espacios vacíos al inicio
+                                    for (int i = 0; i < diaSemanaInicio; i++)
+                                    {
+                                        <div class="col">
+                                            <div class="dia-calendario vacio"></div>
+                                        </div>
+                                    }
+
+                                    // Días del mes
+                                    for (int dia = 1; dia <= diasMes; dia++)
+                                    {
+                                        var fecha = new DateTime(anioSeleccionado, mesSeleccionado, dia);
+                                        var tieneReserva = reservasPorDia.ContainsKey(fecha);
+                                        var cantidadReservas = tieneReserva ? reservasPorDia[fecha].Count : 0;
+                                        var claseEstilo = tieneReserva ? "con-reserva" : "";
+                                        var esHoy = fecha == DateTime.Today;
+
+                                        <div class="col">
+                                            <div class="dia-calendario @claseEstilo @(esHoy ? "hoy" : "")" 
+                                                 title="@(tieneReserva ? $"{cantidadReservas} sesión(es)" : "Sin sesiones")">
+                                                <div class="numero-dia">@dia</div>
+                                                @if (tieneReserva)
+                                                {
+                                                    <div class="badge-sesiones">
+                                                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                                        @cantidadReservas
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        // Nueva fila después del sábado
+                                        if ((diaSemanaInicio + dia) % 7 == 0 && dia != diasMes)
+                                        {
+                                            @:</div><div class="row g-2">
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4 justify-content-center">
+                            <div>
+                                <span class="badge bg-success me-2">
+                                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                </span>
+                                <span>Día con sesión</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning me-2">
+                                    <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                </span>
+                                <span>Hoy</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador -->
+<div style="height: 100px;"></div>
+
+@section Styles {
+    <style>
+        .calendario-mes {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .dia-calendario {
+            aspect-ratio: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            transition: all 0.3s;
+            position: relative;
+            background: white;
+        }
+
+        .dia-calendario.vacio {
+            border-color: transparent;
+            background: transparent;
+        }
+
+        .dia-calendario.con-reserva {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-color: #28a745;
+            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.2);
+        }
+
+        .dia-calendario.hoy {
+            border-color: #ffc107;
+            border-width: 3px;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        .numero-dia {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .badge-sesiones {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #28a745;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Activar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    </script>
+}
