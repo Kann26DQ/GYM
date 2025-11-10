@@ -10,13 +10,10 @@ namespace GYM.Data
 
         public DbSet<Rol> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
-
-        // Catálogo de planes (usa tabla existente "Membresias")
         public DbSet<MembresiaPlan> MembresiaPlanes { get; set; }
-
-        // Asignaciones por usuario (historial)
         public DbSet<MembresiaUsuario> MembresiasUsuarios { get; set; }
 
+        public DbSet<Reserva> Reservas { get; set; }
         public DbSet<Beneficio> Beneficios { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
         public DbSet<Ejercicio> Ejercicios { get; set; }
@@ -172,6 +169,29 @@ namespace GYM.Data
             modelBuilder.Entity<CartItem>()
                 .HasOne(ci => ci.Usuario).WithMany(u => u.CartItems)
                 .HasForeignKey(ci => ci.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+            // Configuración de Reserva
+            modelBuilder.Entity<Reserva>()
+                .HasOne(r => r.Usuario)
+                .WithMany()
+                .HasForeignKey(r => r.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Reserva>()
+                .HasIndex(r => new { r.FechaReserva, r.HoraInicio, r.HoraFin });
+            modelBuilder.Entity<Reserva>(entity =>
+            {
+                entity.HasKey(r => r.ReservaId);
+
+                entity.HasOne(r => r.Usuario)
+                    .WithMany()
+                    .HasForeignKey(r => r.UsuarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => new { r.FechaReserva, r.HoraInicio, r.HoraFin });
+
+                entity.Property(r => r.Estado)
+                    .HasConversion<int>();
+            });
         }
     }
 }

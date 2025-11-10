@@ -1,0 +1,392 @@
+﻿@{
+    ViewData["Title"] = "Calendario de Reservas";
+    var userId = ViewData["UserId"];
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        <i class="bi bi-calendar3 text-primary me-2" aria-hidden="true"></i>
+                        <span>Calendario de Reservas</span>
+                    </h1>
+                    <p class="text-muted mb-0">Selecciona una fecha y hora disponible</p>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg" aria-label="Volver a lista de reservas">
+                        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                        <span>Mis Reservas</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Información -->
+            <div class="alert alert-info mb-4" role="alert">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
+                        <strong>Horario:</strong> Lunes a Sábado, 8:00 AM - 11:00 PM
+                        <br>
+                        <small>Haz clic en una fecha y luego selecciona un horario disponible</small>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                        <span class="badge bg-success me-2">
+                            <i class="bi bi-circle-fill me-1" aria-hidden="true"></i>
+                            <span>Disponible</span>
+                        </span>
+                        <span class="badge bg-warning">
+                            <i class="bi bi-circle-fill me-1" aria-hidden="true"></i>
+                            <span>Casi Lleno</span>
+                        </span>
+                        <span class="badge bg-danger ms-2">
+                            <i class="bi bi-circle-fill me-1" aria-hidden="true"></i>
+                            <span>Lleno</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Calendario -->
+                <div class="col-lg-7 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-week me-2" aria-hidden="true"></i>
+                                <span>Selecciona una Fecha</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div id="calendario-container">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <button type="button" class="btn btn-outline-primary" id="btnMesAnterior" aria-label="Mes anterior">
+                                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                    </button>
+                                    <h4 class="mb-0" id="mesActual"></h4>
+                                    <button type="button" class="btn btn-outline-primary" id="btnMesSiguiente" aria-label="Mes siguiente">
+                                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div id="calendario" class="calendario-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horarios disponibles -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock me-2" aria-hidden="true"></i>
+                                <span>Horarios Disponibles</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="fecha-seleccionada" class="alert alert-secondary text-center mb-3">
+                                <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>
+                                <span>Selecciona una fecha del calendario</span>
+                            </div>
+                            <div id="horarios-container" class="horarios-grid">
+                                <!-- Los horarios se cargarán aquí dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador -->
+<div style="height: 100px;"></div>
+
+@section Styles {
+    <style>
+        .calendario-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendario-dia-nombre {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .calendario-dia {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+            .calendario-dia:hover:not(.disabled):not(.otro-mes) {
+                background: #e7f3ff;
+                border-color: #0d6efd;
+                transform: scale(1.05);
+            }
+
+            .calendario-dia.seleccionado {
+                background: #0d6efd;
+                color: white;
+                border-color: #0d6efd;
+                font-weight: bold;
+            }
+
+            .calendario-dia.hoy {
+                border: 2px solid #ffc107;
+                font-weight: bold;
+            }
+
+            .calendario-dia.disabled {
+                background: #f8f9fa;
+                color: #adb5bd;
+                cursor: not-allowed;
+            }
+
+            .calendario-dia.otro-mes {
+                color: #ced4da;
+            }
+
+        .horarios-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .horario-btn {
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+            .horario-btn:hover:not(:disabled) {
+                border-color: #0d6efd;
+                transform: translateX(5px);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            .horario-btn.disponible {
+                border-color: #28a745;
+            }
+
+            .horario-btn.casi-lleno {
+                border-color: #ffc107;
+            }
+
+            .horario-btn:disabled {
+                background: #f8f9fa;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+        .horario-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .horario-tiempo {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .horario-capacidad {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let fechaSeleccionada = null;
+        let mesActual = new Date();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderizarCalendario();
+
+            document.getElementById('btnMesAnterior').addEventListener('click', function() {
+                mesActual.setMonth(mesActual.getMonth() - 1);
+                renderizarCalendario();
+            });
+
+            document.getElementById('btnMesSiguiente').addEventListener('click', function() {
+                mesActual.setMonth(mesActual.getMonth() + 1);
+                renderizarCalendario();
+            });
+        });
+
+        function renderizarCalendario() {
+            const año = mesActual.getFullYear();
+            const mes = mesActual.getMonth();
+
+            // Actualizar título
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            document.getElementById('mesActual').textContent = `${meses[mes]} ${año}`;
+
+            const calendario = document.getElementById('calendario');
+            calendario.innerHTML = '';
+
+            // Nombres de días
+            const diasNombres = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            diasNombres.forEach(dia => {
+                const divDia = document.createElement('div');
+                divDia.className = 'calendario-dia-nombre';
+                divDia.textContent = dia;
+                calendario.appendChild(divDia);
+            });
+
+            // Primer día del mes
+            const primerDia = new Date(año, mes, 1);
+            const ultimoDia = new Date(año, mes + 1, 0);
+            const diasMes = ultimoDia.getDate();
+            const diaSemanaInicio = primerDia.getDay();
+
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            // Días del mes anterior (vacíos o grises)
+            for (let i = 0; i < diaSemanaInicio; i++) {
+                const divDia = document.createElement('div');
+                divDia.className = 'calendario-dia otro-mes';
+                calendario.appendChild(divDia);
+            }
+
+            // Días del mes actual
+            for (let dia = 1; dia <= diasMes; dia++) {
+                const fecha = new Date(año, mes, dia);
+                fecha.setHours(0, 0, 0, 0);
+                const esPasado = fecha < hoy;
+                const esDomingo = fecha.getDay() === 0;
+                const esHoy = fecha.getTime() === hoy.getTime();
+
+                const divDia = document.createElement('div');
+                divDia.className = 'calendario-dia';
+                divDia.textContent = dia;
+
+                if (esHoy) {
+                    divDia.classList.add('hoy');
+                }
+
+                if (esPasado || esDomingo) {
+                    divDia.classList.add('disabled');
+                } else {
+                    divDia.addEventListener('click', function() {
+                        seleccionarFecha(fecha);
+                    });
+                }
+
+                if (fechaSeleccionada && fecha.getTime() === fechaSeleccionada.getTime()) {
+                    divDia.classList.add('seleccionado');
+                }
+
+                calendario.appendChild(divDia);
+            }
+        }
+
+        function seleccionarFecha(fecha) {
+            fechaSeleccionada = fecha;
+            renderizarCalendario();
+            cargarHorarios(fecha);
+
+            // Actualizar texto de fecha seleccionada
+            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const textoFecha = fecha.toLocaleDateString('es-ES', opciones);
+            document.getElementById('fecha-seleccionada').innerHTML = `
+                <i class="bi bi-calendar-check me-2" aria-hidden="true"></i>
+                <span>${textoFecha}</span>
+            `;
+        }
+
+        function cargarHorarios(fecha) {
+            const container = document.getElementById('horarios-container');
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
+
+            const fechaStr = fecha.toISOString().split('T')[0];
+
+            fetch(`/Reservas/ObtenerDisponibilidad?fecha=${fechaStr}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        container.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = '';
+
+                    data.horarios.forEach(horario => {
+                        const porcentajeOcupacion = (horario.ocupadas / horario.capacidad) * 100;
+                        let estadoClase = 'disponible';
+                        let estadoBadge = '<span class="badge bg-success">Disponible</span>';
+
+                        if (horario.ocupadas >= horario.capacidad) {
+                            estadoClase = '';
+                            estadoBadge = '<span class="badge bg-danger">Lleno</span>';
+                        } else if (porcentajeOcupacion >= 70) {
+                            estadoClase = 'casi-lleno';
+                            estadoBadge = '<span class="badge bg-warning">Casi Lleno</span>';
+                        }
+
+                        const btn = document.createElement('button');
+                        btn.className = `horario-btn ${estadoClase}`;
+                        btn.disabled = horario.ocupadas >= horario.capacidad;
+                        btn.innerHTML = `
+                            <div class="horario-info">
+                                <div>
+                                    <div class="horario-tiempo">
+                                        <i class="bi bi-clock me-2" aria-hidden="true"></i>
+                                        <span>${horario.horaTexto}</span>
+                                    </div>
+                                    <div class="horario-capacidad mt-1">
+                                        <i class="bi bi-people me-1" aria-hidden="true"></i>
+                                        <span>${horario.ocupadas}/${horario.capacidad} personas</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    ${estadoBadge}
+                                </div>
+                            </div>
+                        `;
+
+                        if (!btn.disabled) {
+                            btn.addEventListener('click', function() {
+                                reservarHorario(fecha, horario.hora);
+                            });
+                        }
+
+                        container.appendChild(btn);
+                    });
+                })
+                .catch(error => {
+                    container.innerHTML = '<div class="alert alert-danger">Error al cargar horarios</div>';
+                    console.error('Error:', error);
+                });
+        }
+
+        function reservarHorario(fecha, hora) {
+            const fechaStr = fecha.toISOString().split('T')[0];
+            const horaStr = `${hora.toString().padStart(2, '0')}:00`;
+            window.location.href = `/Reservas/Crear?fecha=${fechaStr}&hora=${horaStr}`;
+        }
+    </script>
+}

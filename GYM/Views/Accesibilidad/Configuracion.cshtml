@@ -1,0 +1,309 @@
+﻿@{
+    ViewData["Title"] = "Configuración de Accesibilidad";
+    var altoContraste = ViewData["AltoContraste"] as bool? ?? false;
+    var textoGrande = ViewData["TextoGrande"] as bool? ?? false;
+    var reducirAnimaciones = ViewData["ReducirAnimaciones"] as bool? ?? false;
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="bi bi-universal-access-circle me-3" aria-hidden="true"></i>
+                    <span>Configuración de Accesibilidad</span>
+                </h1>
+                <p class="lead text-muted">
+                    Personaliza tu experiencia para una mejor accesibilidad
+                    <br>
+                    <small><strong>ODS 10:</strong> Software Inclusivo para Todos</small>
+                </p>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                    <span>@TempData["Success"]</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar alerta"></button>
+                </div>
+            }
+
+            <!-- Card Principal -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0">
+                        <i class="bi bi-gear-fill me-2" aria-hidden="true"></i>
+                        <span>Opciones de Accesibilidad</span>
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Alto Contraste -->
+                    <div class="accessibility-option mb-4 pb-4 border-bottom">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-2">
+                                    <i class="bi bi-circle-half text-primary me-2" aria-hidden="true"></i>
+                                    <span>Modo Alto Contraste</span>
+                                </h4>
+                                <p class="text-muted mb-0">
+                                    Aumenta el contraste entre texto y fondo para mejorar la legibilidad.
+                                    <br>
+                                    <small><strong>Beneficia a:</strong> Personas con baja visión, daltonismo o sensibilidad a la luz.</small>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           id="switchAltoContraste"
+                                           @(altoContraste ? "checked" : "")
+                                           onchange="toggleAltoContraste(this.checked)"
+                                           aria-label="Activar o desactivar modo alto contraste">
+                                    <label class="form-check-label fs-5" for="switchAltoContraste">
+                                        <span id="labelAltoContraste">@(altoContraste ? "Activado" : "Desactivado")</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Texto Grande -->
+                    <div class="accessibility-option mb-4 pb-4 border-bottom">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-2">
+                                    <i class="bi bi-fonts text-success me-2" aria-hidden="true"></i>
+                                    <span>Texto Grande</span>
+                                </h4>
+                                <p class="text-muted mb-0">
+                                    Aumenta el tamaño de todo el texto en la aplicación.
+                                    <br>
+                                    <small><strong>Beneficia a:</strong> Personas con discapacidad visual, presbicia o dificultad para leer textos pequeños.</small>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           id="switchTextoGrande"
+                                           @(textoGrande ? "checked" : "")
+                                           onchange="toggleTextoGrande(this.checked)"
+                                           aria-label="Activar o desactivar texto grande">
+                                    <label class="form-check-label fs-5" for="switchTextoGrande">
+                                        <span id="labelTextoGrande">@(textoGrande ? "Activado" : "Desactivado")</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reducir Animaciones -->
+                    <div class="accessibility-option mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-2">
+                                    <i class="bi bi-pause-circle text-warning me-2" aria-hidden="true"></i>
+                                    <span>Reducir Animaciones</span>
+                                </h4>
+                                <p class="text-muted mb-0">
+                                    Minimiza animaciones y transiciones que pueden causar mareos o distracciones.
+                                    <br>
+                                    <small><strong>Beneficia a:</strong> Personas con trastornos vestibulares, TDAH, epilepsia fotosensible o dificultades de concentración.</small>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           id="switchReducirAnimaciones"
+                                           @(reducirAnimaciones ? "checked" : "")
+                                           onchange="toggleReducirAnimaciones(this.checked)"
+                                           aria-label="Activar o desactivar reducir animaciones">
+                                    <label class="form-check-label fs-5" for="switchReducirAnimaciones">
+                                        <span id="labelReducirAnimaciones">@(reducirAnimaciones ? "Activado" : "Desactivado")</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                                Los cambios se aplican inmediatamente
+                            </small>
+                        </div>
+                        <form asp-action="Restablecer" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-secondary" aria-label="Restablecer todas las configuraciones">
+                                <i class="bi bi-arrow-counterclockwise me-2" aria-hidden="true"></i>
+                                <span>Restablecer Todo</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Información -->
+            <div class="card border-info shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="card-title">
+                        <i class="bi bi-lightbulb text-info me-2" aria-hidden="true"></i>
+                        <span>Accesibilidad Integrada</span>
+                    </h4>
+                    <p class="card-text">
+                        Esta aplicación está diseñada siguiendo los estándares <strong>WCAG 2.1 Nivel AA</strong> para garantizar que sea utilizable por todas las personas, independientemente de sus capacidades.
+                    </p>
+                    <ul class="mb-0">
+                        <li><strong>Navegación por teclado:</strong> Usa Tab, Enter y Escape para navegar</li>
+                        <li><strong>Lectores de pantalla:</strong> Compatible con JAWS, NVDA y VoiceOver</li>
+                        <li><strong>Zoom del navegador:</strong> Soporta hasta 200% sin pérdida de funcionalidad</li>
+                        <li><strong>Contraste:</strong> Todos los textos cumplen ratio 4.5:1 mínimo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card ODS 10 -->
+            <div class="alert alert-primary mt-4 border-2 border-primary shadow-sm" role="region" aria-label="Información sobre ODS 10">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-award-fill fs-1" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h5 class="alert-heading mb-2">
+                            <strong>ODS 10: Reducción de las Desigualdades</strong>
+                        </h5>
+                        <p class="mb-0">
+                            Este sistema implementa características de accesibilidad para garantizar que todas las personas, independientemente de sus capacidades físicas o cognitivas, puedan utilizar la aplicación de manera efectiva y equitativa.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador para barra de Somee -->
+<div style="height: 100px;"></div>
+
+@section Scripts {
+    <script>
+        // Función para alternar Alto Contraste
+        function toggleAltoContraste(activar) {
+            fetch('@Url.Action("ToggleAltoContraste", "Accesibilidad")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify(activar)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('labelAltoContraste').textContent = activar ? 'Activado' : 'Desactivado';
+
+                    // Aplicar cambios inmediatamente
+                    if (activar) {
+                        document.body.classList.add('alto-contraste');
+                    } else {
+                        document.body.classList.remove('alto-contraste');
+                    }
+
+                    mostrarNotificacion('Alto Contraste ' + (activar ? 'activado' : 'desactivado'), 'success');
+                }
+            });
+        }
+
+        // Función para alternar Texto Grande
+        function toggleTextoGrande(activar) {
+            fetch('@Url.Action("ToggleTextoGrande", "Accesibilidad")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify(activar)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('labelTextoGrande').textContent = activar ? 'Activado' : 'Desactivado';
+
+                    // Aplicar cambios inmediatamente
+                    if (activar) {
+                        document.body.classList.add('texto-grande');
+                    } else {
+                        document.body.classList.remove('texto-grande');
+                    }
+
+                    mostrarNotificacion('Texto Grande ' + (activar ? 'activado' : 'desactivado'), 'success');
+                }
+            });
+        }
+
+        // Función para alternar Reducir Animaciones
+        function toggleReducirAnimaciones(activar) {
+            fetch('@Url.Action("ToggleReducirAnimaciones", "Accesibilidad")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify(activar)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('labelReducirAnimaciones').textContent = activar ? 'Activado' : 'Desactivado';
+
+                    // Aplicar cambios inmediatamente
+                    if (activar) {
+                        document.body.classList.add('reducir-animaciones');
+                    } else {
+                        document.body.classList.remove('reducir-animaciones');
+                    }
+
+                    mostrarNotificacion('Animaciones ' + (activar ? 'reducidas' : 'restauradas'), 'success');
+                }
+            });
+        }
+
+        // Función para mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${tipo} position-fixed bottom-0 end-0 m-3 alert-dismissible fade show`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                <span>${mensaje}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Aplicar configuraciones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('switchAltoContraste').checked) {
+                document.body.classList.add('alto-contraste');
+            }
+            if (document.getElementById('switchTextoGrande').checked) {
+                document.body.classList.add('texto-grande');
+            }
+            if (document.getElementById('switchReducirAnimaciones').checked) {
+                document.body.classList.add('reducir-animaciones');
+            }
+        });
+    </script>
+}

@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
+    @RenderSection("Styles", required: false)
     <style>
         /* Navbar Negro y Amarillo */
         .navbar-custom {
@@ -124,15 +125,243 @@
         body {
             background: #f5f5f5;
         }
+
+            /* ========================================
+                   ESTILOS DE ACCESIBILIDAD (ODS 10)
+                   ======================================== */
+
+            /* Modo Alto Contraste */
+            body.alto-contraste {
+                background: #000 !important;
+                color: #fff !important;
+            }
+
+                body.alto-contraste .card {
+                    background: #1a1a1a !important;
+                    border: 2px solid #fff !important;
+                    color: #fff !important;
+                }
+
+                body.alto-contraste .text-muted {
+                    color: #ccc !important;
+                }
+
+                body.alto-contraste .btn-primary {
+                    background: #0066ff !important;
+                    border-color: #0066ff !important;
+                    color: #fff !important;
+                }
+
+                body.alto-contraste .btn-success {
+                    background: #00cc00 !important;
+                    border-color: #00cc00 !important;
+                    color: #fff !important;
+                }
+
+                body.alto-contraste .navbar-custom {
+                    background: #000 !important;
+                    border-bottom: 3px solid #ffc107 !important;
+                }
+
+                body.alto-contraste .alert {
+                    border: 2px solid #fff !important;
+                }
+
+                body.alto-contraste .modal-content {
+                    background: #1a1a1a !important;
+                    border: 2px solid #fff !important;
+                }
+
+                body.alto-contraste input,
+                body.alto-contraste select,
+                body.alto-contraste textarea {
+                    background: #1a1a1a !important;
+                    color: #fff !important;
+                    border: 2px solid #fff !important;
+                }
+
+                body.alto-contraste .table {
+                    color: #fff !important;
+                    border-color: #fff !important;
+                }
+
+            /* Texto Grande */
+            body.texto-grande {
+                font-size: 1.25rem !important;
+            }
+
+                body.texto-grande h1 {
+                    font-size: 3rem !important;
+                }
+
+                body.texto-grande h2 {
+                    font-size: 2.5rem !important;
+                }
+
+                body.texto-grande h3 {
+                    font-size: 2rem !important;
+                }
+
+                body.texto-grande h4 {
+                    font-size: 1.75rem !important;
+                }
+
+                body.texto-grande h5 {
+                    font-size: 1.5rem !important;
+                }
+
+                body.texto-grande .btn {
+                    font-size: 1.25rem !important;
+                    padding: 0.75rem 1.5rem !important;
+                }
+
+                body.texto-grande .nav-link {
+                    font-size: 1.25rem !important;
+                }
+
+                body.texto-grande .form-label {
+                    font-size: 1.25rem !important;
+                }
+
+                body.texto-grande .form-control {
+                    font-size: 1.25rem !important;
+                }
+
+                body.texto-grande small {
+                    font-size: 1rem !important;
+                }
+
+            /* Reducir Animaciones */
+            body.reducir-animaciones *,
+            body.reducir-animaciones *::before,
+            body.reducir-animaciones *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+        /* Focus visible para navegación por teclado (WCAG 2.1) */
+        *:focus {
+            outline: 3px solid #ffc107 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* Áreas de click ampliadas (mínimo 44x44px WCAG) */
+        .btn,
+        .nav-link,
+        a {
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Skip to main content (para lectores de pantalla) */
+        .skip-to-main {
+            position: absolute;
+            left: -9999px;
+            z-index: 999;
+            padding: 1em;
+            background-color: #000;
+            color: #fff;
+            text-decoration: none;
+        }
+
+            .skip-to-main:focus {
+                left: 50%;
+                transform: translateX(-50%);
+                top: 0;
+            }
+
+        /* Botón flotante de accesibilidad */
+        .accessibility-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid #1a1a1a;
+        }
+
+            .accessibility-fab:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 30px rgba(255, 193, 7, 0.7);
+            }
+
+            .accessibility-fab i {
+                font-size: 1.8rem;
+                color: #1a1a1a;
+            }
+
+        /* Panel de acceso rápido */
+        .accessibility-quick-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            z-index: 999;
+            background: #fff;
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+            min-width: 250px;
+        }
+
+            .accessibility-quick-panel.show {
+                display: block;
+                animation: slideUp 0.3s ease-out;
+            }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .accessibility-quick-panel .form-check-label {
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+
+        /* Contraste mejorado para texto sobre fondos oscuros */
+        body.alto-contraste .bg-primary,
+        body.alto-contraste .bg-success,
+        body.alto-contraste .bg-info,
+        body.alto-contraste .bg-warning {
+            color: #000 !important;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+    <!-- Skip to main content para lectores de pantalla -->
+    <a href="#main-content" class="skip-to-main" tabindex="1">
+        Saltar al contenido principal
+    </a>
+
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4" role="navigation" aria-label="Navegación principal">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                <i class="fa fa-dumbbell me-2"></i>GYM PRO
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index" aria-label="Ir a inicio - GYM PRO">
+                <i class="fa fa-dumbbell me-2" aria-hidden="true"></i>
+                <span>GYM PRO</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Alternar menú de navegación">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -142,51 +371,70 @@
                     {
                         <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
-                               asp-controller="Home" asp-action="Index">
-                                <i class="fa fa-home me-2"></i>Inicio
+                               asp-controller="Home" asp-action="Index"
+                               aria-label="Ir a la página de inicio">
+                                <i class="fa fa-home me-2" aria-hidden="true"></i>
+                                <span>Inicio</span>
                             </a>
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MiMembresia" ? "active" : "")"
-                               asp-controller="MiMembresia" asp-action="Index">
-                                <i class="fa fa-id-card me-2"></i>Mi Membresía
+                               asp-controller="MiMembresia" asp-action="Index"
+                               aria-label="Ver mi membresía">
+                                <i class="fa fa-id-card me-2" aria-hidden="true"></i>
+                                <span>Mi Membresía</span>
                             </a>
                         </li>
 
-                        <!-- 👇 MODIFICADO: Solo mostrar si tiene permiso, de lo contrario no mostrar nada -->
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservas" ? "active" : "")"
+                               asp-controller="Reservas" asp-action="Index"
+                               aria-label="Ver mis reservas de sesiones">
+                                <i class="bi bi-calendar-check me-2" aria-hidden="true"></i>
+                                <span>Reservas</span>
+                            </a>
+                        </li>
+
                         @if (tieneRutina)
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Rutinas" ? "active" : "")"
-                                   asp-controller="Rutinas" asp-action="Index">
-                                    <i class="fa fa-dumbbell me-2"></i>Mis Rutinas
+                                   asp-controller="Rutinas" asp-action="Index"
+                                   aria-label="Ver mis rutinas de entrenamiento">
+                                    <i class="fa fa-dumbbell me-2" aria-hidden="true"></i>
+                                    <span>Mis Rutinas</span>
                                 </a>
                             </li>
                         }
 
-                        <!-- 👇 MODIFICADO: Solo mostrar si tiene permiso, de lo contrario no mostrar nada -->
                         @if (tieneAlimentacion)
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PlanesAlimenticios" ? "active" : "")"
-                                   asp-controller="PlanesAlimenticios" asp-action="Index">
-                                    <i class="fa fa-utensils me-2"></i>Mi Alimentación
+                                   asp-controller="PlanesAlimenticios" asp-action="Index"
+                                   aria-label="Ver mi plan alimenticio">
+                                    <i class="fa fa-utensils me-2" aria-hidden="true"></i>
+                                    <span>Mi Alimentación</span>
                                 </a>
                             </li>
                         }
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Productos" ? "active" : "")"
-                               asp-controller="Productos" asp-action="Index">
-                                <i class="fa fa-store me-2"></i>Tienda
+                               asp-controller="Productos" asp-action="Index"
+                               aria-label="Ir a la tienda de productos">
+                                <i class="fa fa-store me-2" aria-hidden="true"></i>
+                                <span>Tienda</span>
                             </a>
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cart" ? "active" : "")"
-                               asp-controller="Cart" asp-action="Index">
-                                <i class="fa fa-shopping-cart me-2"></i>Carrito
+                               asp-controller="Cart" asp-action="Index"
+                               aria-label="Ver carrito de compras">
+                                <i class="fa fa-shopping-cart me-2" aria-hidden="true"></i>
+                                <span>Carrito</span>
                             </a>
                         </li>
                     }
@@ -196,8 +444,9 @@
                         <li class="nav-item ms-2">
                             <form asp-controller="Acceso" asp-action="Logout" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-logout">
-                                    <i class="fa fa-sign-out-alt me-2"></i>Salir
+                                <button type="submit" class="btn btn-logout" aria-label="Cerrar sesión">
+                                    <i class="fa fa-sign-out-alt me-2" aria-hidden="true"></i>
+                                    <span>Salir</span>
                                 </button>
                             </form>
                         </li>
@@ -205,8 +454,9 @@
                     else
                     {
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Acceso" asp-action="Login">
-                                <i class="fa fa-sign-in-alt me-2"></i>Entrar
+                            <a class="nav-link" asp-controller="Acceso" asp-action="Login" aria-label="Iniciar sesión">
+                                <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i>
+                                <span>Entrar</span>
                             </a>
                         </li>
                     }
@@ -215,11 +465,147 @@
         </div>
     </nav>
 
-    <div class="container">
-        @RenderBody()
+    <main id="main-content" role="main" aria-label="Contenido principal">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <!-- Botón flotante de accesibilidad -->
+    <div class="accessibility-fab"
+         onclick="toggleAccessibilityPanel()"
+         role="button"
+         tabindex="0"
+         aria-label="Abrir panel de accesibilidad rápida"
+         onkeypress="if(event.key === 'Enter' || event.key === ' ') toggleAccessibilityPanel()">
+        <i class="bi bi-universal-access-circle" aria-hidden="true"></i>
+    </div>
+
+    <!-- Panel de acceso rápido -->
+    <div class="accessibility-quick-panel" id="quickAccessPanel" role="dialog" aria-label="Panel de configuración de accesibilidad">
+        <h6 class="mb-3 fw-bold">
+            <i class="bi bi-gear-fill me-2" aria-hidden="true"></i>
+            <span>Acceso Rápido</span>
+        </h6>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input"
+                   type="checkbox"
+                   role="switch"
+                   id="quickAltoContraste"
+                   onchange="toggleAltoContrasteQuick(this.checked)"
+                   aria-label="Activar o desactivar alto contraste">
+            <label class="form-check-label" for="quickAltoContraste">
+                Alto Contraste
+            </label>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input"
+                   type="checkbox"
+                   role="switch"
+                   id="quickTextoGrande"
+                   onchange="toggleTextoGrandeQuick(this.checked)"
+                   aria-label="Activar o desactivar texto grande">
+            <label class="form-check-label" for="quickTextoGrande">
+                Texto Grande
+            </label>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input"
+                   type="checkbox"
+                   role="switch"
+                   id="quickReducirAnimaciones"
+                   onchange="toggleReducirAnimacionesQuick(this.checked)"
+                   aria-label="Activar o desactivar reducir animaciones">
+            <label class="form-check-label" for="quickReducirAnimaciones">
+                Reducir Animaciones
+            </label>
+        </div>
+
+        <hr>
+
+        <a asp-controller="Accesibilidad" asp-action="Configuracion" class="btn btn-sm btn-primary w-100" aria-label="Ir a configuración completa de accesibilidad">
+            <i class="bi bi-sliders me-2" aria-hidden="true"></i>
+            <span>Más Opciones</span>
+        </a>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Aplicar preferencias guardadas en cookies al cargar
+        (function () {
+            const altoContraste = document.cookie.includes('AltoContraste=true');
+            const textoGrande = document.cookie.includes('TextoGrande=true');
+            const reducirAnimaciones = document.cookie.includes('ReducirAnimaciones=true');
+
+            if (altoContraste) {
+                document.body.classList.add('alto-contraste');
+                const checkbox = document.getElementById('quickAltoContraste');
+                if (checkbox) checkbox.checked = true;
+            }
+
+            if (textoGrande) {
+                document.body.classList.add('texto-grande');
+                const checkbox = document.getElementById('quickTextoGrande');
+                if (checkbox) checkbox.checked = true;
+            }
+
+            if (reducirAnimaciones) {
+                document.body.classList.add('reducir-animaciones');
+                const checkbox = document.getElementById('quickReducirAnimaciones');
+                if (checkbox) checkbox.checked = true;
+            }
+        })();
+
+        // Toggle panel de accesibilidad
+        function toggleAccessibilityPanel() {
+            const panel = document.getElementById('quickAccessPanel');
+            panel.classList.toggle('show');
+        }
+
+        // Cerrar panel al hacer click fuera
+        document.addEventListener('click', function (event) {
+            const panel = document.getElementById('quickAccessPanel');
+            const fab = document.querySelector('.accessibility-fab');
+
+            if (!panel.contains(event.target) && !fab.contains(event.target)) {
+                panel.classList.remove('show');
+            }
+        });
+
+        // Funciones de toggle rápido
+        function toggleAltoContrasteQuick(activar) {
+            document.body.classList.toggle('alto-contraste', activar);
+            setCookie('AltoContraste', activar);
+        }
+
+        function toggleTextoGrandeQuick(activar) {
+            document.body.classList.toggle('texto-grande', activar);
+            setCookie('TextoGrande', activar);
+        }
+
+        function toggleReducirAnimacionesQuick(activar) {
+            document.body.classList.toggle('reducir-animaciones', activar);
+            setCookie('ReducirAnimaciones', activar);
+        }
+
+        // Helper para guardar cookies
+        function setCookie(name, value) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (365 * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        }
+
+        // Soporte de teclado para el botón flotante
+        document.querySelector('.accessibility-fab')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleAccessibilityPanel();
+            }
+        });
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

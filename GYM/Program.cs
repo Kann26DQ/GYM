@@ -55,6 +55,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAccesibilidad();
+
 app.UseAuthentication();
 app.UseMembresiaExpiradaCheck();
 app.UseAuthorization();

@@ -1,0 +1,151 @@
+﻿@model GYM.Models.Reserva
+@{
+    ViewData["Title"] = "Nueva Reserva";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 mb-2">
+                    <i class="bi bi-plus-circle text-success me-2" aria-hidden="true"></i>
+                    <span>Nueva Reserva</span>
+                </h1>
+                <p class="text-muted">Confirma los detalles de tu sesión</p>
+            </div>
+
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2" aria-hidden="true"></i>
+                        <span>Detalles de la Reserva</span>
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Crear" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                        <!-- Fecha -->
+                        <div class="mb-4">
+                            <label asp-for="FechaReserva" class="form-label">
+                                <i class="bi bi-calendar-event text-primary me-2" aria-hidden="true"></i>
+                                <strong>Fecha de la Sesión</strong>
+                            </label>
+                            <input asp-for="FechaReserva"
+                                   type="date"
+                                   class="form-control form-control-lg"
+                                   min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   required
+                                   aria-required="true" />
+                            <span asp-validation-for="FechaReserva" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                                Disponible de Lunes a Sábado
+                            </small>
+                        </div>
+
+                        <!-- Hora de Inicio -->
+                        <div class="mb-4">
+                            <label asp-for="HoraInicio" class="form-label">
+                                <i class="bi bi-clock text-primary me-2" aria-hidden="true"></i>
+                                <strong>Hora de Inicio</strong>
+                            </label>
+                            <select asp-for="HoraInicio"
+                                    class="form-select form-select-lg"
+                                    required
+                                    aria-required="true">
+                                <option value="">-- Selecciona una hora --</option>
+                                @for (int hora = 8; hora < 23; hora++)
+                                {
+                                    var horaInicio = new TimeSpan(hora, 0, 0);
+                                    <option value="@horaInicio">@hora:00 - @(hora + 1):00</option>
+                                }
+                            </select>
+                            <span asp-validation-for="HoraInicio" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                                Horario: 8:00 AM - 11:00 PM
+                            </small>
+                        </div>
+
+                        <!-- Hora de Fin (automática) -->
+                        <input asp-for="HoraFin" type="hidden" />
+
+                        <!-- Notas opcionales -->
+                        <div class="mb-4">
+                            <label asp-for="Notas" class="form-label">
+                                <i class="bi bi-sticky text-warning me-2" aria-hidden="true"></i>
+                                <strong>Notas (Opcional)</strong>
+                            </label>
+                            <textarea asp-for="Notas"
+                                      class="form-control"
+                                      rows="3"
+                                      maxlength="500"
+                                      placeholder="Ej: Enfoque en cardio, entrenamiento de fuerza, etc."
+                                      aria-label="Notas adicionales sobre la reserva"></textarea>
+                            <span asp-validation-for="Notas" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Máximo 500 caracteres
+                            </small>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
+                                <strong>Información Importante</strong>
+                            </h6>
+                            <ul class="mb-0">
+                                <li>Las sesiones tienen una duración de 1 hora</li>
+                                <li>Puedes cancelar tu reserva hasta 2 horas antes</li>
+                                <li>Llega 5-10 minutos antes de tu hora reservada</li>
+                                <li>Capacidad máxima: 20 personas por horario</li>
+                            </ul>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-3 mt-4">
+                            <a asp-action="Calendario" class="btn btn-outline-secondary btn-lg flex-fill" aria-label="Volver al calendario">
+                                <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                                <span>Volver al Calendario</span>
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg flex-fill" aria-label="Confirmar reserva">
+                                <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                                <span>Confirmar Reserva</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Espaciador -->
+<div style="height: 100px;"></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Calcular automáticamente la hora de fin (1 hora después)
+        document.querySelector('select[name="HoraInicio"]').addEventListener('change', function() {
+            const horaInicio = this.value;
+            if (horaInicio) {
+                const partes = horaInicio.split(':');
+                const horas = parseInt(partes[0]);
+                const horaFin = `${(horas + 1).toString().padStart(2, '0')}:00:00`;
+                document.querySelector('input[name="HoraFin"]').value = horaFin;
+            }
+        });
+
+        // Inicializar si ya hay un valor seleccionado
+        const selectHora = document.querySelector('select[name="HoraInicio"]');
+        if (selectHora.value) {
+            selectHora.dispatchEvent(new Event('change'));
+        }
+    </script>
+}
