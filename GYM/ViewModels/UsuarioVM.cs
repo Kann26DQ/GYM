@@ -16,6 +16,7 @@ namespace GYM.ViewModels
 
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
+        [RegularExpression(@"^\S+$", ErrorMessage = "La contraseña no puede contener espacios")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Debe confirmar su contraseña")]

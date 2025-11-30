@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GYM.Migrations
 {
     /// <inheritdoc />
-    public partial class p : Migration
+    public partial class EFDBGYM : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -130,36 +130,22 @@ namespace GYM.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EvaluacionesRendimiento",
+                name: "GruposClientes",
                 columns: table => new
                 {
-                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: false)
+                    GrupoClientesId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    Titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     EmpleadoId = table.Column<int>(type: "int", nullable: false),
-                    FechaEvaluacion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Fuerza = table.Column<int>(type: "int", nullable: false),
-                    Resistencia = table.Column<int>(type: "int", nullable: false),
-                    Flexibilidad = table.Column<int>(type: "int", nullable: false),
-                    Tecnica = table.Column<int>(type: "int", nullable: false),
-                    NivelGeneral = table.Column<int>(type: "int", nullable: false),
-                    Peso = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    Altura = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    IMC = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    Observaciones = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    ObjetivoCliente = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EvaluacionesRendimiento", x => x.EvaluacionRendimientoId);
+                    table.PrimaryKey("PK_GruposClientes", x => x.GrupoClientesId);
                     table.ForeignKey(
-                        name: "FK_EvaluacionesRendimiento_Usuarios_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Usuarios",
-                        principalColumn: "UsuarioId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EvaluacionesRendimiento_Usuarios_EmpleadoId",
+                        name: "FK_GruposClientes_Usuarios_EmpleadoId",
                         column: x => x.EmpleadoId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
@@ -253,10 +239,11 @@ namespace GYM.Migrations
                 {
                     PlanAlimenticioId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Objetivo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true),
-                    EmpleadoId = table.Column<int>(type: "int", nullable: true)
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Objetivo = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    EmpleadoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -364,41 +351,43 @@ namespace GYM.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Rutinas",
+                name: "EvaluacionesRendimiento",
                 columns: table => new
                 {
-                    RutinaId = table.Column<int>(type: "int", nullable: false)
+                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Tipo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    DuracionSemanas = table.Column<int>(type: "int", nullable: false),
-                    Descripcion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    NivelDificultad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Activa = table.Column<bool>(type: "bit", nullable: false),
                     ClienteId = table.Column<int>(type: "int", nullable: false),
                     EmpleadoId = table.Column<int>(type: "int", nullable: false),
-                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: true)
+                    GrupoClientesId = table.Column<int>(type: "int", nullable: true),
+                    FechaEvaluacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Fuerza = table.Column<int>(type: "int", nullable: false),
+                    Resistencia = table.Column<int>(type: "int", nullable: false),
+                    Flexibilidad = table.Column<int>(type: "int", nullable: false),
+                    Tecnica = table.Column<int>(type: "int", nullable: false),
+                    NivelGeneral = table.Column<int>(type: "int", nullable: false),
+                    Peso = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Altura = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    IMC = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Observaciones = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    ObjetivoCliente = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Rutinas", x => x.RutinaId);
+                    table.PrimaryKey("PK_EvaluacionesRendimiento", x => x.EvaluacionRendimientoId);
                     table.ForeignKey(
-                        name: "FK_Rutinas_EvaluacionesRendimiento_EvaluacionRendimientoId",
-                        column: x => x.EvaluacionRendimientoId,
-                        principalTable: "EvaluacionesRendimiento",
-                        principalColumn: "EvaluacionRendimientoId",
+                        name: "FK_EvaluacionesRendimiento_GruposClientes_GrupoClientesId",
+                        column: x => x.GrupoClientesId,
+                        principalTable: "GruposClientes",
+                        principalColumn: "GrupoClientesId",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Rutinas_Usuarios_ClienteId",
+                        name: "FK_EvaluacionesRendimiento_Usuarios_ClienteId",
                         column: x => x.ClienteId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Rutinas_Usuarios_EmpleadoId",
+                        name: "FK_EvaluacionesRendimiento_Usuarios_EmpleadoId",
                         column: x => x.EmpleadoId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
@@ -461,9 +450,9 @@ namespace GYM.Migrations
                 {
                     ComidaId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Ingredientes = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Horarios = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Ingredientes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    Horarios = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     PlanAlimenticioId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -506,16 +495,63 @@ namespace GYM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Rutinas",
+                columns: table => new
+                {
+                    RutinaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Tipo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DuracionSemanas = table.Column<int>(type: "int", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    NivelDificultad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    DiaSemana = table.Column<int>(type: "int", nullable: true),
+                    HoraInicio = table.Column<TimeSpan>(type: "time", nullable: true),
+                    HoraFin = table.Column<TimeSpan>(type: "time", nullable: true),
+                    FechaEspecifica = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Activa = table.Column<bool>(type: "bit", nullable: false),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    EmpleadoId = table.Column<int>(type: "int", nullable: false),
+                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rutinas", x => x.RutinaId);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_EvaluacionesRendimiento_EvaluacionRendimientoId",
+                        column: x => x.EvaluacionRendimientoId,
+                        principalTable: "EvaluacionesRendimiento",
+                        principalColumn: "EvaluacionRendimientoId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_Usuarios_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_Usuarios_EmpleadoId",
+                        column: x => x.EmpleadoId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Ejercicios",
                 columns: table => new
                 {
                     EjercicioId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GrupoMuscular = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    GrupoMuscular = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Series = table.Column<int>(type: "int", nullable: false),
                     Repeticiones = table.Column<int>(type: "int", nullable: false),
-                    Notas = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Duracion = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Notas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     RutinaId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -593,6 +629,16 @@ namespace GYM.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_EvaluacionesRendimiento_EmpleadoId",
                 table: "EvaluacionesRendimiento",
+                column: "EmpleadoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EvaluacionesRendimiento_GrupoClientesId",
+                table: "EvaluacionesRendimiento",
+                column: "GrupoClientesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GruposClientes_EmpleadoId",
+                table: "GruposClientes",
                 column: "EmpleadoId");
 
             migrationBuilder.CreateIndex(
@@ -746,6 +792,9 @@ namespace GYM.Migrations
 
             migrationBuilder.DropTable(
                 name: "EvaluacionesRendimiento");
+
+            migrationBuilder.DropTable(
+                name: "GruposClientes");
 
             migrationBuilder.DropTable(
                 name: "Usuarios");

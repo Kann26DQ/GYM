@@ -273,11 +273,11 @@ namespace GYM.Controllers
         }
 
         /// <summary>
-        /// ? CORREGIDO: EliminarEvaluacion - Elimina evaluación + rutinas + ejercicios
+        /// ? ACTUALIZADO: EliminarEvaluacion con confirmación mejorada
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EliminarEvaluacion(int evaluacionId, bool eliminarRutinas = false)
+        public async Task<IActionResult> EliminarEvaluacion(int evaluacionId, bool confirmarEliminacion = false)
         {
             var empleadoId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -306,19 +306,50 @@ namespace GYM.Controllers
             var clienteId = evaluacion.ClienteId;
             var clienteNombre = evaluacion.Cliente?.Nombre;
 
-            // ? Si tiene rutinas Y NO confirmó eliminarlas, mostrar modal
+            // ? Si tiene rutinas Y NO confirmó, mostrar SOLO UNA VEZ
+            if (evaluacion.Rutinas != null && evaluacion.Rutinas.Any() && !confirmarEliminacion)
+            {
+                var rutinasNombres = string.Join(", ", evaluacion.Rutinas.Select(r => $"'{r.Nombre}'"));
+
+                // ? CAMBIO: Usar ViewData en lugar de TempData para evitar persistencia
+                ViewData["MostrarConfirmacion"] = true;
+                ViewData["EvaluacionId"] = evaluacionId;
+                ViewData["ClienteNombre"] = clienteNombre;
+                ViewData["CantidadRutinas"] = evaluacion.Rutinas.Count;
+                ViewData["RutinasNombres"] = rutinasNombres;
+
+                // Regresar a la vista con la modal de confirmación
+                var todasEvaluaciones = await _context.EvaluacionesRendimiento
+                    .Include(e => e.Cliente)
+                    .Include(e => e.Rutinas)
+                        .ThenInclude(r => r.Ejercicios)
+                    .Include(e => e.Grupo)
+                    .Where(e => e.EmpleadoId == empleadoId)
+                    .OrderByDescending(e => e.FechaEvaluacion)
+                    .ToListAsync();
+
+                var gruposEvaluaciones = todasEvaluaciones
+                    .GroupBy(e => e.GrupoClientesId ?? 0)
+                    .Select(g => new
+                    {
+                        GrupoId = g.Key,
+                        Fecha = g.FirstOrDefault()?.FechaEvaluacion.Date ?? DateTime.Now.Date,
+                        Evaluaciones = g.ToList(),
+                        TotalClientes = g.Count(),
+                        PromedioGrupo = g.Average(e => e.PromedioRendimiento)
+                    })
+                    .OrderByDescending(g => g.Fecha)
+                    .ToList();
+
+                ViewData["EmpleadoNombre"] = empleado.Nombre;
+                ViewData["GruposEvaluaciones"] = gruposEvaluaciones;
+
+                return View("~/Views/Empleado/MisGrupos.cshtml", todasEvaluaciones);
+            }
+
+            // ? Proceder con eliminación (confirmado o sin rutinas)
             if (evaluacion.Rutinas != null && evaluacion.Rutinas.Any())
             {
-                if (!eliminarRutinas)
-                {
-                    var rutinasNombres = string.Join(", ", evaluacion.Rutinas.Select(r => $"'{r.Nombre}'"));
-                    TempData["Warning"] = $"Esta evaluación tiene {evaluacion.Rutinas.Count} rutina(s) asociada(s): {rutinasNombres}.";
-                    TempData["EvaluacionIdPendiente"] = evaluacionId;
-                    TempData["ClienteNombrePendiente"] = clienteNombre;
-                    return RedirectToAction(nameof(MisGrupos));
-                }
-
-                // ? Eliminar rutinas y ejercicios en cascada
                 foreach (var rutina in evaluacion.Rutinas.ToList())
                 {
                     if (rutina.Ejercicios != null && rutina.Ejercicios.Any())
@@ -327,26 +358,23 @@ namespace GYM.Controllers
                     }
                     _context.Rutinas.Remove(rutina);
                 }
-
                 await _context.SaveChangesAsync();
             }
 
-            // ? Eliminar la evaluación
             _context.EvaluacionesRendimiento.Remove(evaluacion);
             await _context.SaveChangesAsync();
 
-            // ? Verificar que se eliminó correctamente
             var verificacion = await _context.EvaluacionesRendimiento
                 .Where(e => e.ClienteId == clienteId)
                 .CountAsync();
 
             if (verificacion > 0)
             {
-                TempData["Error"] = $"?? Error: {clienteNombre} todavía tiene {verificacion} evaluación(es). Contacta al administrador.";
+                TempData["Error"] = $"? Error: {clienteNombre} todavía tiene {verificacion} evaluación(es).";
             }
             else
             {
-                TempData["Success"] = $"? {clienteNombre} eliminado del grupo. Ahora está disponible en 'Clientes Activos'.";
+                TempData["Success"] = $"? {clienteNombre} eliminado del grupo correctamente.";
             }
 
             return RedirectToAction(nameof(MisGrupos));
@@ -1160,7 +1188,6 @@ namespace GYM.Controllers
 
             return View("~/Views/Empleado/CrearRutinaEspecifica.cshtml", rutina);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearRutinaEspecifica(Rutina model)
@@ -1181,7 +1208,7 @@ namespace GYM.Controllers
             model.FechaCreacion = DateTime.Now;
             model.Activa = true;
 
-            // ? SOLUCIÓN: Limpiar y recrear la colección SIEMPRE
+            // ? Limpiar y recrear la colección
             model.Ejercicios = new List<Ejercicio>();
 
             // Procesar ejercicios del formulario
@@ -1189,7 +1216,6 @@ namespace GYM.Controllers
                 .Where(k => k.StartsWith("ejercicios[") && k.EndsWith("].Nombre"))
                 .ToList();
 
-            // ? NUEVO: Usar HashSet para detectar duplicados de forma más eficiente
             var nombresUnicos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var key in ejerciciosNombres)
@@ -1201,10 +1227,34 @@ namespace GYM.Controllers
 
                     if (!string.IsNullOrWhiteSpace(nombre))
                     {
-                        // ? Validar duplicados usando HashSet
+                        // ? VALIDACIÓN: Sin espacios
+                        if (nombre.Contains(" "))
+                        {
+                            TempData["Error"] = $"? El nombre '{nombre}' no puede contener espacios. Usa guiones o escribe sin separación.";
+                            var cliente = await _context.Usuarios.FindAsync(model.ClienteId);
+                            var evaluacion = await _context.EvaluacionesRendimiento.FindAsync(model.EvaluacionRendimientoId);
+                            ViewData["Cliente"] = cliente;
+                            ViewData["Evaluacion"] = evaluacion;
+                            ViewData["EmpleadoNombre"] = empleado.Nombre;
+                            return View("~/Views/Empleado/CrearRutinaEspecifica.cshtml", model);
+                        }
+
+                        // ? VALIDACIÓN: Sin símbolos
+                        if (!System.Text.RegularExpressions.Regex.IsMatch(nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$"))
+                        {
+                            TempData["Error"] = $"? El nombre '{nombre}' solo puede contener letras (sin números, símbolos ni espacios).";
+                            var cliente = await _context.Usuarios.FindAsync(model.ClienteId);
+                            var evaluacion = await _context.EvaluacionesRendimiento.FindAsync(model.EvaluacionRendimientoId);
+                            ViewData["Cliente"] = cliente;
+                            ViewData["Evaluacion"] = evaluacion;
+                            ViewData["EmpleadoNombre"] = empleado.Nombre;
+                            return View("~/Views/Empleado/CrearRutinaEspecifica.cshtml", model);
+                        }
+
+                        // ? VALIDACIÓN: Duplicados
                         if (nombresUnicos.Contains(nombre))
                         {
-                            TempData["Error"] = $"?? El ejercicio '{nombre}' aparece más de una vez. Cada ejercicio debe tener un nombre único.";
+                            TempData["Error"] = $"? El ejercicio '{nombre}' aparece más de una vez. Cada ejercicio debe tener un nombre único.";
                             var cliente = await _context.Usuarios.FindAsync(model.ClienteId);
                             var evaluacion = await _context.EvaluacionesRendimiento.FindAsync(model.EvaluacionRendimientoId);
                             ViewData["Cliente"] = cliente;
@@ -1225,7 +1275,6 @@ namespace GYM.Controllers
                             Notas = Request.Form[$"ejercicios[{index}].Notas"].ToString()
                         };
 
-                        // ? Asegurar que GrupoMuscular tenga valor
                         if (string.IsNullOrWhiteSpace(ejercicio.GrupoMuscular))
                         {
                             ejercicio.GrupoMuscular = model.Tipo;
@@ -1249,13 +1298,8 @@ namespace GYM.Controllers
 
             try
             {
-                // ? CRÍTICO: Desconectar cualquier rastreo previo
                 _context.ChangeTracker.Clear();
-
-                // Agregar SOLO la rutina al contexto
                 _context.Rutinas.Add(model);
-
-                // UN SOLO SaveChangesAsync - EF Core rastrea automáticamente los ejercicios
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = $"? Rutina '{model.Nombre}' creada con {model.Ejercicios.Count} ejercicio(s).";
@@ -1391,7 +1435,7 @@ namespace GYM.Controllers
             return RedirectToAction(nameof(VerRutinaDetalle), new { rutinaId = ejercicio.RutinaId });
         }
         /// <summary>
-        /// ? CORREGIDO: Agregar ejercicio con validación de duplicados mejorada
+        /// ? ACTUALIZADO: Agregar ejercicio con validación estricta de nombre
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1409,14 +1453,29 @@ namespace GYM.Controllers
                 return RedirectToAction(nameof(CalendarioSemanal));
             }
 
-            // ? VALIDACIÓN MEJORADA: Normalizar nombre y verificar duplicados
-            var nombreNormalizado = model.Nombre?.Trim().ToLower() ?? "";
-
-            if (string.IsNullOrWhiteSpace(nombreNormalizado))
+            // ? VALIDACIÓN 1: Nombre vacío
+            if (string.IsNullOrWhiteSpace(model.Nombre))
             {
-                TempData["Error"] = "El nombre del ejercicio es obligatorio.";
+                TempData["Error"] = "? El nombre del ejercicio es obligatorio.";
                 return RedirectToAction(nameof(VerRutinaDetalle), new { rutinaId });
             }
+
+            // ? VALIDACIÓN 2: Sin espacios
+            if (model.Nombre.Contains(" "))
+            {
+                TempData["Error"] = $"? El nombre '{model.Nombre}' no puede contener espacios. Usa guiones o escribe sin separación (ej: 'PressHombros', 'Sentadillas').";
+                return RedirectToAction(nameof(VerRutinaDetalle), new { rutinaId });
+            }
+
+            // ? VALIDACIÓN 3: Sin símbolos (solo letras)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(model.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$"))
+            {
+                TempData["Error"] = $"? El nombre '{model.Nombre}' solo puede contener letras (sin números, símbolos ni espacios).";
+                return RedirectToAction(nameof(VerRutinaDetalle), new { rutinaId });
+            }
+
+            // ? VALIDACIÓN 4: Normalizar y verificar duplicados
+            var nombreNormalizado = model.Nombre.Trim().ToLower();
 
             var ejercicioDuplicado = rutina.Ejercicios?.Any(e =>
                 !string.IsNullOrWhiteSpace(e.Nombre) &&
@@ -1424,7 +1483,7 @@ namespace GYM.Controllers
 
             if (ejercicioDuplicado == true)
             {
-                TempData["Error"] = $"?? Ya existe un ejercicio llamado '{model.Nombre}' en esta rutina. Usa un nombre diferente.";
+                TempData["Error"] = $"? Ya existe un ejercicio llamado '{model.Nombre}' en esta rutina. Usa un nombre diferente.";
                 return RedirectToAction(nameof(VerRutinaDetalle), new { rutinaId });
             }
 

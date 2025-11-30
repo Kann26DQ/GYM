@@ -35,22 +35,44 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ? Registrar servicios personalizados
+// Registrar servicios personalizados
 builder.Services.AddScoped<MembresiaPermisosService>();
 builder.Services.AddHostedService<MembresiaExpiradaBackgroundService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+// Aplicar migraciones con manejo de errores
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            db.Database.Migrate();
+            logger.LogInformation("Migraciones aplicadas correctamente");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error al aplicar migraciones. La aplicación continuará pero la BD puede no estar actualizada");
+            // No lanzar excepción para permitir que la app inicie
+        }
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Error crítico durante la inicialización de la base de datos");
 }
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -59,12 +81,11 @@ app.UseRouting();
 app.UseAccesibilidad();
 
 app.UseAuthentication();
-app.UseMembresiaExpiradaCheck();
-app.UseAuthorization();
+app.UseAuthorization();  // ? ANTES del middleware personalizado
+app.UseMembresiaExpiradaCheck();  // ? DESPUÉS
 app.UseSession();
 
-// ? Rutas específicas (ANTES de la ruta por defecto)
-// ? Asegurar que las rutas estén correctamente mapeadas
+// Rutas específicas
 app.MapControllerRoute(
     name: "gestionrutinas",
     pattern: "GestionRutinas/{action=Index}/{id?}",
@@ -75,11 +96,7 @@ app.MapControllerRoute(
     pattern: "Rutinas/{action=Index}/{id?}",
     defaults: new { controller = "Rutinas" });
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Acceso}/{action=Login}/{id?}");
-
-// ? Ruta por defecto (ÚLTIMA)
+// Ruta por defecto (solo una vez)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Acceso}/{action=Login}/{id?}");
