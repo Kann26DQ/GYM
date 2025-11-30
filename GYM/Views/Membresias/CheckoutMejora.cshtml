@@ -1,0 +1,263 @@
+﻿@using GYM.Models
+@{
+    ViewData["Title"] = "Confirmar Mejora";
+    Layout = null;
+    var plan = ViewData["Plan"] as MembresiaPlan;
+    var usuario = ViewData["Usuario"] as Usuario;
+    var descuento = (decimal)(ViewData["DescuentoProporcional"] ?? 0m);
+    var precioFinal = (decimal)(ViewData["PrecioFinal"] ?? 0m);
+    var diasRestantes = (int)(ViewData["DiasRestantes"] ?? 0);
+    var membresiaActualId = (int)(ViewData["MembresiaActualId"] ?? 0);
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RichardsGYM</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card-custom {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 2px solid #ffc107;
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(255, 193, 7, 0.4);
+            color: white;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card-header-custom {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffc107;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #ffc107;
+        }
+
+        .form-control {
+            border-radius: 0.75rem;
+            padding: 0.7rem;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+
+            .form-control:focus {
+                border-color: #ffc107;
+                box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            }
+
+        .btn-yellow {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a !important;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+            .btn-yellow:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            }
+
+        .btn-secondary {
+            border-radius: 0.75rem;
+            padding: 0.8rem;
+        }
+
+        .resumen-pedido {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #ffc107;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+            .resumen-pedido h5 {
+                color: #ffc107;
+                margin-bottom: 1rem;
+            }
+
+        .resumen-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #f8f9fa;
+        }
+
+        .descuento-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .total {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffc107;
+            border-top: 2px solid #ffc107;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .text-yellow {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="fa fa-rocket me-2"></i>Confirmar Mejora de Membresía
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Resumen del pedido -->
+            <div class="resumen-pedido">
+                <h5><i class="fa fa-gift me-2"></i>Resumen de tu Mejora</h5>
+
+                @if (descuento > 0)
+                {
+                    <div class="descuento-badge">
+                        <i class="fa fa-tag me-1"></i>¡Descuento por mejora inmediata: S/ @descuento.ToString("0.00")!
+                    </div>
+                    <p class="text-white mb-2">
+                        <small>Te quedan @diasRestantes días en tu plan actual. Ese valor se aplicará como descuento.</small>
+                    </p>
+                }
+
+                <div class="resumen-item">
+                    <span>Nuevo Plan:</span>
+                    <strong>@plan.Nombre</strong>
+                </div>
+                <div class="resumen-item">
+                    <span>Duración:</span>
+                    <span>@plan.DuracionDias días</span>
+                </div>
+                <div class="resumen-item">
+                    <span>Precio Original:</span>
+                    <span><s>S/ @plan.Precio.ToString("0.00")</s></span>
+                </div>
+                @if (descuento > 0)
+                {
+                    <div class="resumen-item">
+                        <span class="text-success">Descuento Aplicado:</span>
+                        <span class="text-success">-S/ @descuento.ToString("0.00")</span>
+                    </div>
+                }
+                <div class="resumen-item total">
+                    <span>Total a Pagar:</span>
+                    <span>S/ @precioFinal.ToString("0.00")</span>
+                </div>
+            </div>
+
+            <!-- Formulario de pago -->
+            <form asp-action="ProcesarMejora" method="post" id="paymentForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="planId" value="@plan.MembresiaPlanId" />
+                <input type="hidden" name="membresiaActualId" value="@membresiaActualId" />
+                <input type="hidden" name="descuentoProporcional" value="@descuento" />
+
+                <div class="mb-3">
+                    <label for="numeroTarjeta" class="form-label">
+                        <i class="fa fa-credit-card me-1"></i>Número de Tarjeta
+                    </label>
+                    <input type="text" class="form-control" id="numeroTarjeta" name="numeroTarjeta"
+                           placeholder="1234 5678 9012 3456" maxlength="19" required
+                           pattern="\d{4}\s?\d{4}\s?\d{4}\s?\d{4}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="nombreTitular" class="form-label">
+                        <i class="fa fa-user me-1"></i>Nombre del Titular
+                    </label>
+                    <input type="text" class="form-control" id="nombreTitular" name="nombreTitular"
+                           placeholder="Como aparece en la tarjeta" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fechaExpiracion" class="form-label">
+                            <i class="fa fa-calendar me-1"></i>Fecha de Expiración
+                        </label>
+                        <input type="text" class="form-control" id="fechaExpiracion" name="fechaExpiracion"
+                               placeholder="MM/AA" maxlength="5" required pattern="\d{2}/\d{2}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="cvv" class="form-label">
+                            <i class="fa fa-shield-alt me-1"></i>CVV
+                        </label>
+                        <input type="text" class="form-control" id="cvv" name="cvv"
+                               placeholder="123" maxlength="3" required pattern="\d{3}">
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-yellow btn-lg">
+                        <i class="fa fa-check-circle me-2"></i>Confirmar Mejora - S/ @precioFinal.ToString("0.00")
+                    </button>
+                    <a asp-controller="MiMembresia" asp-action="Index" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left me-2"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Formatear número de tarjeta
+        document.getElementById('numeroTarjeta').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Formatear fecha de expiración
+        document.getElementById('fechaExpiracion').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // Solo números en CVV
+        document.getElementById('cvv').addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html>

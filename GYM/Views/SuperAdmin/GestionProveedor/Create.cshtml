@@ -5,54 +5,96 @@
     Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
 }
 
-<h2 class="mb-4">Registrar Proveedor</h2>
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">
+                <i class="bi bi-building me-2"></i>Registrar Proveedor
+            </h2>
+        </div>
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> Por favor, corrige los errores en el formulario.
+                </div>
+            }
 
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-<form asp-action="Create" method="post" novalidate>
-    @Html.AntiForgeryToken()
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
 
-    <div class="form-group mb-3">
-        <label asp-for="Nombre" class="form-label">Nombre del Proveedor</label>
-        <input asp-for="Nombre" class="form-control" required />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Nombre" class="form-label fw-bold">
+                            <i class="bi bi-building me-1"></i>Nombre del Proveedor *
+                        </label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Proveedor XYZ" required />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Telefono" class="form-label fw-bold">
+                            <i class="bi bi-telephone me-1"></i>Número de Teléfono *
+                        </label>
+                        <input asp-for="Telefono" class="form-control"
+                               type="tel" inputmode="numeric" maxlength="9"
+                               placeholder="987654321"
+                               pattern="[0-9]{9}"
+                               title="Debe contener exactamente 9 dígitos numéricos"
+                               required />
+                        <span asp-validation-for="Telefono" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label fw-bold">
+                            <i class="bi bi-envelope me-1"></i>Correo Electrónico *
+                        </label>
+                        <input asp-for="Email" class="form-control"
+                               type="email" placeholder="ejemplo@correo.com"
+                               required />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Direccion" class="form-label fw-bold">
+                            <i class="bi bi-geo-alt me-1"></i>Dirección
+                        </label>
+                        <input asp-for="Direccion" class="form-control" placeholder="Opcional" />
+                        <span asp-validation-for="Direccion" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input asp-for="Estado" class="form-check-input" checked />
+                    <label asp-for="Estado" class="form-check-label">
+                        Proveedor Activo
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Registrar Proveedor
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Telefono" class="form-label">Número de Teléfono</label>
-        <input asp-for="Telefono" class="form-control"
-               type="tel" inputmode="numeric" maxlength="9"
-               pattern="^[0-9]{9}$"
-               title="Debe contener exactamente 9 dígitos numéricos"
-               required />
-        <span asp-validation-for="Telefono" class="text-danger"></span>
-    </div>
-
-      <div class="form-group mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control"
-               type="email" placeholder="ejemplo@correo.com"
-               pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$"
-               title="Debe ser un correo válido que termine en .com"
-               required />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Direccion" class="form-label">Dirección</label>
-        <input asp-for="Direccion" class="form-control" />
-        <span asp-validation-for="Direccion" class="text-danger"></span>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="Estado" class="form-check-input" />
-        <label asp-for="Estado" class="form-check-label">Activo</label>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Registrar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Validación en tiempo real del teléfono
+        document.querySelector('input[name="Telefono"]').addEventListener('input', function (e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 9);
+        });
+    </script>
 }

@@ -8,104 +8,434 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SuperAdmin GYM</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            height: 100vh;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========================================
+                   SIDEBAR MEJORADO
+                ======================================== */
         .sidebar {
-            width: 260px;
-            background: #111;
-            color: white;
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
-            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
 
-            .sidebar h2 {
-                text-align: center;
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+            .sidebar-header h2 {
+                font-size: 1.5rem;
                 font-weight: bold;
-                color: #e63946;
-                margin-bottom: 30px;
+                color: white;
+                margin: 0;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             }
 
-            .sidebar a, .sidebar form {
-                color: #ccc;
+            .sidebar-header .admin-badge {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 0.3rem 1rem;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                margin-top: 0.5rem;
+                display: inline-block;
+                backdrop-filter: blur(10px);
+            }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 1.5rem 0;
+        }
+
+        .menu-item {
+            position: relative;
+            margin: 0.3rem 0.8rem;
+        }
+
+            .menu-item a,
+            .menu-item button {
+                color: #b8b8d1;
                 text-decoration: none;
-                padding: 12px 20px;
-                display: block;
-                transition: 0.3s;
+                padding: 1rem 1.2rem;
+                display: flex;
+                align-items: center;
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                font-size: 1rem;
+                font-weight: 500;
+                border: none;
+                background: transparent;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
             }
 
-                .sidebar a:hover, .sidebar form:hover {
-                    background: #e63946;
+                .menu-item a:hover,
+                .menu-item button:hover {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
+                    transform: translateX(5px);
+                    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
                 }
 
-            .sidebar i {
-                margin-right: 10px;
+                .menu-item a.active {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                }
+
+                .menu-item a i,
+                .menu-item button i {
+                    width: 25px;
+                    margin-right: 12px;
+                    font-size: 1.1rem;
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 1rem 1.5rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+            .sidebar-footer .user-info {
+                display: flex;
+                align-items: center;
+                color: #b8b8d1;
+                margin-bottom: 1rem;
             }
 
-        .main {
+                .sidebar-footer .user-info .avatar {
+                    width: 40px;
+                    height: 40px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 10px;
+                    color: white;
+                    font-weight: bold;
+                }
+
+                .sidebar-footer .user-info .user-details {
+                    flex: 1;
+                }
+
+                    .sidebar-footer .user-info .user-details .name {
+                        font-weight: 600;
+                        color: white;
+                        font-size: 0.95rem;
+                    }
+
+                    .sidebar-footer .user-info .user-details .role {
+                        font-size: 0.8rem;
+                        color: #b8b8d1;
+                    }
+
+        /* ========================================
+                   MAIN CONTENT MEJORADO
+                ======================================== */
+        .main-content {
             flex: 1;
-            background: #f4f4f9;
-            padding: 20px;
-            overflow-y: auto;
+            margin-left: 280px;
+            background: #f5f7fa;
+            min-height: 100vh;
+            transition: all 0.3s ease;
         }
 
         .topbar {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
 
             .topbar h3 {
                 margin: 0;
                 font-weight: bold;
-                color: #333;
+                color: #2c3e50;
+                font-size: 1.5rem;
+            }
+
+            .topbar .topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+                .topbar .topbar-actions .btn-tienda {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 0.6rem 1.5rem;
+                    border-radius: 12px;
+                    font-weight: 600;
+                    transition: all 0.3s;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                    .topbar .topbar-actions .btn-tienda:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                    }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        /* ========================================
+                   SCROLLBAR PERSONALIZADO
+                ======================================== */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 10px;
+        }
+
+            .sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgba(102, 126, 234, 0.8);
+            }
+
+        /* ========================================
+                   RESPONSIVE
+                ======================================== */
+        @@media (max-width: 768px) {
+            .sidebar
+
+        {
+            width: 80px;
+        }
+
+        .sidebar-header h2,
+        .sidebar-header .admin-badge,
+        .menu-item a span,
+        .menu-item button span,
+        .sidebar-footer .user-info .user-details {
+            display: none;
+        }
+
+        .menu-item a,
+        .menu-item button {
+            justify-content: center;
+        }
+
+        .main-content {
+            margin-left: 80px;
+        }
+
+        .sidebar-footer .user-info .avatar {
+            margin: 0 auto;
+        }
+
+        }
+
+        /* ========================================
+                   ANIMACIONES
+                ======================================== */
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .menu-item {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+            .menu-item:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+
+            .menu-item:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .menu-item:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+
+            .menu-item:nth-child(4) {
+                animation-delay: 0.4s;
+            }
+
+            .menu-item:nth-child(5) {
+                animation-delay: 0.5s;
             }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>GYM Admin 🏋️‍♂️</h2>
-        <a asp-controller="GestionUsuarios" asp-action="Index"><i class="fa fa-home"></i> Gestion Usuarios</a>
-        <a asp-controller="GestionStock" asp-action="Index"><i class="fa fa-boxes"></i> Gestión Stock</a>
-        <a asp-controller="Ventas" asp-action="Index"><i class="fa fa-cash-register"></i> Ventas</a>
-        <a asp-controller="Membresiaplanes" asp-action="Index"><i class="fa fa-id-card"></i> Membresías</a>
+    <div class="admin-wrapper">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <h2><i class="fa fa-dumbbell me-2"></i>GYM PRO</h2>
+                <div class="admin-badge">
+                    <i class="fa fa-shield-alt me-1"></i>SuperAdmin
+                </div>
+            </div>
 
-        @* Logout: usar formulario POST con antiforgery para evitar HTTP 405 *@
-        <form asp-area="" asp-controller="Acceso" asp-action="Logout" method="post" style="margin:0;">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-link text-start w-100 p-0" style="color:inherit; text-decoration:none;">
-                <i class="fa fa-sign-out-alt" style="margin-right:10px;"></i> Salir
-            </button>
-        </form>
-    </div>
+            <!-- Menu -->
+            <div class="sidebar-menu">
+                <div class="menu-item">
+                    <a asp-controller="SuperAdmin" asp-action="Index">
+                        <i class="bi bi-house-door-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
 
-    <!-- Main -->
-    <div class="main">
-        <div class="topbar">
-            <h3>@ViewData["Title"]</h3>
-            <div>
-                <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-primary btn-sm me-2">
-                    <i class="fa fa-store"></i> Ver Tienda
-                </a>
-                <span>@User.Identity?.Name</span>
+                <div class="menu-item">
+                    <a asp-controller="GestionUsuarios" asp-action="Index">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Gestión Usuarios</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a asp-controller="GestionStock" asp-action="Index">
+                        <i class="bi bi-box-seam-fill"></i>
+                        <span>Gestión Stock</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a asp-controller="GestionProveedor" asp-action="Index">
+                        <i class="bi bi-building"></i>
+                        <span>Proveedores</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a asp-controller="Ventas" asp-action="Index">
+                        <i class="bi bi-cart-check-fill"></i>
+                        <span>Ventas</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a asp-controller="Membresiaplanes" asp-action="Index">
+                        <i class="bi bi-credit-card-fill"></i>
+                        <span>Membresías</span>
+                    </a>
+                </div>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-item">
+                    <form asp-area="" asp-controller="Acceso" asp-action="Logout" method="post" style="margin:0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="name">@User.Identity?.Name</div>
+                        <div class="role">Administrador</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="content">
-            @RenderBody()
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <h3>@ViewData["Title"]</h3>
+                <div class="topbar-actions">
+                    <a asp-controller="Productos" asp-action="Index" class="btn-tienda">
+                        <i class="bi bi-shop"></i>
+                        <span>Ver Tienda</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content-area">
+                @RenderBody()
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ✅ Marcar el menú activo según la ruta actual
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.menu-item a');
+
+            menuLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -2,91 +2,317 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Productos disponibles";
+    ViewData["Title"] = "Tienda";
     var cartItems = ViewBag.CartItems as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
-<h2 class="my-4">Productos disponibles</h2>
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+    .hero-section {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 30px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
 
-<div class="text-end mb-3">
-    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-primary">Carrito</a>
-</div>
-
-<div class="row">
-    <!-- Columna principal: productos o mensaje -->
-    <div class="col-lg-9">
-        @{
-            var enVenta = (Model ?? Enumerable.Empty<GYM.Models.Producto>()).Where(p => p.StockVenta > 0).ToList();
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
         }
-        @if (!enVenta.Any())
-        {
-            <div class="alert alert-info">No hay productos en venta por el momento.</div>
-        }
-        else
-        {
-            <div class="row">
-                @foreach (var p in enVenta)
-                {
-                    var cantidadEnCarrito = cartItems.ContainsKey(p.ProductoId) ? cartItems[p.ProductoId] : 0;
-                    var estaEnCarrito = cantidadEnCarrito > 0;
 
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 product-card @(estaEnCarrito ? "in-cart" : "")"
-                             data-product-id="@p.ProductoId"
-                             data-cupo="@p.StockVenta">
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">@p.Nombre</h5>
-                                <p class="card-text text-truncate">@p.Descripcion</p>
-                                <p class="mb-1"><strong>Precio:</strong> S/ @p.Precio</p>
-                                <p class="mb-1"><strong>En venta:</strong> @p.StockVenta</p>
+        .hero-section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    .product-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.05) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .product-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+        }
+
+        .product-card.in-cart {
+            border: 2px solid #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
+        }
+
+            .product-card.in-cart::after {
+                content: '✓';
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #28a745;
+                color: white;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                z-index: 2;
+            }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000 !important;
+        }
+
+    /* ✅ NUEVO: Botón de historial */
+    .btn-historial {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-historial:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            color: white !important;
+        }
+
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #1a1a1a;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        animation: float 3s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .alert-custom-success {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(34, 139, 61, 0.2) 100%);
+        border: 2px solid #28a745;
+        color: #fff;
+        border-radius: 15px;
+    }
+
+    .alert-custom-info {
+        background: rgba(23, 162, 184, 0.2);
+        border: 2px solid #17a2b8;
+        border-radius: 15px;
+        color: #fff;
+    }
+
+    .content-wrapper {
+        padding-bottom: 150px;
+    }
+
+    .badge-stock {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 12px;
+        font-weight: bold;
+    }
+
+    .badge-cart {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 0.4rem 0.8rem;
+        border-radius: 12px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4 content-wrapper">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="text-center">
+            <div class="icon-circle mx-auto">
+                <i class="fa fa-shopping-bag"></i>
+            </div>
+            <h1 class="display-4 text-yellow mb-3">Tienda GYM PRO 🛒</h1>
+            <p class="lead text-white-custom">Encuentra los mejores productos para tu entrenamiento</p>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-custom-success alert-dismissible fade show mb-4">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- ✅ CAMBIADO: Botón de Mi Historial en lugar de Ver Carrito -->
+    <div class="text-end mb-4">
+        <a asp-controller="MisCompras" asp-action="Index" class="btn btn-historial">
+            <i class="fa fa-history me-2"></i>Mi Historial de Compras
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Columna principal: productos -->
+        <div class="col-lg-9">
+            @{
+                var enVenta = (Model ?? Enumerable.Empty<GYM.Models.Producto>()).Where(p => p.StockVenta > 0).ToList();
+            }
+
+            @if (!enVenta.Any())
+            {
+                <div class="alert alert-custom-info text-center py-5">
+                    <i class="fa fa-info-circle fa-3x mb-3"></i>
+                    <h4 class="text-white-custom">No hay productos disponibles</h4>
+                    <p class="text-white-custom">Pronto tendremos nuevos productos para ti</p>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var p in enVenta)
+                    {
+                        var cantidadEnCarrito = cartItems.ContainsKey(p.ProductoId) ? cartItems[p.ProductoId] : 0;
+                        var estaEnCarrito = cantidadEnCarrito > 0;
+
+                        <div class="col-md-4 mb-4">
+                            <div class="product-card @(estaEnCarrito ? "in-cart" : "")" data-product-id="@p.ProductoId" data-cupo="@p.StockVenta">
+                                <h5 class="text-yellow mb-3">@p.Nombre</h5>
+                                <p class="text-white-custom small mb-3">@p.Descripcion</p>
+
+                                <div class="mb-3">
+                                    <h4 class="text-white-custom mb-2">S/ @p.Precio.ToString("0.00")</h4>
+                                    <span class="badge-stock">
+                                        <i class="fa fa-box me-1"></i>Stock: @p.StockVenta
+                                    </span>
+                                </div>
 
                                 @if (estaEnCarrito)
                                 {
-                                    <p class="text-success cart-qty"><strong>En el carrito: @cantidadEnCarrito</strong></p>
+                                    <div class="mb-3">
+                                        <span class="badge-cart cart-qty">
+                                            <i class="fa fa-shopping-cart me-1"></i>En carrito: @cantidadEnCarrito
+                                        </span>
+                                    </div>
                                 }
                                 else
                                 {
-                                    <p class="text-success cart-qty d-none"><strong>En el carrito: 0</strong></p>
+                                    <div class="mb-3 d-none cart-qty">
+                                        <span class="badge-cart">
+                                            <i class="fa fa-shopping-cart me-1"></i>En carrito: 0
+                                        </span>
+                                    </div>
                                 }
 
-                                <div class="mt-auto">
-                                    <a asp-controller="Productos" asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-outline-secondary btn-sm">Ver</a>
-                                </div>
+                                <a asp-controller="Productos" asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-yellow w-100">
+                                    <i class="fa fa-eye me-2"></i>Ver Detalles
+                                </a>
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
-        }
-    </div>
-
-    <!-- Columna derecha: historial SIEMPRE visible -->
-    <div class="col-lg-3">
-        @await Component.InvokeAsync("HistorialCompras", new { max = 5 })
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>
 
 @section Scripts {
-    <style>
-        .product-card.in-cart {
-            border: 2px solid #28a745;
-            box-shadow: 0 0 10px rgba(40,167,69,.5);
-        }
-
-        .d-none {
-            display: none !important;
-        }
-    </style>
-
     <script>
         (async function () {
             try {
@@ -97,18 +323,21 @@
                 document.querySelectorAll('.product-card').forEach(card => {
                     const pid = parseInt(card.dataset.productId, 10);
                     const qty = map[pid] || 0;
-                    const qtyP = card.querySelector('.cart-qty');
+                    const qtyElement = card.querySelector('.cart-qty');
 
                     if (qty > 0) {
                         card.classList.add('in-cart');
-                        qtyP?.classList.remove('d-none');
-                        if (qtyP) qtyP.innerHTML = `<strong>En el carrito: ${qty}</strong>`;
+                        qtyElement?.classList.remove('d-none');
+                        const badge = qtyElement?.querySelector('.badge-cart');
+                        if (badge) badge.innerHTML = `<i class="fa fa-shopping-cart me-1"></i>En carrito: ${qty}`;
                     } else {
                         card.classList.remove('in-cart');
-                        qtyP?.classList.add('d-none');
+                        qtyElement?.classList.add('d-none');
                     }
                 });
-            } catch (e) { console.warn('No se pudo cargar el mapa del carrito', e); }
+            } catch (e) {
+                console.warn('No se pudo cargar el mapa del carrito', e);
+            }
         })();
     </script>
 }

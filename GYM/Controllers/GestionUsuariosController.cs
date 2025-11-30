@@ -48,14 +48,54 @@ namespace GYM.Controllers
             return Json(!exists);
         }
 
-        public async Task<IActionResult> Index()
+        /// <summary>
+        /// ✅ NUEVO: Index con filtro de búsqueda
+        /// </summary>
+        public async Task<IActionResult> Index(string buscar, string tipoFiltro = "nombre")
         {
-            var usuarios = await _context.Usuarios
+            var query = _context.Usuarios
                 .Include(u => u.Rol)
                 .Where(u => (u.RolId == 1 || u.RolId == 2))
+                .AsQueryable();
+
+            // ✅ Aplicar filtros de búsqueda
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                switch (tipoFiltro.ToLower())
+                {
+                    case "nombre":
+                        query = query.Where(u => u.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    case "email":
+                        query = query.Where(u => u.Email.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    case "telefono":
+                        query = query.Where(u => u.Telefono.Contains(buscar));
+                        break;
+                    case "rol":
+                        query = query.Where(u => u.Rol.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    default:
+                        // Búsqueda general en todos los campos
+                        query = query.Where(u =>
+                            u.Nombre.ToLower().Contains(buscar.ToLower()) ||
+                            u.Email.ToLower().Contains(buscar.ToLower()) ||
+                            u.Telefono.Contains(buscar) ||
+                            u.Rol.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                }
+            }
+
+            var usuarios = await query
                 .OrderBy(u => u.RolId)
                 .ThenBy(u => u.Nombre)
                 .ToListAsync();
+
+            // Pasar valores al ViewBag para mantenerlos en la vista
+            ViewBag.BuscarActual = buscar;
+            ViewBag.TipoFiltroActual = tipoFiltro;
 
             return View("~/Views/SuperAdmin/GestionUsuarios/Index.cshtml", usuarios);
         }
@@ -83,7 +123,6 @@ namespace GYM.Controllers
         {
             ViewBag.Roles = _context.Roles.Where(r => r.RolId == 1 || r.RolId == 2).ToList();
 
-            // 👇 NUEVO: Cargar planes de membresía activos
             ViewBag.Planes = await _context.MembresiaPlanes
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Precio)
@@ -127,7 +166,6 @@ namespace GYM.Controllers
                 return View("~/Views/SuperAdmin/GestionUsuarios/Create.cshtml", model);
             }
 
-            // 👇 NUEVO: Determinar si la cuenta estará activa según la membresía
             bool activarCuenta = model.MembresiaPlanId.HasValue;
 
             var usuario = new Usuario
@@ -137,7 +175,7 @@ namespace GYM.Controllers
                 Telefono = model.Telefono,
                 FechaRegistro = DateTime.Now,
                 RolId = model.RolId,
-                Activo = activarCuenta // 👈 Se activa solo si tiene membresía
+                Activo = activarCuenta
             };
 
             usuario.Password = _hasher.HashPassword(usuario, model.Password);
@@ -145,7 +183,6 @@ namespace GYM.Controllers
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
-            // 👇 NUEVO: Si seleccionó membresía, crearla
             if (model.MembresiaPlanId.HasValue)
             {
                 var plan = await _context.MembresiaPlanes.FindAsync(model.MembresiaPlanId.Value);
@@ -180,8 +217,6 @@ namespace GYM.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
-        // ... resto de métodos (Edit, Delete, Toggle, etc.) sin cambios
 
         public async Task<IActionResult> Edit(int id)
         {
@@ -235,7 +270,6 @@ namespace GYM.Controllers
             var usuario = await _context.Usuarios.FindAsync(model.UsuarioId);
             if (usuario == null) return NotFound();
 
-            // 👇 NUEVO: Detectar ascenso de Cliente (1) a Gymbro (2)
             bool fueAscendido = false;
             if (usuario.RolId == 1 && model.RolId == 2)
             {
@@ -256,7 +290,6 @@ namespace GYM.Controllers
             _context.Usuarios.Update(usuario);
             await _context.SaveChangesAsync();
 
-            // 👇 NUEVO: Mensaje diferente si fue ascendido
             if (fueAscendido)
             {
                 TempData["Success"] = $"¡{usuario.Nombre} ha sido ascendido a Gymbro! Recibirá un mensaje de felicitación en su próximo inicio de sesión.";
@@ -285,33 +318,106 @@ namespace GYM.Controllers
 
             try
             {
-                var membresias = await _context.MembresiasUsuarios.Where(m => m.UsuarioId == id).ToListAsync();
+                // ✅ Eliminar membresías
+                var membresias = await _context.MembresiasUsuarios
+                    .Where(m => m.UsuarioId == id)
+                    .ToListAsync();
                 _context.MembresiasUsuarios.RemoveRange(membresias);
 
-                var cartItems = await _context.CartItems.Where(c => c.UsuarioId == id).ToListAsync();
+                // ✅ Eliminar items del carrito
+                var cartItems = await _context.CartItems
+                    .Where(c => c.UsuarioId == id)
+                    .ToListAsync();
                 _context.CartItems.RemoveRange(cartItems);
 
-                var rutinas = await _context.Rutinas.Where(r => r.ClienteId == id || r.EmpleadoId == id).ToListAsync();
-                foreach (var rutina in rutinas)
+                // ✅ Eliminar reservas del usuario
+                var reservas = await _context.Reservas
+                    .Where(r => r.UsuarioId == id)
+                    .ToListAsync();
+                _context.Reservas.RemoveRange(reservas);
+
+                // ✅ Eliminar horarios fijos
+                var horariosFijos = await _context.HorariosFijos
+                    .Where(h => h.UsuarioId == id)
+                    .ToListAsync();
+                _context.HorariosFijos.RemoveRange(horariosFijos);
+
+                // ✅ Eliminar evaluaciones de rendimiento
+                var evaluaciones = await _context.EvaluacionesRendimiento
+                    .Where(e => e.ClienteId == id || e.EmpleadoId == id)
+                    .ToListAsync();
+                _context.EvaluacionesRendimiento.RemoveRange(evaluaciones);
+
+                // ✅ Actualizar rutinas (SET NULL en claves foráneas)
+                var rutinasCliente = await _context.Rutinas
+                    .Where(r => r.ClienteId == id)
+                    .ToListAsync();
+                foreach (var rutina in rutinasCliente)
                 {
-                    if (rutina.ClienteId == id) rutina.ClienteId = null;
-                    if (rutina.EmpleadoId == id) rutina.EmpleadoId = null;
+                    rutina.ClienteId = 0; // O podrías eliminarlas: _context.Rutinas.Remove(rutina);
                 }
 
-                var planesAlimenticios = await _context.PlanesAlimenticios.Where(p => p.ClienteId == id || p.EmpleadoId == id).ToListAsync();
-                foreach (var plan in planesAlimenticios)
+                var rutinasEmpleado = await _context.Rutinas
+                    .Where(r => r.EmpleadoId == id)
+                    .ToListAsync();
+                foreach (var rutina in rutinasEmpleado)
                 {
-                    if (plan.ClienteId == id) plan.ClienteId = null;
-                    if (plan.EmpleadoId == id) plan.EmpleadoId = null;
+                    rutina.EmpleadoId = 0;
                 }
 
-                var ventas = await _context.Ventas.Where(v => v.ClienteId == id || v.EmpleadoId == id).ToListAsync();
-                foreach (var venta in ventas)
+                // ✅ Actualizar planes alimenticios
+                var planesCliente = await _context.PlanesAlimenticios
+                    .Where(p => p.ClienteId == id)
+                    .ToListAsync();
+                foreach (var plan in planesCliente)
                 {
-                    if (venta.ClienteId == id) venta.ClienteId = null;
-                    if (venta.EmpleadoId == id) venta.EmpleadoId = null;
+                    plan.ClienteId = 0;
                 }
 
+                var planesEmpleado = await _context.PlanesAlimenticios
+                    .Where(p => p.EmpleadoId == id)
+                    .ToListAsync();
+                foreach (var plan in planesEmpleado)
+                {
+                    plan.EmpleadoId = 0;
+                }
+
+                // ✅ Actualizar ventas
+                var ventasCliente = await _context.Ventas
+                    .Where(v => v.ClienteId == id)
+                    .ToListAsync();
+                foreach (var venta in ventasCliente)
+                {
+                    venta.ClienteId = 0;
+                }
+
+                var ventasEmpleado = await _context.Ventas
+                    .Where(v => v.EmpleadoId == id)
+                    .ToListAsync();
+                foreach (var venta in ventasEmpleado)
+                {
+                    venta.EmpleadoId = 0;
+                }
+
+                // ✅ Actualizar movimientos de stock
+                var movimientos = await _context.MovimientosStock
+                    .Where(m => m.UsuarioId == id)
+                    .ToListAsync();
+                foreach (var movimiento in movimientos)
+                {
+                    movimiento.UsuarioId = 0;
+                }
+
+                // ✅ Actualizar reportes
+                var reportes = await _context.Reportes
+                    .Where(r => r.EmpleadoId == id)
+                    .ToListAsync();
+                foreach (var reporte in reportes)
+                {
+                    reporte.EmpleadoId = 0;
+                }
+
+                // ✅ FINALMENTE eliminar el usuario
                 _context.Usuarios.Remove(usuario);
                 await _context.SaveChangesAsync();
 

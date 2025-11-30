@@ -1,0 +1,276 @@
+﻿@model List<GYM.Models.Rutina>
+@{
+    ViewData["Title"] = "Mis Rutinas Creadas";
+    var empleadoNombre = (string)ViewData["EmpleadoNombre"];
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .rutina-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s;
+    }
+
+        .rutina-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+        }
+
+        .rutina-card.activa {
+            border-color: #28a745;
+        }
+
+        .rutina-card.inactiva {
+            opacity: 0.6;
+            border-color: #6c757d;
+        }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000;
+        }
+
+    .badge-nivel {
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .badge-principiante {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .badge-intermedio {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+    }
+
+    .badge-avanzado {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    .stats-mini {
+        background: rgba(45, 45, 45, 0.6);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+        border-radius: 10px;
+        padding: 0.5rem;
+        margin: 0.25rem;
+        text-align: center;
+    }
+
+    .btn-eliminar-rutina-card {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+
+        .btn-eliminar-rutina-card:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.5);
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow mb-0">
+            <i class="fa fa-list me-2"></i>Mis Rutinas Creadas
+        </h2>
+        <div>
+            <a asp-controller="GestionRutinas" asp-action="Index" class="btn btn-outline-warning">
+                <i class="fa fa-arrow-left me-2"></i>Volver al Panel
+            </a>
+            <a asp-controller="GestionRutinas" asp-action="SeleccionarClientes" class="btn btn-yellow ms-2">
+                <i class="fa fa-plus-circle me-2"></i>Nueva Rutina
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-mini">
+                <h4 class="text-yellow mb-0">@Model.Count</h4>
+                <small class="text-muted">Total Rutinas</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-mini">
+                <h4 class="text-success mb-0">@Model.Count(r => r.Activa)</h4>
+                <small class="text-muted">Activas</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-mini">
+                <h4 class="text-secondary mb-0">@Model.Count(r => !r.Activa)</h4>
+                <small class="text-muted">Finalizadas</small>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var rutina in Model)
+            {
+                var claseEstado = rutina.Activa ? "activa" : "inactiva";
+                var badgeNivel = rutina.NivelDificultad == "Principiante" ? "badge-principiante" :
+                rutina.NivelDificultad == "Intermedio" ? "badge-intermedio" : "badge-avanzado";
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="rutina-card @claseEstado">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h4 class="text-yellow mb-0">@rutina.Nombre</h4>
+                            <span class="badge @badgeNivel">@rutina.NivelDificultad</span>
+                        </div>
+
+                        <div class="mb-2">
+                            <strong class="text-yellow">
+                                <i class="fa fa-user me-1"></i>Cliente:
+                            </strong>
+                            <span class="text-white-custom">@rutina.Cliente?.Nombre</span>
+                        </div>
+
+                        <div class="text-white-custom mb-2">
+                            <i class="fa fa-tag me-2 text-yellow"></i>
+                            <strong>Tipo:</strong> @rutina.Tipo
+                        </div>
+
+                        <div class="text-white-custom mb-2">
+                            <i class="fa fa-calendar me-2 text-yellow"></i>
+                            <strong>Duración:</strong> @rutina.DuracionSemanas semanas
+                        </div>
+
+                        @if (rutina.FechaInicio.HasValue && rutina.FechaFin.HasValue)
+                        {
+                            <div class="text-white-custom mb-2">
+                                <i class="fa fa-clock me-2 text-yellow"></i>
+                                <strong>Periodo:</strong>
+                                <br />
+                                <small>@rutina.FechaInicio.Value.ToString("dd/MM/yyyy") - @rutina.FechaFin.Value.ToString("dd/MM/yyyy")</small>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(rutina.Descripcion))
+                        {
+                            <div class="text-white-custom mb-3 small">
+                                <i class="fa fa-info-circle me-2 text-yellow"></i>
+                                @rutina.Descripcion.Substring(0, Math.Min(80, rutina.Descripcion.Length))@(rutina.Descripcion.Length > 80 ? "..." : "")
+                            </div>
+                        }
+
+                        @if (rutina.EvaluacionBase != null)
+                        {
+                            <div class="alert alert-info p-2 mb-3 small" style="background: rgba(23, 162, 184, 0.2); border: 1px solid #17a2b8;">
+                                <i class="fa fa-chart-line me-1"></i>
+                                <strong>Evaluación:</strong> @rutina.EvaluacionBase.PromedioRendimiento.ToString("F1")/10
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            @if (rutina.Activa)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fa fa-check-circle me-1"></i>Activa
+                                </span>
+                                <form asp-controller="GestionRutinas" asp-action="DesactivarRutina" method="post" class="d-inline" onsubmit="return confirm('¿Desactivar esta rutina?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@rutina.RutinaId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa fa-ban me-1"></i>Desactivar
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="fa fa-ban me-1"></i>Finalizada
+                                </span>
+                            }
+                            @* ✅ NUEVO: Botón para eliminar rutina permanentemente *@
+                            <form asp-controller="GestionRutinas"
+                                  asp-action="EliminarRutina"
+                                  method="post"
+                                  onsubmit="return confirm('⚠️ ¿Estás seguro de ELIMINAR permanentemente la rutina \'@rutina.Nombre\' de @rutina.Cliente?.Nombre?\n\nEsta acción no se puede deshacer.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="rutinaId" value="@rutina.RutinaId" />
+                                <button type="submit" class="btn-eliminar-rutina-card">
+                                    <i class="fa fa-trash me-1"></i>Eliminar Rutina
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fa fa-dumbbell text-yellow mb-4" style="font-size: 5rem; opacity: 0.3;"></i>
+            <h3 class="text-white-custom mb-3">No has creado ninguna rutina aún</h3>
+            <p class="text-muted mb-4">
+                Comienza creando rutinas personalizadas para tus clientes basándote en sus evaluaciones de rendimiento.
+            </p>
+            <a asp-controller="GestionRutinas" asp-action="SeleccionarClientes" class="btn btn-yellow btn-lg">
+                <i class="fa fa-plus-circle me-2"></i>Crear Primera Rutina
+            </a>
+        </div>
+    }
+</div>
+
+<div style="height: 150px;"></div>

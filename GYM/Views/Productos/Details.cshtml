@@ -2,33 +2,298 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Detalles del Producto";
+    ViewData["Title"] = Model.Nombre;
 }
 
-<h2 class="my-4">@Model.Nombre</h2>
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">@Model.Nombre</h5>
-                <p class="card-text">@Model.Descripcion</p>
-                <p><strong>Precio:</strong> S/ @Model.Precio.ToString("0.00")</p>
-                <p><strong>En venta:</strong> @Model.StockVenta</p>
+    .product-detail-hero {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
 
-                <div class="mt-3">
-                    <form asp-controller="Cart" asp-action="AddToCart" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="productoId" value="@Model.ProductoId" />
-                        <div class="input-group mb-2" style="max-width:260px;">
-                            <input id="qty-input" name="cantidad" type="number" value="1" min="1" max="@Model.StockVenta" class="form-control" />
-                            <button id="btn-add" type="submit" class="btn btn-primary">Añadir al carrito</button>
-                        </div>
-                        <small id="limit-msg" class="text-danger d-none">¡Límite alcanzado!</small>
-                    </form>
+        .product-detail-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
 
-                    <a asp-controller="Cart" asp-action="Productos" class="btn btn-secondary">Volver a la tienda</a>
+        .product-detail-hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .product-image-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(255, 193, 7, 0.3);
+        position: relative;
+        overflow: hidden;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .product-image-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .product-image-container:hover::before {
+            left: 100%;
+        }
+
+    .product-icon {
+        font-size: 6rem;
+        color: #ffc107;
+        text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+    }
+
+    .product-info-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .price-tag {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+        margin-bottom: 1rem;
+    }
+
+    .stock-badge {
+        background: rgba(255, 193, 7, 0.2);
+        border: 2px solid #ffc107;
+        color: #ffc107;
+        padding: 0.7rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .quantity-selector {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+        .quantity-selector input {
+            background: transparent;
+            border: 2px solid rgba(255, 193, 7, 0.5);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 0.7rem;
+            border-radius: 8px;
+        }
+
+            .quantity-selector input:focus {
+                border-color: #ffc107;
+                box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+                outline: none;
+            }
+
+    .btn-add-cart {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.9rem 2rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+        width: 100%;
+        margin-bottom: 0.7rem;
+    }
+
+        .btn-add-cart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.6);
+            color: #000;
+        }
+
+        .btn-add-cart:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-back {
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 0.8rem 2rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+        .btn-back:hover {
+            border-color: #ffc107;
+            color: #ffc107;
+            transform: translateY(-2px);
+        }
+
+    .description-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .alert-limit {
+        background: rgba(220, 53, 69, 0.2);
+        border: 2px solid #dc3545;
+        color: white;
+        border-radius: 12px;
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .content-wrapper {
+        padding-bottom: 120px;
+    }
+</style>
+
+<div class="container mt-4 content-wrapper">
+    <!-- Hero (más pequeño) -->
+    <div class="product-detail-hero">
+        <div class="text-center">
+            <h1 class="display-5 text-yellow mb-2">@Model.Nombre</h1>
+            <p class="text-white-custom mb-0">Producto de alta calidad</p>
+        </div>
+    </div>
+
+    <!-- Contenido Principal (más compacto) -->
+    <div class="row">
+        <!-- Imagen del Producto -->
+        <div class="col-lg-5 mb-3">
+            <div class="product-image-container">
+                <i class="fa fa-box-open product-icon"></i>
+            </div>
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="col-lg-7">
+            <div class="product-info-card">
+                <!-- Precio -->
+                <div class="price-tag">
+                    S/ @Model.Precio.ToString("0.00")
                 </div>
+
+                <!-- Stock -->
+                <div class="stock-badge">
+                    <i class="fa fa-boxes me-2"></i>
+                    <span id="stock-display">Disponibles: @Model.StockVenta unidades</span>
+                </div>
+
+                <!-- Descripción -->
+                @if (!string.IsNullOrEmpty(Model.Descripcion))
+                {
+                    <div class="description-card">
+                        <h6 class="text-yellow mb-2">
+                            <i class="fa fa-info-circle me-2"></i>Descripción
+                        </h6>
+                        <p class="text-white-custom mb-0 small">@Model.Descripcion</p>
+                    </div>
+                }
+
+                <!-- Formulario de Compra -->
+                <form asp-controller="Cart" asp-action="AddToCart" method="post" id="addToCartForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productoId" value="@Model.ProductoId" />
+
+                    <!-- Selector de Cantidad -->
+                    <div class="quantity-selector">
+                        <label class="text-yellow fw-bold mb-2">
+                            <i class="fa fa-calculator me-2"></i>Cantidad:
+                        </label>
+                        <input id="qty-input"
+                               name="cantidad"
+                               type="number"
+                               value="1"
+                               min="1"
+                               max="@Model.StockVenta"
+                               class="form-control" />
+                        <small class="text-white-custom d-block mt-2">
+                            <i class="fa fa-info-circle me-1"></i>
+                            Máximo: <strong id="max-qty">@Model.StockVenta</strong> unidades
+                        </small>
+                    </div>
+
+                    <!-- Alerta de Límite -->
+                    <div id="limit-msg" class="alert-limit d-none">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        ¡Límite alcanzado!
+                    </div>
+
+                    <!-- Botones -->
+                    <button id="btn-add" type="submit" class="btn btn-add-cart">
+                        <i class="fa fa-shopping-cart me-2"></i>Añadir al Carrito
+                    </button>
+
+                    <a asp-controller="Cart" asp-action="Productos" class="btn btn-back">
+                        <i class="fa fa-arrow-left me-2"></i>Volver a la Tienda
+                    </a>
+                </form>
             </div>
         </div>
     </div>
@@ -50,19 +315,33 @@
                 const qtyInput = document.getElementById('qty-input');
                 const btnAdd = document.getElementById('btn-add');
                 const limitMsg = document.getElementById('limit-msg');
+                const stockDisplay = document.getElementById('stock-display');
+                const maxQty = document.getElementById('max-qty');
 
                 qtyInput.max = restante;
+                maxQty.textContent = restante;
+                stockDisplay.innerHTML = `<i class="fa fa-boxes me-2"></i>Disponibles: ${restante} unidades`;
+
                 if (restante === 0) {
                     qtyInput.value = 0;
                     qtyInput.disabled = true;
                     btnAdd.disabled = true;
+                    btnAdd.innerHTML = '<i class="fa fa-times-circle me-2"></i>Sin Stock';
                     limitMsg.classList.remove('d-none');
                 } else {
-                    if (parseInt(qtyInput.value, 10) > restante) qtyInput.value = restante;
+                    if (parseInt(qtyInput.value, 10) > restante) {
+                        qtyInput.value = restante;
+                    }
                     limitMsg.classList.add('d-none');
                 }
+
+                qtyInput.addEventListener('input', function () {
+                    if (parseInt(this.value) > restante) this.value = restante;
+                    if (parseInt(this.value) < 1) this.value = 1;
+                });
+
             } catch (e) {
-                console.warn('No se pudo ajustar el límite por carrito', e);
+                console.warn('Error al cargar carrito', e);
             }
         })();
     </script>

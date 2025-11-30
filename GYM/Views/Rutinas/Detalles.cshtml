@@ -1,0 +1,172 @@
+﻿@model GYM.Models.Rutina
+@{
+    ViewData["Title"] = "Detalles de Rutina";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .detalle-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-outline-yellow {
+        background: transparent;
+        color: #ffc107;
+        border: 2px solid #ffc107;
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-yellow:hover {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a;
+        }
+
+    .ejercicio-item {
+        background: rgba(45, 45, 45, 0.8);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="text-end mb-3">
+        <a asp-action="Index" class="btn btn-outline-yellow">
+            <i class="fa fa-arrow-left me-2"></i>Volver a Mis Rutinas
+        </a>
+    </div>
+
+    <div class="detalle-card">
+        <h2 class="text-yellow mb-4">
+            <i class="fa fa-dumbbell me-2"></i>@Model.Nombre
+        </h2>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow">Tipo:</strong> @Model.Tipo
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow">Nivel:</strong> @Model.NivelDificultad
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow">Duración:</strong> @Model.DuracionSemanas semanas
+                </p>
+            </div>
+            <div class="col-md-6">
+                @if (Model.FechaInicio.HasValue)
+                {
+                    <p class="text-white-custom mb-2">
+                        <strong class="text-yellow">Inicio:</strong> @Model.FechaInicio.Value.ToString("dd/MM/yyyy")
+                    </p>
+                }
+                @if (Model.FechaFin.HasValue)
+                {
+                    <p class="text-white-custom mb-2">
+                        <strong class="text-yellow">Fin:</strong> @Model.FechaFin.Value.ToString("dd/MM/yyyy")
+                    </p>
+                }
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow">Estado:</strong>
+                    @if (Model.Activa)
+                    {
+                        <span class="badge bg-success">Activa</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Finalizada</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Descripcion))
+        {
+            <div class="mb-4">
+                <h5 class="text-yellow">Descripción:</h5>
+                <p class="text-white-custom">@Model.Descripcion</p>
+            </div>
+        }
+
+        @if (Model.EvaluacionBase != null)
+        {
+            <div class="alert alert-info mb-4" style="background: rgba(23, 162, 184, 0.2); border: 2px solid #17a2b8;">
+                <h5 class="text-yellow">
+                    <i class="fa fa-chart-line me-2"></i>Evaluación de Rendimiento
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="text-white-custom mb-1"><strong>Fuerza:</strong> @Model.EvaluacionBase.Fuerza/10</p>
+                        <p class="text-white-custom mb-1"><strong>Resistencia:</strong> @Model.EvaluacionBase.Resistencia/10</p>
+                        <p class="text-white-custom mb-1"><strong>Flexibilidad:</strong> @Model.EvaluacionBase.Flexibilidad/10</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="text-white-custom mb-1"><strong>Técnica:</strong> @Model.EvaluacionBase.Tecnica/10</p>
+                        <p class="text-white-custom mb-1"><strong>Nivel General:</strong> @Model.EvaluacionBase.NivelGeneral/10</p>
+                        <p class="text-white-custom mb-1"><strong>Promedio:</strong> @Model.EvaluacionBase.PromedioRendimiento.ToString("F1")/10</p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.EvaluacionBase.Observaciones))
+                {
+                    <hr style="border-color: #17a2b8;">
+                    <p class="text-white-custom mb-0"><strong>Observaciones:</strong> @Model.EvaluacionBase.Observaciones</p>
+                }
+            </div>
+        }
+
+        @if (Model.Ejercicios != null && Model.Ejercicios.Any())
+        {
+            <h5 class="text-yellow mb-3">
+                <i class="fa fa-list me-2"></i>Ejercicios (@Model.Ejercicios.Count)
+            </h5>
+            @foreach (var ejercicio in Model.Ejercicios)
+            {
+                <div class="ejercicio-item">
+                    <h6 class="text-yellow mb-2">@ejercicio.Nombre</h6>
+                    <p class="text-white-custom mb-1">
+                        <strong>Grupo Muscular:</strong> @ejercicio.GrupoMuscular
+                    </p>
+                    <p class="text-white-custom mb-1">
+                        <strong>Series:</strong> @ejercicio.Series |
+                        <strong>Repeticiones:</strong> @ejercicio.Repeticiones
+                    </p>
+                    @if (!string.IsNullOrEmpty(ejercicio.Notas))
+                    {
+                        <p class="text-muted small mb-0">
+                            <i class="fa fa-sticky-note me-1"></i>@ejercicio.Notas
+                        </p>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107;">
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                Esta rutina aún no tiene ejercicios asignados.
+            </div>
+        }
+    </div>
+</div>
+
+<div style="height: 150px;"></div>

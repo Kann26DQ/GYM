@@ -79,10 +79,12 @@
                 <button class="btn btn-warning" type="submit"><i class="bi bi-person-fill me-2"></i>Ingresar</button>
             </div>
 
-            @if (ViewData["Mensaje"] != null)
+            @if (ViewBag.Mensaje != null)
             {
-                <div class="alert alert-danger mt-3" role="alert">
-                    @ViewData["Mensaje"]
+                <div class="alert alert-@(ViewBag.TipoMensaje ?? "info") alert-dismissible fade show" role="alert">
+                    <i class="fa fa-exclamation-triangle me-2"></i>
+                    <strong>@ViewBag.Mensaje</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 

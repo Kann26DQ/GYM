@@ -9,7 +9,281 @@
     // Variables para el mensaje de ascenso
     var mostrarMensajeAscenso = ViewData["MostrarMensajeAscenso"] as bool? ?? false;
     var nombreUsuarioAscendido = ViewData["NombreUsuario"] as string ?? nombreUsuario;
+
+    // ✅ NUEVO: Información del Gymbro asignado
+    var tieneGymbro = ViewData["TieneGymbro"] as bool? ?? false;
+    var nombreGymbro = ViewData["NombreGymbro"] as string;
+    var emailGymbro = ViewData["EmailGymbro"] as string;
 }
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 30px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .hero-section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    /* ✅ Tarjeta del Gymbro */
+    .gymbro-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+
+        .gymbro-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.4);
+        }
+
+        .gymbro-card::before {
+            content: '💪';
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            font-size: 6rem;
+            opacity: 0.1;
+        }
+
+        .gymbro-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000 !important;
+            text-decoration: none;
+        }
+
+    .feature-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.3s;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.05) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .feature-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+        }
+
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #1a1a1a;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        animation: float 3s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .membership-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+
+        .membership-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 193, 7, 0.4);
+        }
+
+    .content-wrapper {
+        padding-bottom: 150px;
+    }
+
+    /* ✅ Estilos para alertas */
+    .alert-custom-success {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(34, 139, 61, 0.2) 100%);
+        border: 2px solid #28a745;
+        color: #fff;
+        border-radius: 15px;
+    }
+
+    .alert-custom-warning {
+        background: rgba(255, 193, 7, 0.2);
+        border: 2px solid #ffc107;
+        border-radius: 15px;
+        color: #fff;
+    }
+
+    /* ✅ Estilos del modal de ascenso */
+    .confetti-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #ffc107;
+        animation: confetti-fall 3s ease-in-out infinite;
+    }
+
+        .confetti:nth-child(1) {
+            left: 10%;
+            animation-delay: 0s;
+            background: #ff6b6b;
+        }
+
+        .confetti:nth-child(2) {
+            left: 30%;
+            animation-delay: 0.5s;
+            background: #4ade80;
+        }
+
+        .confetti:nth-child(3) {
+            left: 50%;
+            animation-delay: 1s;
+            background: #ffc107;
+        }
+
+        .confetti:nth-child(4) {
+            left: 70%;
+            animation-delay: 1.5s;
+            background: #667eea;
+        }
+
+        .confetti:nth-child(5) {
+            left: 85%;
+            animation-delay: 2s;
+            background: #ff6b6b;
+        }
+
+        .confetti:nth-child(6) {
+            left: 95%;
+            animation-delay: 2.5s;
+            background: #4ade80;
+        }
+
+    @@keyframes confetti-fall {
+        0% {
+            transform: translateY(-100px) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(600px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    #modalAscenso .modal-content > * {
+        position: relative;
+        z-index: 1;
+    }
+</style>
 
 <!-- 👇 Modal de felicitación por ascenso -->
 @if (mostrarMensajeAscenso)
@@ -87,80 +361,6 @@
         </div>
     </div>
 
-    <style>
-        .confetti-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ffc107;
-            animation: confetti-fall 3s ease-in-out infinite;
-        }
-
-            .confetti:nth-child(1) {
-                left: 10%;
-                animation-delay: 0s;
-                background: #ff6b6b;
-            }
-
-            .confetti:nth-child(2) {
-                left: 30%;
-                animation-delay: 0.5s;
-                background: #4ade80;
-            }
-
-            .confetti:nth-child(3) {
-                left: 50%;
-                animation-delay: 1s;
-                background: #ffc107;
-            }
-
-            .confetti:nth-child(4) {
-                left: 70%;
-                animation-delay: 1.5s;
-                background: #667eea;
-            }
-
-            .confetti:nth-child(5) {
-                left: 85%;
-                animation-delay: 2s;
-                background: #ff6b6b;
-            }
-
-            .confetti:nth-child(6) {
-                left: 95%;
-                animation-delay: 2.5s;
-                background: #4ade80;
-            }
-
-        @@keyframes confetti-fall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(600px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        #modalAscenso .modal-content > * {
-            position: relative;
-            z-index: 1;
-        }
-    </style>
-
     <script>
         // 👇 Script inline para garantizar ejecución inmediata
         function cerrarModalAscenso() {
@@ -179,228 +379,236 @@
     </script>
 }
 
-<div class="container mt-4">
+<div class="container mt-4 content-wrapper">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="text-center">
+            <div class="icon-circle mx-auto">
+                <i class="fa fa-home"></i>
+            </div>
+            <h1 class="display-4 text-yellow mb-3">¡Bienvenido, @nombreUsuario! 👋</h1>
+            <p class="lead text-white-custom">Tu camino hacia una vida más saludable comienza aquí</p>
+        </div>
+    </div>
+
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-custom-success alert-dismissible fade show mb-4">
             <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* ✅ NUEVO: Mostrar Gymbro asignado si el cliente tiene uno *@
+    @if (tieneMembresia == true && tieneGymbro)
+    {
+        <div class="gymbro-card">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <div class="icon-circle" style="width: 100px; height: 100px; font-size: 3rem; margin: 0;">
+                        <i class="fa fa-user-tie"></i>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <h4 class="text-yellow mb-2">
+                        <i class="fa fa-star me-2"></i>Tu Gymbro Asignado
+                    </h4>
+                    <h5 class="text-white-custom mb-2">@nombreGymbro</h5>
+                    <p class="text-muted mb-0">
+                        <i class="fa fa-envelope me-2"></i>@emailGymbro
+                    </p>
+                </div>
+                <div class="col-md-3 text-end">
+                    <a asp-controller="Rutinas" asp-action="Index" class="btn btn-yellow">
+                        <i class="fa fa-dumbbell me-2"></i>Ver Mis Rutinas
+                    </a>
+                </div>
+            </div>
         </div>
     }
 
     @if (tieneMembresia == true)
     {
-        <!-- Usuario CON membresía activa -->
-        <div class="text-center mb-5">
-            <h1 class="display-3">¡Hola, @nombreUsuario! 👋</h1>
-            <p class="lead text-muted">Bienvenido de nuevo a tu gimnasio</p>
-        </div>
+        <!-- Tarjetas de acceso rápido -->
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-dumbbell"></i>
+                    </div>
+                    <h4 class="text-yellow mb-3">Mis Rutinas</h4>
+                    <p class="text-white-custom mb-4">Entrena con rutinas personalizadas diseñadas para ti</p>
+                    <a asp-controller="Rutinas" asp-action="Index" class="btn btn-yellow">
+                        <i class="fa fa-arrow-right me-2"></i>Ver Rutinas
+                    </a>
+                </div>
+            </div>
 
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-8">
-                <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <div class="card-body text-white text-center p-5">
-                        <i class="fa fa-check-circle fa-4x mb-4"></i>
-                        <h2 class="mb-3">Tu Membresía está Activa</h2>
-                        <p class="lead mb-4">Estás listo para entrenar y alcanzar tus objetivos</p>
-                        <div class="d-flex justify-content-center gap-3">
-                            <a href="#" class="btn btn-light btn-lg">
-                                <i class="fa fa-dumbbell me-2"></i>Ver Mis Rutinas
-                            </a>
-                            <a href="#" class="btn btn-outline-light btn-lg">
-                                <i class="fa fa-utensils me-2"></i>Mi Plan Alimenticio
-                            </a>
-                        </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-utensils"></i>
                     </div>
+                    <h4 class="text-yellow mb-3">Mi Alimentación</h4>
+                    <p class="text-white-custom mb-4">Planes nutricionales adaptados a tus objetivos</p>
+                    <a asp-controller="PlanesAlimenticios" asp-action="Index" class="btn btn-yellow">
+                        <i class="fa fa-arrow-right me-2"></i>Ver Planes
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <!-- Tarjetas informativas -->
-        <div class="row mt-5">
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100 border-0">
-                    <div class="card-body p-4">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                             style="width: 80px; height: 80px;">
-                            <i class="fa fa-calendar-check fa-2x"></i>
-                        </div>
-                        <h4>Reserva tu Clase</h4>
-                        <p class="text-muted">Agenda tus sesiones de entrenamiento</p>
-                        <a href="#" class="btn btn-outline-primary">Reservar</a>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-shopping-bag"></i>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100 border-0">
-                    <div class="card-body p-4">
-                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                             style="width: 80px; height: 80px;">
-                            <i class="fa fa-chart-line fa-2x"></i>
-                        </div>
-                        <h4>Mi Progreso</h4>
-                        <p class="text-muted">Revisa tus avances y logros</p>
-                        <a href="#" class="btn btn-outline-success">Ver Estadísticas</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100 border-0">
-                    <div class="card-body p-4">
-                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                             style="width: 80px; height: 80px;">
-                            <i class="fa fa-shopping-bag fa-2x"></i>
-                        </div>
-                        <h4>Tienda</h4>
-                        <p class="text-muted">Productos y suplementos</p>
-                        <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-info">Ir a Tienda</a>
-                    </div>
+                    <h4 class="text-yellow mb-3">Tienda</h4>
+                    <p class="text-white-custom mb-4">Productos y suplementos de calidad</p>
+                    <a asp-controller="Productos" asp-action="Index" class="btn btn-yellow">
+                        <i class="fa fa-arrow-right me-2"></i>Ir a Tienda
+                    </a>
                 </div>
             </div>
         </div>
     }
     else
     {
-        <!-- Usuario SIN membresía -->
+        <!-- Sección para usuarios SIN membresía -->
         <div class="text-center mb-5">
-            <h1 class="display-4">¡Bienvenido al GYM!</h1>
-            <p class="lead">Tu camino hacia una vida más saludable comienza aquí</p>
+            <div class="alert alert-custom-warning">
+                <h4 class="text-white-custom mb-2">
+                    <i class="fa fa-exclamation-triangle me-2"></i>No tienes una membresía activa
+                </h4>
+                <p class="text-white-custom mb-0">Adquiere una membresía para comenzar tu transformación</p>
+            </div>
         </div>
 
         @if (membresias != null && membresias.Any())
         {
-            <div class="mb-4">
-                <div class="alert alert-info text-center">
-                    <i class="fa fa-info-circle me-2"></i>
-                    <strong>¡Comienza hoy!</strong> Elige una de nuestras membresías disponibles para activar tu cuenta.
+            <!-- Botones para cambiar entre Mensuales y Anuales -->
+            <div class="text-center mb-4">
+                <div class="btn-group btn-group-lg" role="group">
+                    <a asp-action="Index" asp-route-tipo="mensual"
+                       class="btn @(tipoMembresia == "mensual" ? "btn-yellow" : "btn-outline-warning") @(tipoMembresia == "mensual" ? "" : "text-white")">
+                        <i class="fa fa-calendar me-2"></i>Planes Mensuales
+                    </a>
+                    <a asp-action="Index" asp-route-tipo="anual"
+                       class="btn @(tipoMembresia == "anual" ? "btn-yellow" : "btn-outline-warning") @(tipoMembresia == "anual" ? "" : "text-white")">
+                        <i class="fa fa-calendar-check me-2"></i>Planes Anuales
+                    </a>
                 </div>
+            </div>
 
-                <!-- Botones para cambiar entre Mensuales y Anuales -->
-                <div class="text-center mb-4">
-                    <div class="btn-group btn-group-lg" role="group">
-                        <a asp-action="Index" asp-route-tipo="mensual"
-                           class="btn @(tipoMembresia == "mensual" ? "btn-primary" : "btn-outline-primary")">
-                            <i class="fa fa-calendar me-2"></i>Planes Mensuales
-                        </a>
-                        <a asp-action="Index" asp-route-tipo="anual"
-                           class="btn @(tipoMembresia == "anual" ? "btn-success" : "btn-outline-success")">
-                            <i class="fa fa-calendar-check me-2"></i>Planes Anuales
-                        </a>
-                    </div>
-                </div>
+            <h2 class="text-center text-yellow mb-4">
+                <i class="fa fa-star me-2"></i>
+                @if (tipoMembresia == "anual")
+                {
+                    <span>Planes Anuales - ¡Ahorra más!</span>
+                }
+                else
+                {
+                    <span>Planes Mensuales</span>
+                }
+            </h2>
 
-                <h2 class="text-center mb-4">
-                    @if (tipoMembresia == "anual")
-                    {
-                        <span class="badge bg-success mb-2">Planes Anuales - ¡Ahorra más!</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-primary mb-2">Planes Mensuales</span>
-                    }
-                </h2>
-
-                <div class="row justify-content-center">
-                    @foreach (var plan in membresias)
-                    {
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="card h-100 shadow-lg @(plan.DuracionDias >= 300 ? "border-success" : "border-primary")">
-                                <div class="card-header @(plan.DuracionDias >= 300 ? "bg-success" : "bg-primary") text-white text-center py-3">
-                                    <h5 class="mb-0">@plan.Nombre</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="text-center mb-3">
-                                        <h2 class="display-5 @(plan.DuracionDias >= 300 ? "text-success" : "text-primary") mb-0">
-                                            S/ @plan.Precio.ToString("0.00")
-                                        </h2>
-                                        <p class="text-muted">
-                                            @if (plan.DuracionDias >= 300)
-                                            {
-                                                <span>@plan.DuracionDias días (1 año)</span>
-                                            }
-                                            else
-                                            {
-                                                <span>@plan.DuracionDias días</span>
-                                            }
-                                        </p>
+            <div class="row justify-content-center">
+                @foreach (var plan in membresias)
+                {
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="membership-card">
+                            <div class="p-4">
+                                <div class="text-center mb-3">
+                                    <div class="icon-circle mx-auto" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                        <i class="fa fa-crown"></i>
                                     </div>
-
-                                    <p class="text-muted small mb-3">@plan.Descripcion</p>
-
-                                    <h6 class="mb-2">Beneficios:</h6>
-                                    <ul class="list-unstyled small">
-                                        @foreach (var beneficio in plan.Beneficios.Take(3))
+                                    <h4 class="text-yellow mb-3">@plan.Nombre</h4>
+                                    <h2 class="text-white-custom display-6 mb-0">S/ @plan.Precio.ToString("0.00")</h2>
+                                    <p class="text-muted small">
+                                        @if (plan.DuracionDias >= 300)
                                         {
-                                            <li class="mb-1">
-                                                <i class="fa fa-check-circle text-success me-1"></i>@beneficio
-                                            </li>
+                                            <span>@plan.DuracionDias días (1 año)</span>
                                         }
-                                    </ul>
-
-                                    <div class="mt-2">
-                                        @if (plan.PermiteRutina)
+                                        else
                                         {
-                                            <span class="badge bg-info me-1">
-                                                <i class="fa fa-dumbbell"></i> Rutinas
-                                            </span>
+                                            <span>@plan.DuracionDias días</span>
                                         }
-                                        @if (plan.PermiteAlimentacion)
-                                        {
-                                            <span class="badge bg-success">
-                                                <i class="fa fa-utensils"></i> Alimentación
-                                            </span>
-                                        }
-                                    </div>
+                                    </p>
                                 </div>
-                                <div class="card-footer bg-white border-0">
-                                    <form asp-controller="Membresias" asp-action="IniciarPago" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@plan.MembresiaPlanId" />
-                                        <button type="submit" class="btn @(plan.DuracionDias >= 300 ? "btn-success" : "btn-primary") w-100">
-                                            <i class="fa fa-shopping-cart"></i> Adquirir
-                                        </button>
-                                    </form>
+
+                                <p class="text-white-custom small mb-3">@plan.Descripcion</p>
+
+                                <h6 class="text-yellow mb-2">Beneficios:</h6>
+                                <ul class="list-unstyled small text-white-custom">
+                                    @foreach (var beneficio in plan.Beneficios.Take(3))
+                                    {
+                                        <li class="mb-1">
+                                            <i class="fa fa-check-circle text-success me-1"></i>@beneficio
+                                        </li>
+                                    }
+                                </ul>
+
+                                <div class="mb-3">
+                                    @if (plan.PermiteRutina)
+                                    {
+                                        <span class="badge bg-success me-1 mb-2">
+                                            <i class="fa fa-dumbbell"></i> Rutinas
+                                        </span>
+                                    }
+                                    @if (plan.PermiteAlimentacion)
+                                    {
+                                        <span class="badge bg-info mb-2">
+                                            <i class="fa fa-utensils"></i> Alimentación
+                                        </span>
+                                    }
                                 </div>
+
+                                <form asp-controller="Membresias" asp-action="IniciarPago" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@plan.MembresiaPlanId" />
+                                    <button type="submit" class="btn btn-yellow w-100">
+                                        <i class="fa fa-shopping-cart me-2"></i>Adquirir
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             </div>
         }
         else
         {
-            <div class="alert alert-warning text-center">
+            <div class="alert alert-custom-warning text-center">
                 <i class="fa fa-exclamation-triangle"></i> No hay membresías @tipoMembresia disponibles en este momento.
             </div>
         }
 
         <!-- Tarjetas informativas para usuarios sin membresía -->
         <div class="row mt-5">
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="fa fa-dumbbell fa-3x text-primary mb-3"></i>
-                        <h4>Entrena Mejor</h4>
-                        <p>Rutinas personalizadas adaptadas a tus objetivos</p>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-dumbbell"></i>
                     </div>
+                    <h4 class="text-yellow mb-3">Entrena Mejor</h4>
+                    <p class="text-white-custom">Rutinas personalizadas adaptadas a tus objetivos</p>
                 </div>
             </div>
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="fa fa-utensils fa-3x text-success mb-3"></i>
-                        <h4>Come Saludable</h4>
-                        <p>Planes alimenticios diseñados por profesionales</p>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-utensils"></i>
                     </div>
+                    <h4 class="text-yellow mb-3">Come Saludable</h4>
+                    <p class="text-white-custom">Planes alimenticios diseñados por profesionales</p>
                 </div>
             </div>
-            <div class="col-md-4 text-center mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="fa fa-chart-line fa-3x text-info mb-3"></i>
-                        <h4>Progresa Rápido</h4>
-                        <p>Seguimiento continuo de tu evolución</p>
+            <div class="col-md-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="icon-circle mx-auto">
+                        <i class="fa fa-chart-line"></i>
                     </div>
+                    <h4 class="text-yellow mb-3">Progresa Rápido</h4>
+                    <p class="text-white-custom">Seguimiento continuo de tu evolución</p>
                 </div>
             </div>
         </div>

@@ -222,6 +222,32 @@
             });
         }
 
+        // Función para alternar Alto Contraste con token CSRF
+        function toggleAltoContrasteQuick(activar) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            
+            fetch('@Url.Action("ToggleAltoContraste", "Accesibilidad")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token // ✅ AGREGAR token
+                },
+                body: JSON.stringify(activar)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('labelAltoContraste').textContent = activar ? 'Activado' : 'Desactivado';
+                    document.body.classList.toggle('alto-contraste', activar);
+                    mostrarNotificacion('Alto Contraste ' + (activar ? 'activado' : 'desactivado'), 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al cambiar configuración', 'danger');
+            });
+        }
+
         // Función para alternar Texto Grande
         function toggleTextoGrande(activar) {
             fetch('@Url.Action("ToggleTextoGrande", "Accesibilidad")', {

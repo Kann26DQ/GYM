@@ -16,15 +16,52 @@ namespace GYM.Controllers.SuperAdmin
             _context = context;
         }
 
-        // ------------------------------
-        // LISTAR PRODUCTOS
-        // ------------------------------
-        // ...
+        /// <summary>
+        /// ✅ NUEVO: Index con filtro de búsqueda
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string buscar, string tipoFiltro = "nombre")
         {
-            var productos = await _context.Productos
+            var query = _context.Productos
                 .Include(p => p.Proveedor)
+                .AsQueryable();
+
+            // ✅ Aplicar filtros de búsqueda
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                switch (tipoFiltro.ToLower())
+                {
+                    case "nombre":
+                        query = query.Where(p => p.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    case "proveedor":
+                        query = query.Where(p => p.Proveedor != null && p.Proveedor.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    case "stock":
+                        if (int.TryParse(buscar, out int stockBuscado) && stockBuscado >= 0)
+                        {
+                            query = query.Where(p => p.Stock == stockBuscado);
+                        }
+                        break;
+                    case "precio":
+                        if (decimal.TryParse(buscar, out decimal precioBuscado) && precioBuscado >= 0)
+                        {
+                            query = query.Where(p => p.Precio == precioBuscado);
+                        }
+                        break;
+                    default:
+                        // Búsqueda general en todos los campos
+                        query = query.Where(p =>
+                            p.Nombre.ToLower().Contains(buscar.ToLower()) ||
+                            (p.Proveedor != null && p.Proveedor.Nombre.ToLower().Contains(buscar.ToLower())) ||
+                            p.Descripcion.ToLower().Contains(buscar.ToLower()));
+                        break;
+                }
+            }
+
+            var productos = await query
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
@@ -37,6 +74,10 @@ namespace GYM.Controllers.SuperAdmin
 
             ViewBag.ProductosAgotados = productosAgotados;
             ViewBag.ProductosBajoStock = productos.Where(p => p.Stock > 0 && p.Stock <= 5).ToList();
+
+            // Pasar valores al ViewBag para mantenerlos en la vista
+            ViewBag.BuscarActual = buscar;
+            ViewBag.TipoFiltroActual = tipoFiltro;
 
             return View("~/Views/SuperAdmin/GestionStock/Index.cshtml", productos);
         }

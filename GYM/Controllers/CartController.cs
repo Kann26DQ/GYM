@@ -150,7 +150,7 @@ namespace GYM.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckoutConfirm()
+        public async Task<IActionResult> ProcessCheckout() // ? Cambiar de CheckoutConfirm a ProcessCheckout
         {
             var cartItems = await _context.CartItems
                 .Include(ci => ci.Producto)
@@ -214,7 +214,7 @@ namespace GYM.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                TempData["Success"] = "Compra realizada con éxito.";
+                TempData["Success"] = "¡Compra realizada con éxito!";
                 return RedirectToAction("Index", "Productos");
             }
             catch (Exception ex)

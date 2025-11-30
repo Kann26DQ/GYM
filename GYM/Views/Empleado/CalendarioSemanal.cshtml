@@ -1,0 +1,478 @@
+﻿@{
+    ViewData["Title"] = "Calendario Semanal de Rutinas";
+    var empleadoNombre = (string)ViewData["EmpleadoNombre"];
+    var horariosFijos = (List<GYM.Models.HorarioFijo>)ViewData["HorariosFijos"];
+    var reservasFuturas = (List<GYM.Models.Reserva>)ViewData["ReservasFuturas"];
+    var rutinas = (List<GYM.Models.Rutina>)ViewData["Rutinas"];
+    var inicioSemana = (DateTime)ViewData["InicioSemana"];
+    var totalClientes = (int?)ViewData["TotalClientes"] ?? 0;
+    var coloresClientes = (Dictionary<int, string>?)ViewData["ColoresClientes"] ?? new Dictionary<int, string>();
+
+    var diasSemana = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Lunes" },
+        { DayOfWeek.Tuesday, "Martes" },
+        { DayOfWeek.Wednesday, "Miércoles" },
+        { DayOfWeek.Thursday, "Jueves" },
+        { DayOfWeek.Friday, "Viernes" },
+        { DayOfWeek.Saturday, "Sábado" }
+    };
+
+    // Función helper para calcular la altura del evento según duración
+    int CalcularAltura(TimeSpan duracion)
+    {
+        return (int)(duracion.TotalHours * 80); // 80px por hora
+    }
+
+    // Función helper para calcular posición top según hora de inicio
+    int CalcularPosicionTop(TimeSpan horaInicio)
+    {
+        return (int)((horaInicio.Hours - 8) * 80 + (horaInicio.Minutes / 60.0 * 80));
+    }
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .calendario-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 1.5rem;
+        overflow-x: auto;
+    }
+
+    .tabla-calendario {
+        display: grid;
+        grid-template-columns: 80px repeat(6, 1fr);
+        gap: 2px;
+        min-width: 1000px;
+    }
+
+    .header-celda {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 1rem;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 10px 10px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .hora-celda {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        padding: 0.5rem;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .dia-celda {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+        border-radius: 5px;
+        position: relative;
+        min-height: 80px;
+    }
+
+    .evento-absoluto {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        border-radius: 8px;
+        padding: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 5;
+        border-left: 4px solid;
+    }
+
+        .evento-absoluto:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.6);
+            z-index: 10;
+        }
+
+    .evento-nombre {
+        color: white;
+        font-weight: bold;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .evento-info {
+        color: #f8f9fa;
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .btn-crear-mini {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.3rem 0.6rem;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 0.3rem;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+        .btn-crear-mini:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffc107 100%);
+            color: #000;
+            text-decoration: none;
+        }
+
+    .badge-mini {
+        background: rgba(40, 167, 69, 0.8);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        display: block;
+        text-align: center;
+        margin-top: 0.3rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+        .badge-mini:hover {
+            background: rgba(40, 167, 69, 1);
+            color: white;
+            text-decoration: none;
+        }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .leyenda {
+        background: rgba(45, 45, 45, 0.8);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .leyenda-item {
+        display: inline-block;
+        margin-right: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .leyenda-cliente {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .grid-hora {
+        display: contents;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow mb-0">
+            <i class="fa fa-calendar-week me-2"></i>Calendario Semanal
+            @if (totalClientes > 0)
+            {
+                <span class="badge bg-info ms-2">@totalClientes cliente(s) en tu grupo</span>
+            }
+        </h2>
+        <div>
+            <a asp-controller="GestionRutinas" asp-action="Index" class="btn btn-outline-warning">
+                <i class="fa fa-arrow-left me-2"></i>Volver al Panel
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="fa fa-exclamation-triangle me-2"></i>@TempData["Warning"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- ✅ MENSAJE SI NO HAY CLIENTES EN EL GRUPO -->
+    @if (totalClientes == 0 || (!horariosFijos.Any() && !reservasFuturas.Any()))
+    {
+        <div class="text-center py-5">
+            <i class="fa fa-users text-yellow mb-4" style="font-size: 5rem; opacity: 0.3;"></i>
+            <h3 class="text-white-custom mb-3">No hay clientes con horarios o reservas</h3>
+            <p class="text-muted mb-4">
+                Los clientes de tu grupo aún no tienen horarios fijos o reservas configuradas.
+            </p>
+            <a asp-controller="GestionRutinas" asp-action="MisGrupos" class="btn btn-warning">
+                <i class="fa fa-users me-2"></i>Ver Mis Grupos
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- ✅ LEYENDA CON COLORES DE CLIENTES -->
+        <div class="leyenda">
+            <h6 class="text-yellow mb-3">
+                <i class="fa fa-info-circle me-2"></i>Leyenda de Clientes
+            </h6>
+            @if (coloresClientes.Any())
+            {
+                @foreach (var colorCliente in coloresClientes)
+                {
+                    var cliente = horariosFijos.FirstOrDefault(h => h.UsuarioId == colorCliente.Key)?.Usuario
+                    ?? reservasFuturas.FirstOrDefault(r => r.UsuarioId == colorCliente.Key)?.Usuario;
+
+                    @if (cliente != null)
+                    {
+                        <div class="leyenda-item">
+                            <span class="leyenda-cliente" style="background: @colorCliente.Value;"></span>
+                            <span class="text-white-custom">@cliente.Nombre</span>
+                        </div>
+                    }
+                }
+            }
+            else
+            {
+                <div class="leyenda-item">
+                    <i class="fa fa-square text-success"></i>
+                    <span class="text-white-custom">Horario Fijo</span>
+                </div>
+                <div class="leyenda-item">
+                    <i class="fa fa-square text-info"></i>
+                    <span class="text-white-custom">Reserva</span>
+                </div>
+            }
+        </div>
+
+        <!-- ✅ CALENDARIO TIPO MALLA CON HORAS AL COSTADO -->
+        <div class="calendario-container">
+            <div class="tabla-calendario">
+                <!-- ENCABEZADO -->
+                <div class="header-celda">Hora</div>
+                @foreach (var dia in diasSemana)
+                {
+                    var fecha = inicioSemana.AddDays((int)dia.Key - (int)inicioSemana.DayOfWeek);
+                    if (inicioSemana.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        fecha = inicioSemana.AddDays((int)dia.Key + 1);
+                    }
+                    <div class="header-celda">
+                        @dia.Value
+                        <br />
+                        <small>@fecha.ToString("dd/MM")</small>
+                    </div>
+                }
+
+                <!-- FILAS POR HORA (8:00 - 23:00) -->
+                @for (int hora = 8; hora < 23; hora++)
+                {
+                    <div class="grid-hora">
+                        <!-- COLUMNA DE HORA -->
+                        <div class="hora-celda">
+                            @hora:00
+                        </div>
+
+                        <!-- COLUMNAS DE DÍAS -->
+                        @foreach (var dia in diasSemana)
+                        {
+                            var fecha = inicioSemana.AddDays((int)dia.Key - (int)inicioSemana.DayOfWeek);
+                            if (inicioSemana.DayOfWeek == DayOfWeek.Sunday)
+                            {
+                                fecha = inicioSemana.AddDays((int)dia.Key + 1);
+                            }
+
+                            var horaInicio = new TimeSpan(hora, 0, 0);
+                            var horaFin = new TimeSpan(hora + 1, 0, 0);
+
+                            <div class="dia-celda">
+                                @{
+                                    // Buscar eventos que EMPIEZAN en esta hora
+                                    var horariosEnCelda = horariosFijos
+                                    .Where(h => h.DiaSemana == dia.Key &&
+                                    h.HoraInicio >= horaInicio &&
+                                    h.HoraInicio < horaFin)
+                                    .ToList();
+
+                                    var reservasEnCelda = reservasFuturas
+                                    .Where(r => r.FechaReserva.Date == fecha.Date &&
+                                    r.HoraInicio >= horaInicio &&
+                                    r.HoraInicio < horaFin)
+                                    .ToList();
+
+                                    // ✅ HORARIOS FIJOS CON COLOR DINÁMICO
+                                    foreach (var horario in horariosEnCelda)
+                                    {
+                                        var duracion = horario.HoraFin - horario.HoraInicio;
+                                        var altura = CalcularAltura(duracion);
+                                        var colorCliente = coloresClientes.ContainsKey(horario.UsuarioId)
+                                        ? coloresClientes[horario.UsuarioId]
+                                        : "#28a745";
+
+                                        // Verificar si hay rutina para ESTE horario específico
+                                        var tieneRutina = rutinas.Any(r => r.ClienteId == horario.UsuarioId &&
+                                        r.DiaSemana == dia.Key &&
+                                        r.HoraInicio == horario.HoraInicio);
+
+                                        <div class="evento-absoluto"
+                                             style="height: @(altura)px;
+                                                                        top: @(CalcularPosicionTop(horario.HoraInicio) - (hora - 8) * 80)px;
+                                                                        background: linear-gradient(135deg, @(colorCliente)E6 0%, @(colorCliente)CC 100%);
+                                                                        border-left-color: @colorCliente;">
+                                            <div class="evento-nombre" title="@horario.Usuario?.Nombre">
+                                                <i class="fa fa-user me-1"></i>@horario.Usuario?.Nombre
+                                            </div>
+                                            <div class="evento-info">
+                                                <i class="fa fa-dumbbell me-1"></i>@horario.TipoEntrenamiento
+                                            </div>
+                                            <div class="evento-info">
+                                                <i class="fa fa-clock me-1"></i>
+                                                @horario.HoraInicio.ToString(@"hh\:mm") - @horario.HoraFin.ToString(@"hh\:mm")
+                                            </div>
+
+                                            @if (!tieneRutina)
+                                            {
+                                                <a asp-controller="GestionRutinas"
+                                                   asp-action="CrearRutinaEspecifica"
+                                                   asp-route-clienteId="@horario.UsuarioId"
+                                                   asp-route-diaSemana="@((int)dia.Key)"
+                                                   asp-route-horaInicio="@horario.HoraInicio.ToString()"
+                                                   asp-route-horaFin="@horario.HoraFin.ToString()"
+                                                   asp-route-tipoEntrenamiento="@horario.TipoEntrenamiento"
+                                                   class="btn-crear-mini">
+                                                    <i class="fa fa-plus"></i> Rutina
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                var rutinaDia = rutinas.FirstOrDefault(r => r.ClienteId == horario.UsuarioId &&
+                                                r.DiaSemana == dia.Key &&
+                                                r.HoraInicio == horario.HoraInicio);
+                                                @if (rutinaDia != null)
+                                                {
+                                                    <a asp-controller="GestionRutinas"
+                                                       asp-action="VerRutinaDetalle"
+                                                       asp-route-rutinaId="@rutinaDia.RutinaId"
+                                                       class="badge-mini">
+                                                        <i class="fa fa-eye"></i> Ver (@(rutinaDia.Ejercicios?.Count ?? 0)) ejercicios
+                                                    </a>
+                                                }
+                                            }
+                                        </div>
+                                    }
+
+                                    // ✅ RESERVAS CON COLOR DINÁMICO
+                                    foreach (var reserva in reservasEnCelda)
+                                    {
+                                        var duracion = reserva.HoraFin - reserva.HoraInicio;
+                                        var altura = CalcularAltura(duracion);
+                                        var colorCliente = coloresClientes.ContainsKey(reserva.UsuarioId)
+                                        ? coloresClientes[reserva.UsuarioId]
+                                        : "#17a2b8";
+
+                                        // Verificar rutina para ESTA fecha específica
+                                        var tieneRutina = rutinas.Any(r => r.ClienteId == reserva.UsuarioId &&
+                                        r.FechaEspecifica == fecha.Date &&
+                                        r.HoraInicio == reserva.HoraInicio);
+
+                                        <div class="evento-absoluto"
+                                             style="height: @(altura)px;
+                                                                        top: @(CalcularPosicionTop(reserva.HoraInicio) - (hora - 8) * 80)px;
+                                                                        background: linear-gradient(135deg, @(colorCliente)E6 0%, @(colorCliente)CC 100%);
+                                                                        border-left-color: @colorCliente;">
+                                            <div class="evento-nombre" title="@reserva.Usuario?.Nombre">
+                                                <i class="fa fa-user me-1"></i>@reserva.Usuario?.Nombre
+                                            </div>
+                                            <div class="evento-info">
+                                                <i class="fa fa-calendar-check me-1"></i>Reserva
+                                            </div>
+                                            <div class="evento-info">
+                                                <i class="fa fa-clock me-1"></i>
+                                                @reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")
+                                            </div>
+
+                                            @if (!tieneRutina)
+                                            {
+                                                <a asp-controller="GestionRutinas"
+                                                   asp-action="CrearRutinaEspecifica"
+                                                   asp-route-clienteId="@reserva.UsuarioId"
+                                                   asp-route-fechaEspecifica="@fecha.ToString("yyyy-MM-dd")"
+                                                   asp-route-horaInicio="@reserva.HoraInicio.ToString()"
+                                                   asp-route-horaFin="@reserva.HoraFin.ToString()"
+                                                   asp-route-tipoEntrenamiento="Reserva"
+                                                   class="btn-crear-mini">
+                                                    <i class="fa fa-plus"></i> Rutina
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                var rutinaDia = rutinas.FirstOrDefault(r => r.ClienteId == reserva.UsuarioId &&
+                                                r.FechaEspecifica == fecha.Date &&
+                                                r.HoraInicio == reserva.HoraInicio);
+                                                @if (rutinaDia != null)
+                                                {
+                                                    <a asp-controller="GestionRutinas"
+                                                       asp-action="VerRutinaDetalle"
+                                                       asp-route-rutinaId="@rutinaDia.RutinaId"
+                                                       class="badge-mini">
+                                                        <i class="fa fa-eye"></i> Ver (@(rutinaDia.Ejercicios?.Count ?? 0)) ejercicios
+                                                    </a>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<div style="height: 150px;"></div>

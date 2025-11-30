@@ -12,7 +12,6 @@ namespace GYM.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<MembresiaPlan> MembresiaPlanes { get; set; }
         public DbSet<MembresiaUsuario> MembresiasUsuarios { get; set; }
-
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<Beneficio> Beneficios { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
@@ -26,6 +25,9 @@ namespace GYM.Data
         public DbSet<Reporte> Reportes { get; set; }
         public DbSet<Proveedor> Proveedores { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<HorarioFijo> HorariosFijos { get; set; }
+        public DbSet<EvaluacionRendimiento> EvaluacionesRendimiento { get; set; }
+        public DbSet<GrupoClientes> GruposClientes { get; set; } // ✅ AGREGADO
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,7 +105,53 @@ namespace GYM.Data
             modelBuilder.Entity<MembresiaPlan>().Property(mp => mp.Precio).HasPrecision(18, 2);
             modelBuilder.Entity<MembresiaUsuario>().Property(mu => mu.Precio).HasPrecision(18, 2);
 
-            // Relación de asignaciones
+            // ✅ Precisión para EvaluacionRendimiento
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .Property(e => e.Peso)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .Property(e => e.Altura)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .Property(e => e.IMC)
+                .HasPrecision(18, 2);
+
+            // ✅ Relaciones de EvaluacionRendimiento
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .HasOne(e => e.Cliente)
+                .WithMany()
+                .HasForeignKey(e => e.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .HasOne(e => e.Empleado)
+                .WithMany()
+                .HasForeignKey(e => e.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EvaluacionRendimiento>()
+                .HasOne(e => e.Grupo)
+                .WithMany(g => g.Evaluaciones)
+                .HasForeignKey(e => e.GrupoClientesId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ✅ Relación Rutina -> EvaluacionRendimiento
+            modelBuilder.Entity<Rutina>()
+                .HasOne(r => r.EvaluacionBase)
+                .WithMany(e => e.Rutinas)
+                .HasForeignKey(r => r.EvaluacionRendimientoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ✅ Relación GrupoClientes -> Empleado
+            modelBuilder.Entity<GrupoClientes>()
+                .HasOne(g => g.Empleado)
+                .WithMany()
+                .HasForeignKey(g => g.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relación de asignaciones de membresías
             modelBuilder.Entity<MembresiaUsuario>()
                 .HasOne(mu => mu.Usuario)
                 .WithMany()
@@ -121,54 +169,77 @@ namespace GYM.Data
 
             // RUTINA
             modelBuilder.Entity<Rutina>()
-                .HasOne(r => r.Cliente).WithMany(u => u.Rutinas)
-                .HasForeignKey(r => r.ClienteId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(r => r.Cliente)
+                .WithMany(u => u.Rutinas)
+                .HasForeignKey(r => r.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Rutina>()
-                .HasOne(r => r.Empleado).WithMany()
-                .HasForeignKey(r => r.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(r => r.Empleado)
+                .WithMany()
+                .HasForeignKey(r => r.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // PLAN ALIMENTICIO
             modelBuilder.Entity<PlanAlimenticio>()
-                .HasOne(p => p.Cliente).WithMany(u => u.PlanesAlimenticios)
-                .HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.Cliente)
+                .WithMany(u => u.PlanesAlimenticios)
+                .HasForeignKey(p => p.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PlanAlimenticio>()
-                .HasOne(p => p.Empleado).WithMany()
-                .HasForeignKey(p => p.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.Empleado)
+                .WithMany()
+                .HasForeignKey(p => p.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // VENTA
             modelBuilder.Entity<Venta>()
-                .HasOne(v => v.Cliente).WithMany(u => u.Ventas)
-                .HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(v => v.Cliente)
+                .WithMany(u => u.Ventas)
+                .HasForeignKey(v => v.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Venta>()
-                .HasOne(v => v.Empleado).WithMany()
-                .HasForeignKey(v => v.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(v => v.Empleado)
+                .WithMany()
+                .HasForeignKey(v => v.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // MOVIMIENTO STOCK
             modelBuilder.Entity<MovimientoStock>()
-                .HasOne(ms => ms.Usuario).WithMany(u => u.Movimientos)
-                .HasForeignKey(ms => ms.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ms => ms.Usuario)
+                .WithMany(u => u.Movimientos)
+                .HasForeignKey(ms => ms.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // REPORTE
             modelBuilder.Entity<Reporte>()
-                .HasOne(r => r.Empleado).WithMany(u => u.Reportes)
-                .HasForeignKey(r => r.EmpleadoId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(r => r.Empleado)
+                .WithMany(u => u.Reportes)
+                .HasForeignKey(r => r.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // PROVEEDOR
             modelBuilder.Entity<Proveedor>()
-                .HasMany(p => p.Productos).WithOne(p => p.Proveedor)
-                .HasForeignKey(p => p.ProveedorId).OnDelete(DeleteBehavior.SetNull);
+                .HasMany(p => p.Productos)
+                .WithOne(p => p.Proveedor)
+                .HasForeignKey(p => p.ProveedorId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // CartItem
             modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Producto).WithMany(p => p.CartItems)
-                .HasForeignKey(ci => ci.ProductoId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ci => ci.Producto)
+                .WithMany(p => p.CartItems)
+                .HasForeignKey(ci => ci.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Usuario).WithMany(u => u.CartItems)
-                .HasForeignKey(ci => ci.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ci => ci.Usuario)
+                .WithMany(u => u.CartItems)
+                .HasForeignKey(ci => ci.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configuración de Reserva
             modelBuilder.Entity<Reserva>()
                 .HasOne(r => r.Usuario)
@@ -178,6 +249,7 @@ namespace GYM.Data
 
             modelBuilder.Entity<Reserva>()
                 .HasIndex(r => new { r.FechaReserva, r.HoraInicio, r.HoraFin });
+
             modelBuilder.Entity<Reserva>(entity =>
             {
                 entity.HasKey(r => r.ReservaId);
@@ -187,10 +259,18 @@ namespace GYM.Data
                     .HasForeignKey(r => r.UsuarioId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                entity.HasOne(r => r.MarcadoPor)
+                    .WithMany()
+                    .HasForeignKey(r => r.MarcadoPorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasIndex(r => new { r.FechaReserva, r.HoraInicio, r.HoraFin });
 
                 entity.Property(r => r.Estado)
                     .HasConversion<int>();
+
+                entity.Property(r => r.Asistio)
+                    .IsRequired(false);
             });
         }
     }

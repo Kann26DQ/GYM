@@ -1,118 +1,395 @@
 ﻿@model IEnumerable<GYM.Models.MembresiaPlan>
 @{
     Layout = "_LayoutSuperAdmin";
-    ViewData["Title"] = "Membresías";
+    ViewData["Title"] = "Gestión de Membresías";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Membresías</h2>
-    <a asp-action="Create" class="btn btn-success">
-        <i class="fa fa-plus"></i> Nueva membresía
-    </a>
-</div>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .membership-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .membership-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .membership-card:hover::before {
+            left: 100%;
+        }
+
+        .membership-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+    .membership-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .membership-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin: 0;
+    }
+
+    .membership-price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .membership-duration {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .feature-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: bold;
+        margin: 0.3rem;
+        display: inline-block;
+    }
+
+        .feature-badge.rutina {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .feature-badge.alimentacion {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+    .status-active {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .status-inactive {
+        background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .btn-action-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4);
+            color: white;
+        }
+
+    .btn-toggle {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        color: #333;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 237, 234, 0.4);
+        }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+
+    .btn-create {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+        .btn-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            color: white;
+        }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+        .benefits-list li {
+            padding: 0.5rem 0;
+            color: #666;
+        }
+
+            .benefits-list li i {
+                color: #28a745;
+                margin-right: 0.5rem;
+            }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+</style>
+
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fa fa-id-card me-2"></i>Gestión de Membresías
+                </h1>
+                <p class="mb-0">Administra los planes de membresía disponibles para tus clientes</p>
+            </div>
+            <a asp-action="Create" class="btn btn-create btn-lg">
+                <i class="fa fa-plus-circle me-2"></i>Nueva Membresía
+            </a>
+        </div>
     </div>
-}
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
+    <!-- Alertas -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Precio</th>
-                <th>Duración</th>
-                <th>Permisos</th>
-                <th>Estado</th>
-                <th class="text-end">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in Model)
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tarjetas de Membresías -->
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var plan in Model)
             {
-                <tr>
-                    <td><strong>@p.Nombre</strong></td>
-                    <td>@p.Descripcion</td>
-                    <td>S/ @p.Precio.ToString("0.00")</td>
-                    <td>@p.DuracionDias días</td>
-                    <td>
-                        @if (p.PermiteRutina)
-                        {
-                            <span class="badge bg-info">Rutina</span>
-                        }
-                        @if (p.PermiteAlimentacion)
-                        {
-                            <span class="badge bg-success">Alimentación</span>
-                        }
-                    </td>
-                    <td>
-                        @if (p.Activo)
-                        {
-                            <span class="badge bg-success">Activo</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Inactivo</span>
-                        }
-                    </td>
-                    <td class="text-end">
-                        <div class="btn-group" role="group">
-                            <a asp-action="Edit" asp-route-id="@p.MembresiaPlanId"
-                               class="btn btn-sm btn-warning" title="Editar">
-                                <i class="fa fa-edit"></i>
+                <div class="col-lg-6 mb-4">
+                    <div class="membership-card">
+                        <div class="membership-card-header">
+                            <div>
+                                <h3 class="membership-title">
+                                    <i class="fa fa-crown me-2"></i>@plan.Nombre
+                                </h3>
+                                <span class="membership-duration">
+                                    <i class="fa fa-calendar-alt me-1"></i>@plan.DuracionDias días
+                                </span>
+                            </div>
+                            <div class="text-end">
+                                <div class="membership-price">S/ @plan.Precio.ToString("0.00")</div>
+                                @if (plan.Activo)
+                                {
+                                    <span class="status-active">
+                                        <i class="fa fa-check-circle me-1"></i>Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-inactive">
+                                        <i class="fa fa-times-circle me-1"></i>Inactivo
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <p class="text-muted mb-3">
+                                <i class="fa fa-info-circle me-1"></i>
+                                @plan.Descripcion
+                            </p>
+
+                            <div class="mb-3">
+                                <strong class="d-block mb-2">
+                                    <i class="fa fa-gift me-1 text-success"></i>Beneficios incluidos:
+                                </strong>
+                                <div>
+                                    @if (plan.PermiteRutina)
+                                    {
+                                        <span class="feature-badge rutina">
+                                            <i class="fa fa-dumbbell me-1"></i>Rutinas Personalizadas
+                                        </span>
+                                    }
+                                    @if (plan.PermiteAlimentacion)
+                                    {
+                                        <span class="feature-badge alimentacion">
+                                            <i class="fa fa-utensils me-1"></i>Plan Alimenticio
+                                        </span>
+                                    }
+                                    @if (!plan.PermiteRutina && !plan.PermiteAlimentacion)
+                                    {
+                                        <span class="text-muted">
+                                            <i class="fa fa-info-circle me-1"></i>Plan básico sin servicios adicionales
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (plan.Beneficios.Any())
+                            {
+                                <strong class="d-block mb-2">
+                                    <i class="fa fa-list me-1 text-primary"></i>Características:
+                                </strong>
+                                <ul class="benefits-list">
+                                    @foreach (var beneficio in plan.Beneficios.Take(3))
+                                    {
+                                        <li>
+                                            <i class="fa fa-check-circle"></i>@beneficio
+                                        </li>
+                                    }
+                                    @if (plan.Beneficios.Count > 3)
+                                    {
+                                        <li class="text-muted">
+                                            <i class="fa fa-plus"></i>+@(plan.Beneficios.Count - 3) beneficios más
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+
+                        <div class="btn-action-group">
+                            <a asp-action="Edit" asp-route-id="@plan.MembresiaPlanId"
+                               class="btn btn-edit">
+                                <i class="fa fa-edit me-1"></i>Editar
                             </a>
 
                             <form asp-action="Toggle" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@p.MembresiaPlanId" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                        title="@(p.Activo ? "Desactivar" : "Activar")">
-                                    <i class="fa fa-@(p.Activo ? "toggle-on" : "toggle-off")"></i>
+                                <input type="hidden" name="id" value="@plan.MembresiaPlanId" />
+                                <button type="submit" class="btn btn-toggle">
+                                    <i class="fa fa-@(plan.Activo ? "toggle-on" : "toggle-off") me-1"></i>
+                                    @(plan.Activo ? "Desactivar" : "Activar")
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-sm btn-danger"
+                            <button type="button" class="btn btn-delete"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal@(p.MembresiaPlanId)"
-                                    title="Eliminar">
-                                <i class="fa fa-trash"></i>
+                                    data-bs-target="#deleteModal@(plan.MembresiaPlanId)">
+                                <i class="fa fa-trash me-1"></i>Eliminar
                             </button>
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                </div>
 
                 <!-- Modal de confirmación de eliminación -->
-                <div class="modal fade" id="deleteModal@(p.MembresiaPlanId)" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Confirmar eliminación</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal fade" id="deleteModal@(plan.MembresiaPlanId)" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius: 20px; border: none;">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 20px 20px 0 0;">
+                                <h5 class="modal-title">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    Confirmar Eliminación
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="modal-body">
-                                <p>¿Estás seguro de que deseas eliminar la membresía <strong>@p.Nombre</strong>?</p>
-                                <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción no se puede deshacer.</p>
+                            <div class="modal-body" style="padding: 2rem;">
+                                <p class="fs-5">¿Estás seguro de que deseas eliminar la membresía <strong>@plan.Nombre</strong>?</p>
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    <strong>Advertencia:</strong> Esta acción no se puede deshacer. Si hay usuarios con esta membresía activa, no se podrá eliminar.
+                                </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <div class="modal-footer" style="border: none; padding: 1rem 2rem;">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 12px;">
+                                    <i class="fa fa-times me-1"></i>Cancelar
+                                </button>
                                 <form asp-action="Delete" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@p.MembresiaPlanId" />
-                                    <button type="submit" class="btn btn-danger">
-                                        <i class="fa fa-trash"></i> Eliminar
+                                    <input type="hidden" name="id" value="@plan.MembresiaPlanId" />
+                                    <button type="submit" class="btn btn-delete">
+                                        <i class="fa fa-trash me-1"></i>Sí, Eliminar
                                     </button>
                                 </form>
                             </div>
@@ -120,13 +397,17 @@
                     </div>
                 </div>
             }
-        </tbody>
-    </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa fa-inbox"></i>
+            <h3>No hay membresías registradas</h3>
+            <p class="text-muted mb-4">Comienza creando tu primera membresía para tus clientes</p>
+            <a asp-action="Create" class="btn btn-create btn-lg">
+                <i class="fa fa-plus-circle me-2"></i>Crear Primera Membresía
+            </a>
+        </div>
+    }
 </div>
-
-@if (!Model.Any())
-{
-    <div class="alert alert-info text-center">
-        <i class="fa fa-info-circle"></i> No hay membresías registradas.
-    </div>
-}

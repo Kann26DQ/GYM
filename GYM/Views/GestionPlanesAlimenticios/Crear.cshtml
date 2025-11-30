@@ -1,0 +1,459 @@
+﻿@model GYM.Models.PlanAlimenticio
+@{
+    ViewData["Title"] = "Crear Plan Alimenticio";
+    var cliente = ViewData["Cliente"] as GYM.Models.Usuario;
+    var evaluacion = ViewData["Evaluacion"] as GYM.Models.EvaluacionRendimiento;
+    var empleadoNombre = ViewData["EmpleadoNombre"] as string;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+        padding-bottom: 150px;
+    }
+
+    .form-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #4cff4c;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .comida-row {
+        background: rgba(45, 45, 45, 0.95);
+        border: 2px solid rgba(76, 255, 76, 0.5);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .text-green {
+        color: #4cff4c !important;
+        font-weight: 600;
+        text-shadow: 0 0 5px rgba(76, 255, 76, 0.3);
+    }
+
+    .text-white-custom {
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.95);
+        border: 2px solid rgba(76, 255, 76, 0.5);
+        color: #ffffff !important;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(45, 45, 45, 1);
+            border-color: #4cff4c;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(76, 255, 76, 0.4);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+    .form-label {
+        color: #4cff4c !important;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .btn-agregar-comida {
+        background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 0.8rem 1.8rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 3px 10px rgba(32, 201, 151, 0.3);
+    }
+
+        .btn-agregar-comida:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(32, 201, 151, 0.5);
+            color: #ffffff !important;
+        }
+
+    .btn-eliminar-comida {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+
+        .btn-eliminar-comida:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.5);
+            color: #ffffff !important;
+        }
+
+    .btn-guardar {
+        background: linear-gradient(135deg, #4cff4c 0%, #20c997 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(76, 255, 76, 0.4);
+    }
+
+        .btn-guardar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(76, 255, 76, 0.6);
+            color: #000000 !important;
+        }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .alert-info {
+        background: rgba(32, 201, 151, 0.15) !important;
+        border: 2px solid #20c997 !important;
+    }
+
+    .alert-warning {
+        background: rgba(255, 193, 7, 0.15) !important;
+        border: 2px solid rgba(255, 193, 7, 0.4) !important;
+    }
+
+    h2, h4, h5 {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    strong {
+        color: #4cff4c !important;
+    }
+
+    small {
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-green">
+            <i class="fa fa-utensils me-2"></i>Crear Plan Alimenticio
+        </h2>
+        <a asp-action="SeleccionarCliente" class="btn btn-outline-success">
+            <i class="fa fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <!-- Info del Cliente -->
+    <div class="alert alert-info mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="text-green mb-2">
+                    <i class="fa fa-user me-2"></i>@cliente?.Nombre
+                </h5>
+                <p class="text-white-custom small mb-0">
+                    <strong>Email:</strong> @cliente?.Email
+                </p>
+            </div>
+            <div class="col-md-6">
+                @if (evaluacion != null)
+                {
+                    <h6 class="text-green mb-2">Evaluación de Rendimiento</h6>
+                    <p class="text-white-custom small mb-0">
+                        <strong>Objetivo:</strong> @evaluacion.ObjetivoCliente
+                    </p>
+                    @if (evaluacion.Peso.HasValue && evaluacion.Altura.HasValue)
+                    {
+                        <p class="text-white-custom small mb-0">
+                            <strong>Peso:</strong> @evaluacion.Peso.Value.ToString("F1") kg |
+                            <strong>Altura:</strong> @evaluacion.Altura.Value.ToString("F0") cm |
+                            <strong>IMC:</strong> @evaluacion.IMC?.ToString("F1")
+                        </p>
+                    }
+                }
+                else
+                {
+                    <p class="text-warning small mb-0">
+                        <i class="fa fa-exclamation-triangle me-1"></i>
+                        Este cliente no tiene evaluación de rendimiento.
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="fa fa-exclamation-triangle me-2"></i><span class="text-white-custom">@TempData["Warning"]</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i><span class="text-white-custom">@TempData["Error"]</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Crear" method="post" id="formCrearPlan">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ClienteId" />
+        <input type="hidden" asp-for="EmpleadoId" />
+
+        <!-- Información del Plan -->
+        <div class="form-container">
+            <h4 class="text-green mb-3">
+                <i class="fa fa-info-circle me-2"></i>Información del Plan
+            </h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nombre" class="form-label">
+                        <i class="fa fa-signature me-1"></i>Nombre del Plan *
+                    </label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Plan para Ganar Masa Muscular" required />
+                    <span asp-validation-for="Nombre" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Objetivo" class="form-label">
+                        <i class="fa fa-bullseye me-1"></i>Objetivo *
+                    </label>
+                    <input asp-for="Objetivo" class="form-control" placeholder="Ej: Aumentar masa muscular y energía" required />
+                    <span asp-validation-for="Objetivo" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comidas -->
+        <div class="form-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-green mb-0">
+                    <i class="fa fa-apple-alt me-2"></i>Comidas del Plan
+                </h4>
+                <button type="button" class="btn-agregar-comida" onclick="agregarComida()">
+                    <i class="fa fa-plus me-2"></i>Agregar Comida
+                </button>
+            </div>
+
+            <div id="comidas-container">
+                <!-- Las comidas se agregarán dinámicamente aquí -->
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <small class="text-white-custom">
+                    <i class="fa fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> Puedes agregar las comidas que consideres necesarias según las necesidades del cliente.
+                    Se recomienda incluir al menos desayuno, almuerzo y cena.
+                </small>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a asp-action="SeleccionarCliente" class="btn btn-outline-secondary btn-lg me-3">
+                <i class="fa fa-times me-2"></i>Cancelar
+            </a>
+            <button type="submit" class="btn-guardar">
+                <i class="fa fa-save me-2"></i>Guardar Plan Alimenticio
+            </button>
+        </div>
+    </form>
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    <script>
+        let comidaIndex = 0;
+
+        const horariosComunes = [
+            { valor: '6:00 AM - 7:00 AM', texto: '6:00 AM - 7:00 AM (Desayuno Temprano)' },
+            { valor: '7:00 AM - 8:00 AM', texto: '7:00 AM - 8:00 AM (Desayuno)' },
+            { valor: '8:00 AM - 9:00 AM', texto: '8:00 AM - 9:00 AM (Desayuno)' },
+            { valor: '10:00 AM - 11:00 AM', texto: '10:00 AM - 11:00 AM (Snack Mañana)' },
+            { valor: '12:00 PM - 1:00 PM', texto: '12:00 PM - 1:00 PM (Almuerzo)' },
+            { valor: '1:00 PM - 2:00 PM', texto: '1:00 PM - 2:00 PM (Almuerzo)' },
+            { valor: '3:00 PM - 4:00 PM', texto: '3:00 PM - 4:00 PM (Snack Tarde)' },
+            { valor: '4:00 PM - 5:00 PM', texto: '4:00 PM - 5:00 PM (Merienda)' },
+            { valor: '6:00 PM - 7:00 PM', texto: '6:00 PM - 7:00 PM (Cena Temprana)' },
+            { valor: '7:00 PM - 8:00 PM', texto: '7:00 PM - 8:00 PM (Cena)' },
+            { valor: '8:00 PM - 9:00 PM', texto: '8:00 PM - 9:00 PM (Cena Tarde)' },
+            { valor: 'Personalizado', texto: 'Personalizado (Escribe el horario)' }
+        ];
+
+        function agregarComida() {
+            const container = document.getElementById('comidas-container');
+
+            let optionsHtml = '';
+            horariosComunes.forEach(horario => {
+                optionsHtml += `<option value="${horario.valor}">${horario.texto}</option>`;
+            });
+
+            const comidaHtml = `
+                <div class="comida-row" id="comida-${comidaIndex}">
+                    <button type="button" class="btn-eliminar-comida" onclick="eliminarComida(${comidaIndex})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-green mb-0">
+                            <span class="badge bg-success me-2">${comidaIndex + 1}</span>
+                            Comida ${comidaIndex + 1}
+                        </h5>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-utensils me-1"></i>Nombre de la Comida *
+                            </label>
+                            <input type="text"
+                                   name="comidas[${comidaIndex}].Nombre"
+                                   class="form-control"
+                                   placeholder="Ej: Desayuno, Almuerzo, Cena, Snack..."
+                                   required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-clock me-1"></i>Horario Sugerido *
+                            </label>
+                            <select class="form-select"
+                                    id="horario-select-${comidaIndex}"
+                                    onchange="manejarCambioHorario(${comidaIndex})">
+                                ${optionsHtml}
+                            </select>
+                            <input type="text"
+                                   name="comidas[${comidaIndex}].Horarios"
+                                   id="horario-input-${comidaIndex}"
+                                   class="form-control mt-2"
+                                   style="display: none;"
+                                   placeholder="Ej: 8:00 AM, 12:00 PM, 6:00 PM..."
+                                   required />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-shopping-basket me-1"></i>Ingredientes y Preparación *
+                            </label>
+                            <textarea name="comidas[${comidaIndex}].Ingredientes"
+                                      class="form-control"
+                                      rows="5"
+                                      placeholder="Describe los ingredientes y cómo preparar esta comida. Ejemplo:&#10;&#10;- 2 huevos enteros&#10;- 1 taza de avena&#10;- 1 plátano&#10;- 200ml de leche descremada&#10;- 1 cucharada de miel&#10;&#10;Preparación: Cocinar los huevos al gusto. Preparar la avena con leche. Acompañar con plátano en rodajas y miel."
+                                      required></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', comidaHtml);
+
+            // ✅ Establecer el horario en el input oculto
+            const selectElement = document.getElementById(`horario-select-${comidaIndex}`);
+            const inputElement = document.getElementById(`horario-input-${comidaIndex}`);
+            inputElement.value = selectElement.value;
+
+            console.log(`[DEBUG] Comida agregada - Índice: ${comidaIndex}`);
+            comidaIndex++;
+
+            setTimeout(() => {
+                document.getElementById(`comida-${comidaIndex - 1}`).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 100);
+        }
+
+        function manejarCambioHorario(index) {
+            const selectElement = document.getElementById(`horario-select-${index}`);
+            const inputElement = document.getElementById(`horario-input-${index}`);
+
+            if (selectElement.value === 'Personalizado') {
+                inputElement.style.display = 'block';
+                inputElement.value = '';
+                inputElement.focus();
+            } else {
+                inputElement.style.display = 'none';
+                inputElement.value = selectElement.value;
+            }
+            console.log(`[DEBUG] Horario cambiado - Comida ${index}: ${inputElement.value}`);
+        }
+
+        function eliminarComida(index) {
+            const comida = document.getElementById(`comida-${index}`);
+            if (comida) {
+                comida.style.transition = 'all 0.3s';
+                comida.style.opacity = '0';
+                comida.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    comida.remove();
+                    actualizarNumeracion();
+                }, 300);
+            }
+        }
+
+        function actualizarNumeracion() {
+            const comidas = document.querySelectorAll('.comida-row');
+            comidas.forEach((comida, index) => {
+                const badge = comida.querySelector('.badge');
+                const titulo = comida.querySelector('h5');
+                if (badge && titulo) {
+                    badge.textContent = index + 1;
+                    titulo.childNodes[2].textContent = `Comida ${index + 1}`;
+                }
+            });
+        }
+
+        // ✅ Validación y debugging antes de enviar
+        document.getElementById('formCrearPlan')?.addEventListener('submit', function(e) {
+            const comidas = document.querySelectorAll('.comida-row');
+            console.log(`[DEBUG] Total comidas en DOM: ${comidas.length}`);
+
+            if (comidas.length === 0) {
+                e.preventDefault();
+                alert('⚠️ Debes agregar al menos una comida al plan alimenticio.');
+                return false;
+            }
+
+            // ✅ Verificar que los campos tengan valores
+            const formData = new FormData(this);
+            let comidasCount = 0;
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('comidas[') && key.includes('.Nombre')) {
+                    console.log(`[DEBUG] ${key}: ${value}`);
+                    if (value) comidasCount++;
+                }
+            }
+            console.log(`[DEBUG] Comidas con nombre: ${comidasCount}`);
+
+            if (comidasCount === 0) {
+                e.preventDefault();
+                alert('⚠️ Las comidas deben tener nombre. Verifica los campos.');
+                return false;
+            }
+        });
+
+        // Agregar primera comida automáticamente al cargar
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('[DEBUG] Agregando primera comida automáticamente');
+            agregarComida();
+        });
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

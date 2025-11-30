@@ -1,0 +1,208 @@
+﻿@model IEnumerable<GYM.Models.PlanAlimenticio>
+@{
+    ViewData["Title"] = "Mis Planes Alimenticios";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .plan-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #28a745;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        /* ✅ SOLUCIÓN: Agregar z-index: -1 para que NO bloquee los clics */
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(40, 167, 69, 0.1) 0%, transparent 70%);
+            animation: pulse 3s infinite;
+            z-index: -1; /* ✅ CRÍTICO: Mover detrás del contenido */
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            border-color: #20c997;
+        }
+
+    .text-green {
+        color: #28a745 !important;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa !important;
+    }
+
+    .badge-comidas {
+        background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .btn-ver-plan {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white !important;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: block;
+        position: relative; /* ✅ Asegurar que el botón esté encima */
+        z-index: 1; /* ✅ Prioridad sobre el pseudo-elemento */
+        cursor: pointer; /* ✅ Mostrar cursor de clic */
+    }
+
+        .btn-ver-plan:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.5);
+            color: white !important;
+            text-decoration: none;
+        }
+
+    .empty-state {
+        background: rgba(45, 45, 45, 0.6);
+        border: 2px dashed rgba(40, 167, 69, 0.4);
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .plan-icon {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 3rem;
+        opacity: 0.1;
+        color: #28a745;
+        z-index: 0; /* ✅ Detrás del botón pero delante del fondo */
+    }
+
+    /* ✅ Asegurar que TODO el contenido esté clickeable */
+    .plan-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: rotate(0deg);
+        }
+
+        50% {
+            transform: rotate(180deg);
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-green">
+            <i class="fa fa-utensils me-2"></i>Mis Planes Alimenticios
+        </h2>
+        <a asp-controller="MiMembresia" asp-action="Index" class="btn btn-outline-success">
+            <i class="fa fa-id-card me-2"></i>Mi Membresía
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var plan in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="plan-card">
+                        <i class="fa fa-apple-alt plan-icon"></i>
+
+                        <h4 class="text-green mb-3">
+                            <i class="fa fa-leaf me-2"></i>@plan.Nombre
+                        </h4>
+
+                        <div class="mb-3">
+                            <p class="text-white-custom mb-2">
+                                <strong class="text-green">
+                                    <i class="fa fa-bullseye me-1"></i>Objetivo:
+                                </strong><br />
+                                <small>@plan.Objetivo</small>
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge-comidas">
+                                <i class="fa fa-utensils me-1"></i>
+                                @(plan.Comidas?.Count ?? 0) comida(s)
+                            </span>
+                            <small class="text-white-custom">
+                                <i class="fa fa-calendar me-1 text-green"></i>
+                                @plan.FechaCreacion.ToString("dd/MM/yyyy")
+                            </small>
+                        </div>
+
+                        <p class="text-white-custom small mb-3">
+                            <i class="fa fa-user-tie me-1 text-green"></i>
+                            Creado por: <strong>@plan.Empleado?.Nombre</strong>
+                        </p>
+
+                        <a asp-controller="PlanesAlimenticios"
+                           asp-action="Detalles"
+                           asp-route-id="@plan.PlanAlimenticioId"
+                           class="btn-ver-plan w-100 text-center">
+                            <i class="fa fa-eye me-2"></i>Ver Plan Completo
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa fa-utensils text-green mb-4" style="font-size: 6rem; opacity: 0.3;"></i>
+            <h3 class="text-white-custom mb-3">No tienes planes alimenticios aún</h3>
+            <p class="text-muted mb-4">
+                Tu nutricionista personal creará un plan alimenticio personalizado basado en tus objetivos y evaluación de rendimiento.
+            </p>
+            <div class="alert alert-info" style="background: rgba(23, 162, 184, 0.2); border: 2px solid #17a2b8; max-width: 600px; margin: 0 auto;">
+                <i class="fa fa-info-circle me-2"></i>
+                <strong>Tu membresía incluye planes alimenticios personalizados.</strong><br />
+                <small>Espera a que tu entrenador te asigne un plan nutricional adaptado a tus metas.</small>
+            </div>
+        </div>
+    }
+</div>
+
+<div style="height: 150px;"></div>

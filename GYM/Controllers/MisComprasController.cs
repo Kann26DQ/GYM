@@ -21,8 +21,11 @@ namespace GYM.Controllers
         {
             var userId = GetCurrentUserId();
 
+            // ✅ Ahora incluye Detalles y Producto para mostrar los nombres
             var ventas = await _context.Ventas
                 .AsNoTracking()
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
                 .Where(v => v.ClienteId == userId || (v.EmpleadoId != null && v.EmpleadoId == userId))
                 .OrderByDescending(v => v.Fecha)
                 .ToListAsync();

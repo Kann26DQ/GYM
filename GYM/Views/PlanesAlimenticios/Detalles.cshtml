@@ -1,0 +1,204 @@
+﻿@model GYM.Models.PlanAlimenticio
+@{
+    ViewData["Title"] = "Detalle del Plan Alimenticio";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .plan-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #28a745;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .comida-item {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(40, 167, 69, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+        .comida-item:hover {
+            border-color: #28a745;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+    .text-green {
+        color: #28a745 !important;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa !important;
+    }
+
+    .badge-horario {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .ingredientes-box {
+        background: rgba(40, 167, 69, 0.1);
+        border-left: 4px solid #28a745;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .consejos-box {
+        background: rgba(255, 193, 7, 0.1);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-green">
+            <i class="fa fa-utensils me-2"></i>@Model.Nombre
+        </h2>
+        <a asp-action="Index" class="btn btn-outline-success">
+            <i class="fa fa-arrow-left me-2"></i>Volver a Mis Planes
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Información General -->
+    <div class="plan-container">
+        <h4 class="text-green mb-3">
+            <i class="fa fa-info-circle me-2"></i>Información General
+        </h4>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="text-white-custom mb-2">
+                    <strong class="text-green">
+                        <i class="fa fa-bullseye me-2"></i>Objetivo:
+                    </strong><br />
+                    <span class="ms-4">@Model.Objetivo</span>
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p class="text-white-custom mb-2">
+                    <strong class="text-green">
+                        <i class="fa fa-user-tie me-2"></i>Nutricionista:
+                    </strong>
+                    @Model.Empleado?.Nombre
+                </p>
+                <p class="text-white-custom mb-0">
+                    <strong class="text-green">
+                        <i class="fa fa-calendar me-2"></i>Fecha de creación:
+                    </strong>
+                    @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Comidas -->
+    <div class="plan-container">
+        <h4 class="text-green mb-4">
+            <i class="fa fa-apple-alt me-2"></i>Plan de Comidas (@(Model.Comidas?.Count ?? 0))
+        </h4>
+
+        @if (Model.Comidas != null && Model.Comidas.Any())
+        {
+            int index = 1;
+            foreach (var comida in Model.Comidas)
+            {
+                <div class="comida-item">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="text-green mb-0">
+                            <span class="badge bg-success me-2">@index</span>
+                            @comida.Nombre
+                        </h5>
+                        <span class="badge-horario">
+                            <i class="fa fa-clock me-1"></i>@comida.Horarios
+                        </span>
+                    </div>
+
+                    <div class="ingredientes-box">
+                        <p class="text-white-custom mb-1">
+                            <strong class="text-green">
+                                <i class="fa fa-shopping-basket me-1"></i>Ingredientes:
+                            </strong>
+                        </p>
+                        <p class="text-white-custom mb-0">@comida.Ingredientes</p>
+                    </div>
+                </div>
+                index++;
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fa fa-utensils text-green mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                <p class="text-white-custom">No hay comidas registradas en este plan.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Consejos Nutricionales -->
+    <div class="plan-container">
+        <h4 class="text-green mb-3">
+            <i class="fa fa-lightbulb me-2"></i>Consejos Nutricionales
+        </h4>
+        <div class="consejos-box">
+            <ul class="text-white-custom mb-0">
+                <li class="mb-3">
+                    <i class="fa fa-tint text-green me-2"></i>
+                    <strong>Hidratación:</strong> Bebe al menos 2-3 litros de agua al día para mantener tu cuerpo hidratado.
+                </li>
+                <li class="mb-3">
+                    <i class="fa fa-clock text-green me-2"></i>
+                    <strong>Frecuencia:</strong> Come cada 3-4 horas para mantener tu metabolismo activo y niveles de energía estables.
+                </li>
+                <li class="mb-3">
+                    <i class="fa fa-ban text-green me-2"></i>
+                    <strong>Evita:</strong> Alimentos procesados, bebidas azucaradas y comida rápida.
+                </li>
+                <li class="mb-3">
+                    <i class="fa fa-dumbbell text-green me-2"></i>
+                    <strong>Complemento:</strong> Combina este plan alimenticio con tu rutina de ejercicios para obtener mejores resultados.
+                </li>
+                <li class="mb-0">
+                    <i class="fa fa-moon text-green me-2"></i>
+                    <strong>Descanso:</strong> Duerme entre 7-8 horas diarias para una recuperación óptima.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Recordatorio -->
+    <div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107;">
+        <h5 class="text-warning mb-2">
+            <i class="fa fa-exclamation-triangle me-2"></i>Importante
+        </h5>
+        <p class="text-white-custom mb-0 small">
+            Este plan alimenticio ha sido diseñado específicamente para ti según tu evaluación de rendimiento.
+            Si tienes alguna alergia o condición médica, consulta con tu nutricionista antes de iniciar el plan.
+        </p>
+    </div>
+</div>
+
+<div style="height: 150px;"></div>

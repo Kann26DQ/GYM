@@ -16,17 +16,75 @@ namespace GYM.Controllers.SuperAdmin
             _context = context;
         }
 
-        // ------------------------------
-        // LISTAR TODAS LAS VENTAS
-        // ------------------------------
+        /// <summary>
+        /// ✅ NUEVO: Index con filtro de búsqueda
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string buscar, string tipoFiltro = "cliente", DateTime? fechaDesde = null, DateTime? fechaHasta = null)
         {
-            var ventas = await _context.Ventas
+            var query = _context.Ventas
                 .Include(v => v.Cliente)
                 .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
+                .AsQueryable();
+
+            // ✅ Filtro por fechas
+            if (fechaDesde.HasValue)
+            {
+                query = query.Where(v => v.Fecha >= fechaDesde.Value);
+            }
+
+            if (fechaHasta.HasValue)
+            {
+                var fechaHastaFin = fechaHasta.Value.Date.AddDays(1).AddSeconds(-1);
+                query = query.Where(v => v.Fecha <= fechaHastaFin);
+            }
+
+            // ✅ Aplicar filtros de búsqueda por texto
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                switch (tipoFiltro.ToLower())
+                {
+                    case "cliente":
+                        query = query.Where(v => v.Cliente != null && v.Cliente.Nombre.ToLower().Contains(buscar.ToLower()));
+                        break;
+                    case "ventaid":
+                        if (int.TryParse(buscar, out int ventaId) && ventaId > 0)
+                        {
+                            query = query.Where(v => v.VentaId == ventaId);
+                        }
+                        break;
+                    case "total":
+                        if (decimal.TryParse(buscar, out decimal total) && total >= 0)
+                        {
+                            query = query.Where(v => v.Total == total);
+                        }
+                        break;
+                    default:
+                        // Búsqueda general
+                        query = query.Where(v =>
+                            (v.Cliente != null && v.Cliente.Nombre.ToLower().Contains(buscar.ToLower())) ||
+                            v.VentaId.ToString().Contains(buscar));
+                        break;
+                }
+            }
+
+            var ventas = await query
+                .OrderByDescending(v => v.Fecha)
                 .ToListAsync();
+
+            // Calcular estadísticas
+            ViewBag.TotalVentas = ventas.Sum(v => v.Total);
+            ViewBag.CantidadVentas = ventas.Count;
+            ViewBag.PromedioVenta = ventas.Any() ? ventas.Average(v => v.Total) : 0;
+
+            // Pasar valores al ViewBag para mantenerlos en la vista
+            ViewBag.BuscarActual = buscar;
+            ViewBag.TipoFiltroActual = tipoFiltro;
+            ViewBag.FechaDesde = fechaDesde;
+            ViewBag.FechaHasta = fechaHasta;
 
             return View("~/Views/SuperAdmin/Ventas/Index.cshtml", ventas);
         }

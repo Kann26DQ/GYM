@@ -1,38 +1,420 @@
 ﻿@model GYM.Models.Venta
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Detalle de compra";
+    ViewData["Title"] = "Detalle de Compra";
 }
 
-<h2 class="my-4">Detalle de compra</h2>
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
 
-<p><strong>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</p>
-<p><strong>Total:</strong> S/ @Model.Total.ToString("0.00")</p>
+    .detail-hero {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
 
-<h5>Productos</h5>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio unitario</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
+        .detail-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .detail-hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    .info-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 193, 7, 0.1);
+        transition: all 0.3s;
+    }
+
+        .info-item:hover {
+            background: rgba(255, 193, 7, 0.05);
+            border-radius: 8px;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+    /* ✅ NUEVO: Cards de productos individuales */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .product-item-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .product-item-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.05) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .product-item-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-item-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+        }
+
+    .product-icon-box {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+        .product-icon-box i {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+    .product-name {
+        color: #ffc107;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .product-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+    }
+
+        .detail-row .label {
+            color: #b8b8d1;
+            font-size: 0.9rem;
+        }
+
+        .detail-row .value {
+            color: white;
+            font-weight: bold;
+        }
+
+    .quantity-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .price-badge {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .subtotal-highlight {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+
+    .total-section {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(255, 193, 7, 0.5);
+        margin-bottom: 2rem;
+    }
+
+        .total-section .total-label {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .total-section .total-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+    .section-title {
+        color: #ffc107;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(180deg, #ffc107 0%, #ffed4e 100%);
+            border-radius: 2px;
+        }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000 !important;
+        }
+
+    .btn-outline-yellow {
+        background: transparent;
+        color: #ffc107 !important;
+        border: 2px solid #ffc107;
+        padding: 0.8rem 2rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-outline-yellow:hover {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+        }
+
+    .content-wrapper {
+        padding-bottom: 120px;
+    }
+
+    .summary-stats {
+        display: flex;
+        justify-content: space-around;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-box {
+        background: rgba(255, 193, 7, 0.1);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        text-align: center;
+        flex: 1;
+    }
+
+        .stat-box .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        .stat-box .stat-label {
+            color: #b8b8d1;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+</style>
+
+<div class="container mt-4 content-wrapper">
+    <!-- Hero -->
+    <div class="detail-hero">
+        <div class="text-center">
+            <h1 class="display-5 text-yellow mb-2">
+                <i class="fa fa-receipt me-2"></i>Detalle de Compra #@Model.VentaId
+            </h1>
+            <p class="text-white-custom mb-0">Información completa de tu pedido</p>
+        </div>
+    </div>
+
+    <!-- Información General -->
+    <div class="info-card">
+        <h5 class="text-yellow mb-3">
+            <i class="fa fa-info-circle me-2"></i>Información de la Compra
+        </h5>
+        <div class="info-item">
+            <span class="text-white-custom">
+                <i class="fa fa-calendar me-2 text-yellow"></i>Fecha:
+            </span>
+            <strong class="text-white-custom">@Model.Fecha.ToString("dd/MM/yyyy")</strong>
+        </div>
+        <div class="info-item">
+            <span class="text-white-custom">
+                <i class="fa fa-clock me-2 text-yellow"></i>Hora:
+            </span>
+            <strong class="text-white-custom">@Model.Fecha.ToString("HH:mm")</strong>
+        </div>
+        <div class="info-item">
+            <span class="text-white-custom">
+                <i class="fa fa-hashtag me-2 text-yellow"></i>ID de Compra:
+            </span>
+            <strong class="text-yellow">#@Model.VentaId</strong>
+        </div>
+    </div>
+
+    <!-- Estadísticas Resumen -->
+    <div class="summary-stats">
+        <div class="stat-box">
+            <div class="stat-number">@Model.Detalles?.Count</div>
+            <div class="stat-label">Productos</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">@Model.Detalles?.Sum(d => d.Cantidad)</div>
+            <div class="stat-label">Unidades Totales</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">S/ @Model.Total.ToString("0.00")</div>
+            <div class="stat-label">Total Pagado</div>
+        </div>
+    </div>
+
+    <!-- ✅ PRODUCTOS ADQUIRIDOS - DISEÑO MEJORADO -->
+    <div class="section-title">
+        <i class="fa fa-shopping-bag"></i>
+        Productos Adquiridos
+    </div>
+
+    <div class="products-grid">
         @foreach (var d in Model.Detalles)
         {
-            <tr>
-                <td>@d.Producto?.Nombre</td>
-                <td>@d.Cantidad</td>
-                <td>S/ @d.PrecioUnitario.ToString("0.00")</td>
-                <td>S/ @(d.Cantidad* d.PrecioUnitario).ToString("0.00")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+            <div class="product-item-card">
+                <div class="product-icon-box">
+                    <i class="fa fa-box-open"></i>
+                </div>
 
-<div class="d-flex gap-2">
-    <a asp-controller="MisCompras" asp-action="Index" class="btn btn-secondary">Volver al historial</a>
-    <a asp-controller="Cart" asp-action="Productos" class="btn btn-primary">Ir a la tienda</a>
+                <h5 class="product-name">
+                    @d.Producto?.Nombre
+                </h5>
+
+                <div class="product-details">
+                    <div class="detail-row">
+                        <span class="label">
+                            <i class="fa fa-sort-numeric-up me-1"></i>Cantidad:
+                        </span>
+                        <span class="quantity-badge">@d.Cantidad</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="label">
+                            <i class="fa fa-tag me-1"></i>Precio Unitario:
+                        </span>
+                        <span class="price-badge">S/ @d.PrecioUnitario.ToString("0.00")</span>
+                    </div>
+
+                    <div class="subtotal-highlight">
+                        <i class="fa fa-calculator me-2"></i>
+                        Subtotal: S/ @((d.Cantidad * d.PrecioUnitario).ToString("0.00"))
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a asp-controller="MisCompras" asp-action="Index" class="btn btn-outline-yellow">
+            <i class="fa fa-arrow-left me-2"></i>Volver al Historial
+        </a>
+        <a asp-controller="Productos" asp-action="Index" class="btn btn-yellow">
+            <i class="fa fa-shopping-bag me-2"></i>Seguir Comprando
+        </a>
+    </div>
 </div>

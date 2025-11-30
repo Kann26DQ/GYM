@@ -1,0 +1,262 @@
+﻿@model GYM.Models.Rutina
+@{
+    ViewData["Title"] = "Crear Rutina";
+    var cliente = (GYM.Models.Usuario)ViewData["Cliente"];
+    var evaluacion = (GYM.Models.EvaluacionRendimiento)ViewData["Evaluacion"];
+    var horariosFijos = (List<GYM.Models.HorarioFijo>)ViewData["HorariosFijos"];
+    var empleadoNombre = (string)ViewData["EmpleadoNombre"];
+
+    var diasSemana = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Lunes" },
+        { DayOfWeek.Tuesday, "Martes" },
+        { DayOfWeek.Wednesday, "Miércoles" },
+        { DayOfWeek.Thursday, "Jueves" },
+        { DayOfWeek.Friday, "Viernes" },
+        { DayOfWeek.Saturday, "Sábado" },
+        { DayOfWeek.Sunday, "Domingo" }
+    };
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .rutina-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .form-label {
+        color: #ffc107;
+        font-weight: 600;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: rgba(248, 249, 250, 0.5);
+        }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000;
+        }
+
+    .horario-item {
+        background: rgba(45, 45, 45, 0.6);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+        border-radius: 10px;
+        padding: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .badge-nivel {
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="text-end mb-3">
+        <a asp-controller="GestionRutinas" asp-action="Index" class="btn btn-outline-warning">
+            <i class="fa fa-arrow-left me-2"></i>Volver al Panel
+        </a>
+    </div>
+
+    <div class="rutina-card">
+        <h2 class="text-yellow mb-4">
+            <i class="fa fa-dumbbell me-2"></i>Crear Rutina Personalizada
+        </h2>
+
+        <!-- Info del Cliente -->
+        <div class="alert alert-info mb-4" style="background: rgba(23, 162, 184, 0.2); border: 2px solid #17a2b8;">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-yellow mb-2">
+                        <i class="fa fa-user me-2"></i>@cliente.Nombre
+                    </h5>
+                    <p class="text-white-custom small mb-0">
+                        <strong>Email:</strong> @cliente.Email
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-yellow">Evaluación de Rendimiento</h6>
+                    <p class="text-white-custom small mb-0">
+                        <strong>Promedio:</strong> @evaluacion.PromedioRendimiento.ToString("F1")/10
+                    </p>
+                    <p class="text-white-custom small mb-0">
+                        <strong>Nivel Sugerido:</strong>
+                        <span class="badge badge-nivel @(Model.NivelDificultad == "Principiante" ? "bg-success" : Model.NivelDificultad == "Intermedio" ? "bg-warning" : "bg-danger")">
+                            @Model.NivelDificultad
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horarios Fijos del Cliente -->
+        @if (horariosFijos != null && horariosFijos.Any())
+        {
+            <div class="alert alert-warning mb-4" style="background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107;">
+                <h6 class="text-yellow mb-2">
+                    <i class="fa fa-calendar-week me-2"></i>Horarios Fijos del Cliente
+                </h6>
+                <div class="row">
+                    @foreach (var horario in horariosFijos)
+                    {
+                        <div class="col-md-6">
+                            <div class="horario-item">
+                                <strong class="text-yellow">@diasSemana[horario.DiaSemana]:</strong>
+                                <span class="text-white-custom">
+                                    @horario.HoraInicio.ToString(@"hh\:mm") - @horario.HoraFin.ToString(@"hh\:mm")
+                                </span>
+                                <br />
+                                <small class="text-muted">@horario.TipoEntrenamiento</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Formulario de Creación de Rutina -->
+        <form asp-controller="GestionRutinas" asp-action="CrearRutina" method="post">
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.ClienteId)
+            @Html.HiddenFor(m => m.EmpleadoId)
+            @Html.HiddenFor(m => m.EvaluacionRendimientoId)
+
+            <div class="row">
+                <!-- Nombre de la Rutina -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-tag me-2"></i>Nombre de la Rutina *
+                    </label>
+                    <input type="text" asp-for="Nombre" class="form-control" placeholder="Ej: Rutina Hipertrofia 4 semanas" required />
+                    <span asp-validation-for="Nombre" class="text-danger small"></span>
+                </div>
+
+                <!-- Tipo de Rutina -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-list me-2"></i>Tipo de Rutina *
+                    </label>
+                    <select asp-for="Tipo" class="form-select" required>
+                        <option value="">Selecciona...</option>
+                        <option value="Full Body">Full Body</option>
+                        <option value="Push/Pull/Legs">Push/Pull/Legs</option>
+                        <option value="Upper/Lower">Upper/Lower</option>
+                        <option value="Torso/Pierna">Torso/Pierna</option>
+                        <option value="Hipertrofia">Hipertrofia</option>
+                        <option value="Fuerza">Fuerza</option>
+                        <option value="Resistencia">Resistencia</option>
+                        <option value="Pérdida de Peso">Pérdida de Peso</option>
+                        <option value="Cardio">Cardio</option>
+                    </select>
+                    <span asp-validation-for="Tipo" class="text-danger small"></span>
+                </div>
+
+                <!-- Nivel de Dificultad -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-signal me-2"></i>Nivel de Dificultad *
+                    </label>
+                    <select asp-for="NivelDificultad" class="form-select" required>
+                        <option value="Principiante">Principiante</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
+                    </select>
+                    <span asp-validation-for="NivelDificultad" class="text-danger small"></span>
+                </div>
+
+                <!-- Duración en Semanas -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-calendar me-2"></i>Duración (semanas) *
+                    </label>
+                    <input type="number" asp-for="DuracionSemanas" class="form-control" min="1" max="52" required />
+                    <span asp-validation-for="DuracionSemanas" class="text-danger small"></span>
+                </div>
+
+                <!-- Fecha de Inicio -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-calendar-check me-2"></i>Fecha de Inicio
+                    </label>
+                    <input type="date" asp-for="FechaInicio" class="form-control" />
+                    <span asp-validation-for="FechaInicio" class="text-danger small"></span>
+                </div>
+
+                <!-- Fecha de Fin (opcional, se calcula automáticamente) -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-calendar-times me-2"></i>Fecha de Fin (Opcional)
+                    </label>
+                    <input type="date" asp-for="FechaFin" class="form-control" />
+                    <span asp-validation-for="FechaFin" class="text-danger small"></span>
+                    <small class="text-muted">Se calcula automáticamente si no se especifica</small>
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-align-left me-2"></i>Descripción (Opcional)
+                    </label>
+                    <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describe los objetivos y características de esta rutina..."></textarea>
+                    <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-yellow btn-lg">
+                    <i class="fa fa-save me-2"></i>Crear Rutina
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

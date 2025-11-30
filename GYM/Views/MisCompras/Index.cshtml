@@ -1,39 +1,299 @@
 ﻿@model IEnumerable<GYM.Models.Venta>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Mis compras";
+    ViewData["Title"] = "Mis Compras";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="my-0">Mis compras</h2>
-    <a asp-controller="Cart" asp-action="Productos" class="btn btn-primary btn-sm">Ir a la tienda</a>
-</div>
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">Aún no tienes compras registradas.</div>
-}
-else
-{
-    <table class="table table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
+    .hero-section {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 30px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .hero-section > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    .compras-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .compras-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.05) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .compras-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+    .compra-row {
+        background: rgba(255, 193, 7, 0.05);
+        border: 2px solid rgba(255, 193, 7, 0.2);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+
+        .compra-row:hover {
+            border-color: #ffc107;
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.3);
+            transform: translateX(5px);
+        }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+            color: #000 !important;
+        }
+
+    .btn-outline-yellow {
+        background: transparent;
+        color: #ffc107 !important;
+        border: 2px solid #ffc107;
+        padding: 0.6rem 1.5rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-outline-yellow:hover {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+        }
+
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #1a1a1a;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        animation: float 3s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+
+    .alert-custom-info {
+        background: rgba(23, 162, 184, 0.2);
+        border: 2px solid #17a2b8;
+        border-radius: 15px;
+        color: #fff;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .content-wrapper {
+        padding-bottom: 150px;
+    }
+
+    /* ✅ NUEVO: Badge de producto */
+    .producto-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 0.3rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .productos-list {
+        max-height: 60px;
+        overflow-y: auto;
+    }
+
+        .productos-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .productos-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .productos-list::-webkit-scrollbar-thumb {
+            background: #ffc107;
+            border-radius: 4px;
+        }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+</style>
+
+<div class="container mt-4 content-wrapper">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="text-center">
+            <div class="icon-circle mx-auto">
+                <i class="fa fa-receipt"></i>
+            </div>
+            <h1 class="display-4 text-yellow mb-3">Mis Compras 🛍️</h1>
+            <p class="lead text-white-custom">Historial completo de tus adquisiciones</p>
+        </div>
+    </div>
+
+    <div class="text-end mb-4">
+        <a asp-controller="Productos" asp-action="Index" class="btn btn-yellow">
+            <i class="fa fa-shopping-bag me-2"></i>Ir a la Tienda
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert-custom-info">
+            <i class="fa fa-shopping-bag fa-4x mb-3"></i>
+            <h4 class="text-white-custom mb-3">Aún no tienes compras registradas</h4>
+            <p class="text-white-custom mb-4">¡Explora nuestra tienda y encuentra productos increíbles!</p>
+            <a asp-controller="Productos" asp-action="Index" class="btn btn-yellow">
+                <i class="fa fa-store me-2"></i>Explorar Tienda
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="compras-card">
+            <h4 class="text-yellow mb-4">
+                <i class="fa fa-list me-2"></i>Tus Compras (@Model.Count())
+            </h4>
+
             @foreach (var v in Model)
             {
-                <tr>
-                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>S/ @v.Total.ToString("0.00")</td>
-                    <td>
-                        <a asp-controller="MisCompras" asp-action="Details" asp-route-id="@v.VentaId" class="btn btn-sm btn-outline-primary">Ver detalle</a>
-                    </td>
-                </tr>
+                <div class="compra-row">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <i class="fa fa-calendar-check fa-2x text-yellow mb-2"></i>
+                                <h6 class="text-yellow mb-1">@v.Fecha.ToString("dd/MM/yyyy")</h6>
+                                <p class="text-white-custom small mb-0">
+                                    <i class="fa fa-clock me-1"></i>@v.Fecha.ToString("HH:mm")
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <p class="text-white-custom mb-2">
+                                <strong>
+                                    <i class="fa fa-box me-1 text-yellow"></i>
+                                    Productos (@v.Detalles?.Count):
+                                </strong>
+                            </p>
+                            <!-- ✅ CAMBIO: Muestra nombres de productos en lugar de "Orden #" -->
+                            <div class="productos-list">
+                                @if (v.Detalles != null && v.Detalles.Any())
+                                {
+                                    @foreach (var detalle in v.Detalles)
+                                    {
+                                        <span class="producto-badge">
+                                            @detalle.Producto?.Nombre (@detalle.Cantidad)
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-white-custom small">Sin detalles</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <p class="text-white-custom small mb-1">Total</p>
+                            <h4 class="text-yellow mb-0">S/ @v.Total.ToString("0.00")</h4>
+                        </div>
+
+                        <div class="col-md-3 text-center">
+                            <a asp-controller="MisCompras" asp-action="Details" asp-route-id="@v.VentaId" class="btn btn-outline-yellow btn-sm w-100">
+                                <i class="fa fa-eye me-1"></i>Ver Detalle Completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
-}
+        </div>
+    }
+</div>

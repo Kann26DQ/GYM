@@ -1,184 +1,714 @@
-﻿@model IEnumerable<GYM.Models.Reserva>
+﻿@model List<GYM.Models.Reserva>
+@using GYM.Models
 @{
-    ViewData["Title"] = "Mis Reservas";
+    ViewData["Title"] = "Horario";
+    var totalReservas = (int)(ViewData["TotalReservas"] ?? 0);
+    var asistencias = (int)(ViewData["Asistencias"] ?? 0);
+    var faltas = (int)(ViewData["Faltas"] ?? 0);
+    var pendientes = (int)(ViewData["Pendientes"] ?? 0);
+    var horariosFijos = (List<HorarioFijo>)(ViewData["HorariosFijos"] ?? new List<HorarioFijo>());
+
+    // Separar reservas futuras/pendientes del historial
+    var reservasFuturas = Model.Where(r => r.Estado != GYM.Models.EstadoReserva.Cancelada &&
+                                           (r.FechaReserva.Date + r.HoraFin) >= DateTime.Now)
+                               .OrderBy(r => r.FechaReserva)
+                               .ThenBy(r => r.HoraInicio)
+                               .ToList();
+
+    var historial = Model.Where(r => (r.FechaReserva.Date + r.HoraFin) < DateTime.Now ||
+                                     r.Estado == GYM.Models.EstadoReserva.Cancelada)
+                         .OrderByDescending(r => r.FechaReserva)
+                         .ThenByDescending(r => r.HoraInicio)
+                         .Take(10)
+                         .ToList();
+
+    var diasSemana = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Lunes" },
+        { DayOfWeek.Tuesday, "Martes" },
+        { DayOfWeek.Wednesday, "Miércoles" },
+        { DayOfWeek.Thursday, "Jueves" },
+        { DayOfWeek.Friday, "Viernes" },
+        { DayOfWeek.Saturday, "Sábado" }
+    };
 }
 
-<div class="container mt-4 mb-5">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="display-5 mb-0">
-                        <i class="bi bi-calendar-check text-primary me-2" aria-hidden="true"></i>
-                        <span>Mis Reservas</span>
-                    </h1>
-                    <p class="text-muted mb-0">Gestiona tus sesiones en el gimnasio</p>
-                </div>
-                <div
-                    <a asp-action="Historial" class="btn btn-success btn-lg me-2" aria-label="Ver historial de asistencia">
-            <i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>
-            <span>Mi Asistencia</span>
-        </a>
-                    <a asp-action="Calendario" class="btn btn-primary btn-lg me-2" aria-label="Ver calendario de reservas">
-                        <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
-                        <span>Ver Calendario</span>
-                    </a>
-                    <a asp-action="Crear" class="btn btn-success btn-lg" aria-label="Nueva reserva">
-                        <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
-                        <span>Nueva Reserva</span>
-                    </a>
-                </div>
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 237, 74, 0.05) 100%);
+        border-radius: 30px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .stats-card-mini {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 0.6rem;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 1/1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .stats-card-mini:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
+        }
+
+    .horario-fijo-panel {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .horario-fijo-card {
+        background: linear-gradient(135deg, rgba(45, 45, 45, 0.8) 0%, rgba(26, 26, 26, 0.8) 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s;
+    }
+
+        .horario-fijo-card:hover {
+            border-color: #ffc107;
+            transform: translateX(3px);
+        }
+
+    .reserva-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+        .reserva-card:hover {
+            border-color: #ffc107;
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .reserva-card.asistio {
+            border-color: #28a745;
+        }
+
+        .reserva-card.falto {
+            border-color: #dc3545;
+        }
+
+        .reserva-card.pendiente {
+            border-color: #ffc107;
+        }
+
+    .badge-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        font-weight: bold;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .badge-success-custom {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .badge-danger-custom {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    .badge-warning-custom {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+        .btn-yellow:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 193, 7, 0.6);
+            color: #000;
+        }
+
+    .btn-outline-yellow {
+        background: transparent;
+        color: #ffc107;
+        border: 2px solid #ffc107;
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-yellow:hover {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a;
+            transform: translateY(-2px);
+        }
+
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #1a1a1a;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .divider-yellow {
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #ffc107, transparent);
+        border: none;
+        margin: 2rem 0;
+    }
+
+    .content-wrapper {
+        padding-bottom: 120px;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 237, 74, 0.1) 100%);
+        border-left: 5px solid #ffc107;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+
+    .form-label {
+        color: #ffc107;
+        font-weight: 600;
+    }
+
+    .btn-calendario-cliente {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+        font-size: 0.9rem;
+        display: inline-block;
+        text-decoration: none; /* ✅ QUITAR SUBRAYADO */
+    }
+
+        .btn-calendario-cliente:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(23, 162, 184, 0.6);
+            color: white;
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+            text-decoration: none; /* ✅ QUITAR SUBRAYADO EN HOVER */
+        }
+</style>
+
+<div class="container mt-4 content-wrapper">
+    <!-- Hero Section -->
+    <div class="hero-section position-relative">
+        <div class="text-center">
+            <div class="icon-circle mb-4">
+                <i class="fa fa-calendar-check"></i>
             </div>
+            <h1 class="display-4 text-yellow mb-3">Horario</h1>
+            <p class="lead text-white-custom">Gestiona tus sesiones de entrenamiento</p>
+        </div>
+    </div>
 
-            @if (TempData["Success"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
-                    <span>@TempData["Success"]</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                </div>
-            }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-dismissible fade show" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(34, 139, 61, 0.2) 100%); border: 2px solid #28a745; color: #fff; border-radius: 15px;">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
-                    <span>@TempData["Error"]</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                </div>
-            }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-dismissible fade show" style="background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(200, 35, 51, 0.2) 100%); border: 2px solid #dc3545; color: #fff; border-radius: 15px;">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-            <!-- Información del horario -->
-            <div class="alert alert-info mb-4" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-info-circle fs-3 me-3" aria-hidden="true"></i>
-                    <div>
-                        <strong>Horario del Gimnasio:</strong> Lunes a Sábado, 8:00 AM - 11:00 PM
-                        <br>
-                        <small>Los domingos permanecemos cerrados</small>
-                    </div>
-                </div>
+    <!-- Panel de Horario Fijo Semanal -->
+    <div class="horario-fijo-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-yellow mb-0">
+                <i class="fa fa-calendar-week me-2"></i>Mi Horario Fijo Semanal
+            </h4>
+            <div>
+                <!-- ✅ NUEVO: Botón Ver Calendario -->
+                <a asp-action="CalendarioSemanal" class="btn-calendario-cliente me-2">
+                    <i class="fa fa-calendar-week me-2"></i>Ver Calendario
+                </a>
+                <button class="btn btn-outline-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregarHorario">
+                    <i class="fa fa-plus me-2"></i>Agregar Horario
+                </button>
             </div>
+        </div>
 
-            <!-- Lista de reservas -->
-            @if (Model.Any())
-            {
-                <div class="row g-4">
-                    @foreach (var reserva in Model)
-                    {
-                        var esPasada = reserva.FechaReserva.Date + reserva.HoraInicio < DateTime.Now;
-                        var esHoy = reserva.FechaReserva.Date == DateTime.Today;
-                        var cardClass = reserva.Estado == EstadoReserva.Cancelada ? "border-danger" :
-                        esPasada ? "border-secondary" :
-                        esHoy ? "border-warning" : "border-primary";
-
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow-sm @cardClass">
-                                <div class="card-header @(reserva.Estado == EstadoReserva.Cancelada ? "bg-danger" :
-                                                                                               esPasada ? "bg-secondary" :
-                                                                                               esHoy ? "bg-warning" : "bg-primary") text-white">
+        @if (horariosFijos.Any())
+        {
+            <div class="row g-2">
+                @foreach (var horario in horariosFijos)
+                {
+                    <div class="col-md-6">
+                        <div class="horario-fijo-card">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>
-                                    <span>@reserva.FechaReserva.ToString("dddd, dd/MM/yyyy")</span>
-                                </h5>
-                                @if (esHoy && reserva.Estado != EstadoReserva.Cancelada)
-                                        {
-                                            <span class="badge bg-light text-dark">HOY</span>
-                                        }
+                                <div>
+                                    <h6 class="text-yellow mb-1">
+                                        @diasSemana[horario.DiaSemana]
+                                    </h6>
+                                    <div class="text-white-custom small">
+                                        <i class="fa fa-clock me-1"></i>
+                                        @horario.HoraInicio.ToString(@"hh\:mm") - @horario.HoraFin.ToString(@"hh\:mm")
                                     </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <i class="bi bi-clock text-primary me-2" aria-hidden="true"></i>
-                                        <strong>Horario:</strong>
-                                        <div class="fs-4 text-primary fw-bold mt-2">
-                                            @reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")
-                                        </div>
+                                    <div class="text-white-custom small">
+                                        <i class="fa fa-dumbbell me-1 text-yellow"></i>
+                                        @horario.TipoEntrenamiento
                                     </div>
-
-                                    <div class="mb-3">
-                                        <i class="bi bi-info-circle text-secondary me-2" aria-hidden="true"></i>
-                                        <strong>Estado:</strong>
-                                        @switch (reserva.Estado)
-                                        {
-                                            case EstadoReserva.Confirmada:
-                                                <span class="badge bg-success ms-2">Confirmada</span>
-                                                break;
-                                            case EstadoReserva.Completada:
-                                                <span class="badge bg-primary ms-2">Completada</span>
-                                                break;
-                                            case EstadoReserva.Cancelada:
-                                                <span class="badge bg-danger ms-2">Cancelada</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-warning ms-2">Pendiente</span>
-                                                break;
-                                        }
-                                    </div>
-
-                                    @if (!string.IsNullOrEmpty(reserva.Notas))
+                                    @if (!string.IsNullOrEmpty(horario.Notas))
                                     {
-                                        <div class="mb-3">
-                                            <i class="bi bi-sticky text-warning me-2" aria-hidden="true"></i>
-                                            <strong>Notas:</strong>
-                                            <p class="mb-0 mt-1 text-muted">@reserva.Notas</p>
+                                        <div class="text-white-custom small fst-italic mt-1">
+                                            <i class="fa fa-sticky-note me-1 text-yellow"></i>
+                                            @horario.Notas
                                         </div>
                                     }
                                 </div>
-                                <div class="card-footer bg-white">
-                                    @if (reserva.Estado != EstadoReserva.Cancelada && !esPasada)
-                                    {
-                                        <form asp-action="Cancelar" method="post" class="d-inline"
-                                              onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@reserva.ReservaId" />
-                                            <button type="submit" class="btn btn-danger w-100" aria-label="Cancelar reserva">
-                                                <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
-                                                <span>Cancelar Reserva</span>
-                                            </button>
-                                        </form>
-                                    }
-                                    else if (reserva.Estado == EstadoReserva.Cancelada)
-                                    {
-                                        <button class="btn btn-secondary w-100" disabled>
-                                            <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
-                                            <span>Cancelada</span>
+                                <div>
+                                    <form asp-action="EliminarHorarioFijo" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este horario fijo?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@horario.HorarioFijoId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fa fa-trash"></i>
                                         </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-secondary w-100" disabled>
-                                            <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
-                                            <span>Completada</span>
-                                        </button>
-                                    }
+                                    </form>
                                 </div>
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="fa fa-calendar-times text-yellow fs-2 mb-2"></i>
+                <p class="text-white-custom mb-0">No tienes horarios fijos configurados</p>
+                <small class="text-muted">Define tu rutina semanal para organizar mejor tus entrenamientos</small>
+            </div>
+        }
+    </div>
+
+    <!-- Botón Nueva Reserva y Estadísticas (DEBAJO DEL PANEL) -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Botón Nueva Reserva (Izquierda) -->
+        <div>
+            <a asp-action="Calendario" class="btn btn-yellow">
+                <i class="fa fa-calendar-plus me-2"></i>Nueva Reserva
+            </a>
+        </div>
+
+        <!-- Estadísticas (Derecha) -->
+        <div class="d-flex gap-2">
+            <div class="stats-card-mini text-center" style="width: 90px;">
+                <i class="fa fa-calendar-alt text-yellow mb-1" style="font-size: 1.2rem;"></i>
+                <h6 class="text-yellow mb-0" style="font-size: 1.1rem;">@totalReservas</h6>
+                <small class="text-muted" style="font-size: 0.65rem;">Total</small>
+            </div>
+
+            <div class="stats-card-mini text-center" style="width: 90px; border-color: #28a745;">
+                <i class="fa fa-check-circle mb-1" style="color: #28a745; font-size: 1.2rem;"></i>
+                <h6 class="mb-0" style="color: #28a745; font-size: 1.1rem;">@asistencias</h6>
+                <small class="text-muted" style="font-size: 0.65rem;">Asistió</small>
+            </div>
+
+            <div class="stats-card-mini text-center" style="width: 90px; border-color: #dc3545;">
+                <i class="fa fa-times-circle mb-1" style="color: #dc3545; font-size: 1.2rem;"></i>
+                <h6 class="mb-0" style="color: #dc3545; font-size: 1.1rem;">@faltas</h6>
+                <small class="text-muted" style="font-size: 0.65rem;">Faltas</small>
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider-yellow" />
+
+    <!-- DOS COLUMNAS: Reservas Futuras + Historial -->
+    <div class="row g-4">
+        <!-- COLUMNA 1: RESERVAS PRÓXIMAS -->
+        <div class="col-lg-6">
+            <div class="section-header">
+                <h3 class="text-yellow mb-0">
+                    <i class="fa fa-calendar-day me-2"></i>Próximas Reservas
+                </h3>
+            </div>
+
+            @if (reservasFuturas.Any())
+            {
+                foreach (var reserva in reservasFuturas)
+                {
+                    var claseEstado = reserva.Asistio == true ? "asistio" : reserva.Asistio == false ? "falto" : "pendiente";
+
+                    <div class="reserva-card @claseEstado">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-yellow mb-0">@reserva.FechaReserva.ToString("dd")</h4>
+                                    <small class="text-yellow fw-bold">@reserva.FechaReserva.ToString("dddd")</small>
+                                    <div class="text-white-custom small mt-1">@reserva.FechaReserva.ToString("MMM yyyy")</div>
+                                    <div class="text-yellow mt-2 small fw-bold">
+                                        <i class="fa fa-clock me-1"></i>
+                                        @reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-white-custom mb-2">
+                                    <i class="fa fa-dumbbell me-2 text-yellow"></i>
+                                    @if (!string.IsNullOrEmpty(reserva.TipoEntrenamiento))
+                                    {
+                                        <span class="text-yellow">@reserva.TipoEntrenamiento</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Sesión de Entrenamiento</span>
+                                    }
+                                </h6>
+
+                                <div class="text-white-custom small mb-2">
+                                    <i class="fa fa-clock me-1 text-yellow"></i>
+                                    <span class="text-yellow fw-bold">Duración: @reserva.DuracionHoras h</span>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(reserva.Notas))
+                                {
+                                    <div class="text-white-custom small">
+                                        <i class="fa fa-sticky-note me-1 text-yellow"></i>
+                                        <span class="fst-italic">@reserva.Notas</span>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-3 text-end">
+                                <span class="badge badge-warning-custom mb-2 d-block">
+                                    <i class="fa fa-hourglass-half me-1"></i>Pendiente
+                                </span>
+                                <form asp-action="Cancelar" method="post" onsubmit="return confirm('¿Cancelar esta reserva?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@reserva.ReservaId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                        <i class="fa fa-trash me-1"></i>Cancelar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
             else
             {
-                <div class="text-center py-5">
-                    <i class="bi bi-calendar-x display-1 text-muted mb-3" aria-hidden="true"></i>
-                    <h3 class="text-muted mb-4">No tienes reservas aún</h3>
-                    <p class="lead text-muted mb-4">¡Reserva tu primera sesión en el gimnasio!</p>
-                    <a asp-action="Calendario" class="btn btn-primary btn-lg me-2">
-                        <i class="bi bi-calendar3 me-2" aria-hidden="true"></i>
-                        <span>Ver Calendario</span>
-                    </a>
-                    <a asp-action="Crear" class="btn btn-success btn-lg">
-                        <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
-                        <span>Nueva Reserva</span>
-                    </a>
+                <div class="text-center py-4">
+                    <i class="fa fa-calendar-times text-yellow fs-1 mb-3"></i>
+                    <p class="text-white-custom">No tienes reservas próximas</p>
+                </div>
+            }
+        </div>
+
+        <!-- COLUMNA 2: HISTORIAL DE ASISTENCIA -->
+        <div class="col-lg-6">
+            <div class="section-header">
+                <h3 class="text-yellow mb-0">
+                    <i class="fa fa-history me-2"></i>Historial de Asistencia
+                </h3>
+            </div>
+
+            @if (historial.Any())
+            {
+                foreach (var reserva in historial)
+                {
+                    var claseEstado = reserva.Asistio == true ? "asistio" : reserva.Asistio == false ? "falto" : "pendiente";
+                    var esCancelada = reserva.Estado == GYM.Models.EstadoReserva.Cancelada;
+
+                    <div class="reserva-card @claseEstado">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="text-yellow mb-0">@reserva.FechaReserva.ToString("dd")</h4>
+                                    <small class="text-muted">@reserva.FechaReserva.ToString("MMM yyyy")</small>
+                                    <div class="text-white-custom mt-2 small">
+                                        <i class="fa fa-clock me-1"></i>
+                                        @reserva.HoraInicio.ToString(@"hh\:mm")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <h6 class="text-white-custom mb-1 small">Sesión de Entrenamiento</h6>
+                                <p class="text-muted mb-0 small">
+                                    @reserva.FechaReserva.ToString("dd/MM/yyyy")
+                                </p>
+                                @if (!string.IsNullOrEmpty(reserva.ObservacionesAsistencia))
+                                {
+                                    <p class="text-white-custom mb-0 small mt-1">
+                                        <i class="fa fa-comment text-yellow me-1"></i>
+                                        @reserva.ObservacionesAsistencia
+                                    </p>
+                                }
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                @if (esCancelada)
+                                {
+                                    <span class="badge bg-secondary small">
+                                        <i class="fa fa-ban me-1"></i>Cancelada
+                                    </span>
+                                }
+                                else if (reserva.Asistio == true)
+                                {
+                                    <span class="badge badge-success-custom small">
+                                        <i class="fa fa-check-circle me-1"></i>Asistió
+                                    </span>
+                                    @if (reserva.MarcadoPor != null)
+                                    {
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                                            @reserva.MarcadoPor.Nombre
+                                        </small>
+                                    }
+                                }
+                                else if (reserva.Asistio == false)
+                                {
+                                    <span class="badge badge-danger-custom small">
+                                        <i class="fa fa-times-circle me-1"></i>Faltó
+                                    </span>
+                                    @if (reserva.MarcadoPor != null)
+                                    {
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                                            @reserva.MarcadoPor.Nombre
+                                        </small>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark small">
+                                        <i class="fa fa-clock me-1"></i>Sin marcar
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (historial.Count >= 10)
+                {
+                    <div class="text-center mt-3">
+                        <a asp-action="MiAsistencia" class="btn btn-sm btn-outline-yellow">
+                            <i class="fa fa-list me-1"></i>Ver Todo el Historial
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fa fa-inbox text-muted fs-1 mb-3"></i>
+                    <p class="text-muted">Aún no tienes historial</p>
                 </div>
             }
         </div>
     </div>
 </div>
 
-<!-- Espaciador -->
-<div style="height: 100px;"></div>
+<!-- ✅ Modal Agregar Horario Fijo - HORARIO CORREGIDO: 8 AM a 11 PM -->
+<div class="modal fade" id="modalAgregarHorario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #ffc107;">
+            <div class="modal-header" style="border-bottom: 2px solid rgba(255, 193, 7, 0.3);">
+                <h5 class="modal-title text-yellow">
+                    <i class="fa fa-calendar-plus me-2"></i>Agregar Horario Fijo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CrearHorarioFijo" method="post" id="formHorarioFijo">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="DiaSemana" class="form-label">Día de la Semana *</label>
+                        <select name="DiaSemana" id="DiaSemana" class="form-select" required>
+                            <option value="">Selecciona un día</option>
+                            @foreach (var dia in diasSemana)
+                            {
+                                <option value="@((int)dia.Key)">@dia.Value</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="HoraInicio" class="form-label">Hora Inicio *</label>
+                            <input type="time"
+                                   name="HoraInicio"
+                                   id="HoraInicio"
+                                   class="form-control"
+                                   min="08:00"
+                                   max="23:00"
+                                   required />
+                            <small class="text-white-custom">Entre 8:00 AM y 11:00 PM</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="HoraFin" class="form-label">Hora Fin *</label>
+                            <input type="time"
+                                   name="HoraFin"
+                                   id="HoraFin"
+                                   class="form-control"
+                                   min="08:00"
+                                   max="23:00"
+                                   required />
+                            <small class="text-white-custom">Entre 8:00 AM y 11:00 PM</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TipoEntrenamiento" class="form-label">Tipo de Entrenamiento *</label>
+                        <select name="TipoEntrenamiento" id="TipoEntrenamiento" class="form-select" required>
+                            <option value="">Selecciona...</option>
+                            <option value="Pecho">Pecho</option>
+                            <option value="Pierna">Pierna</option>
+                            <option value="Espalda y Brazos">Espalda y Brazos</option>
+                            <option value="Cardio">Cardio</option>
+                            <option value="Full Body">Full Body</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Notas" class="form-label">Notas (Opcional)</label>
+                        <textarea name="Notas" id="Notas" class="form-control" rows="2" placeholder="Ej: Hacer calentamiento previo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid rgba(255, 193, 7, 0.3);">
+                    <button type="button" class="btn btn-outline-yellow" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-yellow">
+                        <i class="fa fa-save me-2"></i>Guardar Horario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ✅ Validación de horarios 8 AM - 11 PM
+        document.getElementById('formHorarioFijo')?.addEventListener('submit', function(e) {
+            const inicio = document.getElementById('HoraInicio').value;
+            const fin = document.getElementById('HoraFin').value;
+
+            if (inicio >= fin) {
+                e.preventDefault();
+                alert('⚠️ La hora de inicio debe ser menor que la hora de fin.');
+                return false;
+            }
+
+            // Validar rango 8 AM - 11 PM
+            if (inicio < '08:00' || inicio > '23:00' || fin < '08:00' || fin > '23:00') {
+                e.preventDefault();
+                alert('⚠️ El horario debe estar entre 8:00 AM y 11:00 PM.');
+                return false;
+            }
+        });
+    </script>
+}
+
+<!-- Espaciador para barra de Somee -->
+<div style="height: 150px;"></div>

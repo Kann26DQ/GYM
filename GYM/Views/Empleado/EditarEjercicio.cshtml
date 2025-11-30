@@ -1,0 +1,182 @@
+﻿@model GYM.Models.Ejercicio
+@{
+    ViewData["Title"] = "Editar Ejercicio";
+    var empleadoNombre = (string?)ViewData["EmpleadoNombre"];
+    var rutina = (GYM.Models.Rutina)ViewData["Rutina"];
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .form-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .text-yellow {
+        color: #ffc107 !important;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa !important;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+
+    .form-label {
+        color: #ffc107;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow">
+            <i class="fa fa-edit me-2"></i>Editar Ejercicio
+        </h2>
+        <a asp-action="VerRutinaDetalle" asp-route-rutinaId="@Model.RutinaId" class="btn btn-outline-warning">
+            <i class="fa fa-arrow-left me-2"></i>Volver a la Rutina
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <h6 class="text-white-custom">
+            <i class="fa fa-info-circle me-2"></i>
+            Editando ejercicio de la rutina: <strong class="text-yellow">@rutina.Nombre</strong>
+        </h6>
+        <p class="text-white-custom small mb-0">
+            Cliente: <strong>@rutina.Cliente?.Nombre</strong> | Tipo: <strong>@rutina.Tipo</strong>
+        </p>
+    </div>
+
+    <form asp-action="EditarEjercicio" method="post" id="formEditarEjercicio">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.EjercicioId)
+        @Html.HiddenFor(m => m.RutinaId)
+
+        <div class="form-container">
+            <h4 class="text-yellow mb-3">
+                <i class="fa fa-dumbbell me-2"></i>Datos del Ejercicio
+            </h4>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nombre" class="form-label"></label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Ej: Sentadillas" required />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="GrupoMuscular" class="form-label"></label>
+                    <input asp-for="GrupoMuscular" class="form-control" placeholder="Ej: Piernas" required />
+                    <span asp-validation-for="GrupoMuscular" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Series" class="form-label"></label>
+                    <input asp-for="Series" class="form-control" type="number" min="1" max="20" required />
+                    <span asp-validation-for="Series" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Repeticiones" class="form-label"></label>
+                    <input asp-for="Repeticiones" class="form-control" type="number" min="1" max="100" required />
+                    <span asp-validation-for="Repeticiones" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Duracion" class="form-label">
+                        Duración/Descanso
+                        <small class="text-white-custom">(Ej: 60 seg, 2 min)</small>
+                    </label>
+                    <input asp-for="Duracion"
+                           class="form-control"
+                           id="duracionInput"
+                           placeholder="Ej: 60 seg"
+                           pattern="^[0-9]+\s*(seg|min|s|m)?$"
+                           title="Formato válido: número seguido de unidad (ej: 60 seg, 2 min)" />
+                    <small class="text-white-custom">Solo números positivos con unidad opcional (seg, min)</small>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Notas" class="form-label"></label>
+                    <textarea asp-for="Notas" class="form-control" rows="3" placeholder="Ej: Descanso 60 segundos entre series"></textarea>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-warning btn-lg">
+                    <i class="fa fa-save me-2"></i>Guardar Cambios
+                </button>
+                <a asp-action="VerRutinaDetalle" asp-route-rutinaId="@Model.RutinaId" class="btn btn-outline-secondary btn-lg ms-2">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // ✅ Validación adicional para duración
+        document.getElementById('formEditarEjercicio').addEventListener('submit', function(e) {
+            const duracionInput = document.getElementById('duracionInput');
+            const duracionValue = duracionInput.value.trim();
+
+            if (duracionValue) {
+                // Extraer solo los números
+                const numero = parseInt(duracionValue.match(/\d+/)?.[0]);
+
+                if (numero && numero < 0) {
+                    e.preventDefault();
+                    alert('⚠️ La duración no puede ser negativa. Por favor ingresa un valor positivo.');
+                    duracionInput.focus();
+                    return false;
+                }
+
+                if (numero === 0) {
+                    e.preventDefault();
+                    alert('⚠️ La duración debe ser mayor a 0.');
+                    duracionInput.focus();
+                    return false;
+                }
+            }
+        });
+
+        // ✅ Prevenir valores negativos mientras se escribe
+        document.getElementById('duracionInput').addEventListener('input', function(e) {
+            const valor = e.target.value;
+            const numero = parseInt(valor.match(/\d+/)?.[0]);
+
+            if (numero && numero < 0) {
+                e.target.setCustomValidity('La duración no puede ser negativa');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+    </script>
+}
