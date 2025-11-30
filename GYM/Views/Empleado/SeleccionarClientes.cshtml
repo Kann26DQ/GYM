@@ -1,0 +1,334 @@
+﻿@model List<GYM.Models.Usuario>
+@{
+    ViewData["Title"] = "Crear Nuevo Grupo";
+    var empleadoNombre = (string?)ViewData["EmpleadoNombre"];
+    var totalDisponibles = (int?)ViewData["TotalDisponibles"] ?? 0;
+    var totalEnGrupos = (int?)ViewData["TotalEnGrupos"] ?? 0;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .cliente-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+        .cliente-card:hover {
+            border-color: #ffc107;
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.4);
+        }
+
+        .cliente-card.selected {
+            border-color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(32, 201, 151, 0.1) 100%);
+        }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-yellow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.5);
+        }
+
+    /* ✅ NUEVO: Contador reposicionado más arriba para evitar el banner de somee */
+    .contador-seleccion {
+        position: fixed;
+        bottom: 120px; /* ✅ Cambio de 2rem a 120px para evitar el banner */
+        right: 2rem;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.5);
+        z-index: 1000;
+        display: none;
+        animation: slideInUp 0.4s ease;
+    }
+
+    @@keyframes slideInUp {
+        from
+
+    {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    /* ✅ Responsive: en móviles centrar el contador */
+    @@media (max-width: 768px) {
+        .contador-seleccion
+
+    {
+        bottom: 100px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+    }
+
+    }
+
+    .info-box {
+        background: rgba(23, 162, 184, 0.1);
+        border: 2px solid rgba(23, 162, 184, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- ✅ HEADER CON UN SOLO BOTÓN -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow mb-0">
+            <i class="fa fa-users-cog me-2"></i>Crear Nuevo Grupo
+        </h2>
+        <a asp-action="MisGrupos" class="btn btn-outline-warning">
+            <i class="fa fa-arrow-left me-2"></i>Volver a Mis Grupos
+        </a>
+    </div>
+
+    <!-- ✅ INFO BOX -->
+    <div class="info-box">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="text-info mb-2">
+                    <i class="fa fa-info-circle me-2"></i>Clientes Disponibles
+                </h5>
+                <p class="text-white-custom mb-1">
+                    ✅ <strong>@totalDisponibles</strong> cliente(s) sin evaluación (disponibles)
+                </p>
+                <p class="text-white-custom mb-0">
+                    🔒 <strong>@totalEnGrupos</strong> cliente(s) ya están en grupos
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-yellow mb-2">
+                    <i class="fa fa-lightbulb me-2"></i>Regla Importante
+                </h5>
+                <p class="text-white-custom small mb-0">
+                    ⚠️ <strong>Un cliente solo puede estar en UN grupo a la vez.</strong> Para evaluarlo nuevamente, elimina su evaluación desde "Mis Grupos".
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <form asp-action="ProcesarGrupo" method="post" id="formSeleccion">
+            @Html.AntiForgeryToken()
+
+            <!-- ✅ CAMPOS DE TÍTULO Y COLOR DEL GRUPO -->
+            <div class="card mb-4" style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid rgba(255, 193, 7, 0.3);">
+                <div class="card-body">
+                    <h5 class="text-yellow mb-3">
+                        <i class="fa fa-tag me-2"></i>Información del Grupo
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="tituloGrupo" class="form-label text-white-custom">
+                                    <i class="fa fa-pen me-2"></i>Título del Grupo *
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="tituloGrupo"
+                                       name="tituloGrupo"
+                                       placeholder="Ej: Grupo Principiantes - Mañana"
+                                       required
+                                       maxlength="100"
+                                       style="background: #1a1a1a; color: #f8f9fa; border: 1px solid #ffc107;">
+                                <small class="text-white-custom">Identifica fácilmente tu grupo de clientes</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="colorGrupo" class="form-label text-white-custom">
+                                    <i class="fa fa-palette me-2"></i>Color del Grupo
+                                </label>
+                                <input type="color"
+                                       class="form-control form-control-color"
+                                       id="colorGrupo"
+                                       name="colorGrupo"
+                                       value="#ffc107"
+                                       title="Selecciona un color"
+                                       style="height: 50px; width: 100%;">
+                                <small class="text-white-custom">Para diferenciar en el calendario</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-success mb-4">
+                <i class="fa fa-check-circle me-2"></i>
+                <strong>@totalDisponibles cliente(s)</strong> disponible(s) para crear grupo
+            </div>
+
+            <!-- ✅ LISTA DE CLIENTES -->
+            <div class="row">
+                @foreach (var cliente in Model)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="cliente-card" onclick="toggleCliente(@cliente.UsuarioId)">
+                            <input type="checkbox"
+                                   name="clientesSeleccionados"
+                                   value="@cliente.UsuarioId"
+                                   id="cliente_@cliente.UsuarioId"
+                                   style="display: none;" />
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fa fa-user-circle fa-3x text-yellow"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="text-yellow mb-1">@cliente.Nombre</h5>
+                                    <p class="text-white-custom small mb-1">
+                                        <i class="fa fa-envelope me-1"></i>@cliente.Email
+                                    </p>
+                                    <span class="badge bg-success small">
+                                        <i class="fa fa-check-circle me-1"></i>Disponible
+                                    </span>
+                                </div>
+                                <div class="check-icon" id="check_@cliente.UsuarioId" style="display: none;">
+                                    <i class="fa fa-check-circle fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- ✅ CONTADOR FLOTANTE REPOSICIONADO -->
+            <div class="contador-seleccion" id="contadorSeleccion">
+                <h5 class="mb-2">
+                    <i class="fa fa-users me-2"></i>
+                    <span id="cantidadSeleccionados">0</span> cliente(s) seleccionado(s)
+                </h5>
+                <button type="submit" class="btn btn-light w-100">
+                    <i class="fa fa-arrow-right me-2"></i>Crear Grupo y Evaluar
+                </button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fa fa-users text-yellow mb-4" style="font-size: 5rem; opacity: 0.3;"></i>
+            <h3 class="text-white-custom mb-3">No hay clientes disponibles</h3>
+
+            <div class="alert alert-info mx-auto" style="max-width: 600px;">
+                <h5 class="text-info">
+                    <i class="fa fa-info-circle me-2"></i>Todos los clientes están en grupos
+                </h5>
+                <p class="text-white-custom mb-0">
+                    Para liberar clientes, ve a <strong>"Mis Grupos"</strong> y elimina evaluaciones.
+                </p>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="MisGrupos" class="btn btn-yellow me-2">
+                    <i class="fa fa-users me-2"></i>Ir a Mis Grupos
+                </a>
+                <a asp-action="Index" class="btn btn-outline-warning">
+                    <i class="fa fa-home me-2"></i>Volver al Panel
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ✅ Espacio adicional para evitar que el contenido quede debajo del banner -->
+<div style="height: 200px;"></div>
+
+<script>
+    let seleccionados = [];
+
+    function toggleCliente(clienteId) {
+        const checkbox = document.getElementById(`cliente_${clienteId}`);
+        const card = checkbox.closest('.cliente-card');
+        const checkIcon = document.getElementById(`check_${clienteId}`);
+
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) {
+            card.classList.add('selected');
+            checkIcon.style.display = 'block';
+            seleccionados.push(clienteId);
+        } else {
+            card.classList.remove('selected');
+            checkIcon.style.display = 'none';
+            seleccionados = seleccionados.filter(id => id !== clienteId);
+        }
+
+        actualizarContador();
+    }
+
+    function actualizarContador() {
+        const contador = document.getElementById('contadorSeleccion');
+        const cantidad = document.getElementById('cantidadSeleccionados');
+
+        cantidad.textContent = seleccionados.length;
+
+        if (seleccionados.length > 0) {
+            contador.style.display = 'block';
+        } else {
+            contador.style.display = 'none';
+        }
+    }
+
+    document.getElementById('formSeleccion')?.addEventListener('submit', function (e) {
+        if (seleccionados.length === 0) {
+            e.preventDefault();
+            alert('⚠️ Debes seleccionar al menos un cliente para crear un grupo.');
+        }
+    });
+</script>

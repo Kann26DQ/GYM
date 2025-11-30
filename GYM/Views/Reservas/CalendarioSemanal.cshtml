@@ -1,0 +1,492 @@
+﻿@{
+    ViewData["Title"] = "Mi Calendario Semanal";
+    var horariosFijos = (List<GYM.Models.HorarioFijo>)ViewData["HorariosFijos"];
+    var reservasFuturas = (List<GYM.Models.Reserva>)ViewData["ReservasFuturas"];
+    var rutinas = (List<GYM.Models.Rutina>)ViewData["Rutinas"];
+    var inicioSemana = (DateTime)ViewData["InicioSemana"];
+
+    var diasSemana = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Lunes" },
+        { DayOfWeek.Tuesday, "Martes" },
+        { DayOfWeek.Wednesday, "Miércoles" },
+        { DayOfWeek.Thursday, "Jueves" },
+        { DayOfWeek.Friday, "Viernes" },
+        { DayOfWeek.Saturday, "Sábado" }
+    };
+
+    int CalcularAltura(TimeSpan duracion)
+    {
+        return (int)(duracion.TotalHours * 80);
+    }
+
+    int CalcularPosicionTop(TimeSpan horaInicio)
+    {
+        return (int)((horaInicio.Hours - 8) * 80 + (horaInicio.Minutes / 60.0 * 80));
+    }
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .calendario-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 1.5rem;
+        overflow-x: auto;
+    }
+
+    .tabla-calendario {
+        display: grid;
+        grid-template-columns: 80px repeat(6, 1fr);
+        gap: 2px;
+        min-width: 1000px;
+    }
+
+    .header-celda {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        padding: 1rem;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 10px 10px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .hora-celda {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        padding: 0.5rem;
+        text-align: center;
+        font-weight: bold;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .dia-celda {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+        border-radius: 5px;
+        position: relative;
+        min-height: 80px;
+    }
+
+    .evento-absoluto {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        border-radius: 8px;
+        padding: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 5;
+    }
+
+        .evento-absoluto:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.6);
+            z-index: 10;
+        }
+
+    .evento-horario-fijo {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.9) 0%, rgba(32, 201, 151, 0.8) 100%);
+        border-left: 4px solid #28a745;
+    }
+
+    .evento-reserva {
+        background: linear-gradient(135deg, rgba(23, 162, 184, 0.9) 0%, rgba(13, 202, 240, 0.8) 100%);
+        border-left: 4px solid #17a2b8;
+    }
+
+    .evento-nombre {
+        color: white;
+        font-weight: bold;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .evento-info {
+        color: #f8f9fa;
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .badge-rutina {
+        background: rgba(255, 193, 7, 0.9);
+        color: #1a1a1a;
+        padding: 0.3rem 0.6rem;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        display: block;
+        text-align: center;
+        margin-top: 0.4rem;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: bold;
+        border: none;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+        .badge-rutina:hover {
+            background: rgba(255, 193, 7, 1);
+            color: #000;
+            text-decoration: none;
+            transform: scale(1.05);
+        }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .leyenda {
+        background: rgba(45, 45, 45, 0.8);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .leyenda-item {
+        display: inline-block;
+        margin-right: 1.5rem;
+    }
+
+    .grid-hora {
+        display: contents;
+    }
+
+    .ejercicio-modal-item {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        transition: all 0.3s;
+    }
+
+        .ejercicio-modal-item:hover {
+            border-color: #ffc107;
+        }
+
+        .ejercicio-modal-item h6 {
+            color: #ffc107;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .ejercicio-modal-item p {
+            color: #f8f9fa;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .ejercicio-modal-item .badge {
+            background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+            color: #1a1a1a;
+            font-weight: bold;
+            padding: 0.3rem 0.6rem;
+        }
+
+    .info-rutina-header {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .info-rutina-header p {
+            color: #f8f9fa;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-rutina-header strong {
+            color: #ffc107;
+        }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow mb-0">
+            <i class="fa fa-calendar-week me-2"></i>Mi Calendario Semanal
+        </h2>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-warning">
+                <i class="fa fa-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="leyenda">
+        <h6 class="text-yellow mb-3">
+            <i class="fa fa-info-circle me-2"></i>Leyenda
+        </h6>
+        <div class="leyenda-item">
+            <i class="fa fa-square text-success"></i>
+            <span class="text-white-custom">Horario Fijo</span>
+        </div>
+        <div class="leyenda-item">
+            <i class="fa fa-square text-info"></i>
+            <span class="text-white-custom">Reserva</span>
+        </div>
+        <div class="leyenda-item">
+            <i class="fa fa-square text-warning"></i>
+            <span class="text-white-custom">Rutina Asignada</span>
+        </div>
+    </div>
+
+    <div class="calendario-container">
+        <div class="tabla-calendario">
+            <div class="header-celda">Hora</div>
+            @foreach (var dia in diasSemana)
+            {
+                var fecha = inicioSemana.AddDays((int)dia.Key - (int)inicioSemana.DayOfWeek);
+                if (inicioSemana.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    fecha = inicioSemana.AddDays((int)dia.Key + 1);
+                }
+                <div class="header-celda">
+                    @dia.Value
+                    <br />
+                    <small>@fecha.ToString("dd/MM")</small>
+                </div>
+            }
+
+            @for (int hora = 8; hora < 23; hora++)
+            {
+                <div class="grid-hora">
+                    <div class="hora-celda">
+                        @hora:00
+                    </div>
+
+                    @foreach (var dia in diasSemana)
+                    {
+                        var fecha = inicioSemana.AddDays((int)dia.Key - (int)inicioSemana.DayOfWeek);
+                        if (inicioSemana.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            fecha = inicioSemana.AddDays((int)dia.Key + 1);
+                        }
+
+                        var horaInicio = new TimeSpan(hora, 0, 0);
+                        var horaFin = new TimeSpan(hora + 1, 0, 0);
+
+                        <div class="dia-celda">
+                            @{
+                                var horariosEnCelda = horariosFijos
+                                .Where(h => h.DiaSemana == dia.Key &&
+                                h.HoraInicio >= horaInicio &&
+                                h.HoraInicio < horaFin)
+                                .ToList();
+
+                                var reservasEnCelda = reservasFuturas
+                                .Where(r => r.FechaReserva.Date == fecha.Date &&
+                                r.HoraInicio >= horaInicio &&
+                                r.HoraInicio < horaFin)
+                                .ToList();
+
+                                foreach (var horario in horariosEnCelda)
+                                {
+                                    var duracion = horario.HoraFin - horario.HoraInicio;
+                                    var altura = CalcularAltura(duracion);
+
+                                    var rutinaAsignada = rutinas.FirstOrDefault(r =>
+                                    r.DiaSemana == dia.Key &&
+                                    r.HoraInicio == horario.HoraInicio);
+
+                                    <div class="evento-absoluto evento-horario-fijo"
+                                         style="height: @(altura)px; top: @(CalcularPosicionTop(horario.HoraInicio) - (hora - 8) * 80)px;">
+                                        <div class="evento-nombre">
+                                            <i class="fa fa-dumbbell me-1"></i>@horario.TipoEntrenamiento
+                                        </div>
+                                        <div class="evento-info">
+                                            <i class="fa fa-clock me-1"></i>
+                                            @horario.HoraInicio.ToString(@"hh\:mm") - @horario.HoraFin.ToString(@"hh\:mm")
+                                        </div>
+
+                                        @if (rutinaAsignada != null)
+                                        {
+                                            <button type="button"
+                                                    class="badge-rutina"
+                                                    onclick="verEjercicios(@rutinaAsignada.RutinaId)">
+                                                <i class="fa fa-clipboard-list me-1"></i>Ver Rutina (@(rutinaAsignada.Ejercicios?.Count ?? 0))
+                                            </button>
+                                        }
+                                    </div>
+                                }
+
+                                foreach (var reserva in reservasEnCelda)
+                                {
+                                    var duracion = reserva.HoraFin - reserva.HoraInicio;
+                                    var altura = CalcularAltura(duracion);
+
+                                    var rutinaAsignada = rutinas.FirstOrDefault(r =>
+                                    r.FechaEspecifica == fecha.Date &&
+                                    r.HoraInicio == reserva.HoraInicio);
+
+                                    <div class="evento-absoluto evento-reserva"
+                                         style="height: @(altura)px; top: @(CalcularPosicionTop(reserva.HoraInicio) - (hora - 8) * 80)px;">
+                                        <div class="evento-nombre">
+                                            <i class="fa fa-calendar-check me-1"></i>Reserva
+                                        </div>
+                                        <div class="evento-info">
+                                            <i class="fa fa-clock me-1"></i>
+                                            @reserva.HoraInicio.ToString(@"hh\:mm") - @reserva.HoraFin.ToString(@"hh\:mm")
+                                        </div>
+
+                                        @if (rutinaAsignada != null)
+                                        {
+                                            <button type="button"
+                                                    class="badge-rutina"
+                                                    onclick="verEjercicios(@rutinaAsignada.RutinaId)">
+                                                <i class="fa fa-clipboard-list me-1"></i>Ver Rutina (@(rutinaAsignada.Ejercicios?.Count ?? 0))
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalVerEjercicios" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #2d2d2d; border: 2px solid #ffc107;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 193, 7, 0.3);">
+                <h5 class="modal-title text-yellow">
+                    <i class="fa fa-dumbbell me-2"></i><span id="tituloRutina"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="info-rutina-header" id="infoRutinaHeader"></div>
+                <h6 class="text-yellow mb-3">
+                    <i class="fa fa-list-ol me-2"></i>Ejercicios
+                </h6>
+                <div id="contenidoEjercicios"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 193, 7, 0.3);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    <script>
+        const rutinasMap = {
+            @foreach (var rutina in rutinas)
+            {
+                    @:@rutina.RutinaId: {
+                        @:nombre: '@Html.Raw(rutina.Nombre ?? "Rutina")',
+                        @:tipo: '@Html.Raw(rutina.Tipo ?? "General")',
+                        @:nivel: '@Html.Raw(rutina.NivelDificultad ?? "No especificado")',
+                        @:duracion: @rutina.DuracionSemanas,
+                        @:descripcion: '@Html.Raw(rutina.Descripcion ?? "")',
+                        @:ejercicios: [
+                            @if (rutina.Ejercicios != null && rutina.Ejercicios.Any())
+                            {
+                                    @foreach (var ejercicio in rutina.Ejercicios)
+                                    {
+                                            @:{
+                                                @:nombre: '@Html.Raw(ejercicio.Nombre)',
+                                                @:grupo: '@Html.Raw(ejercicio.GrupoMuscular ?? "General")',
+                                                @:series: @ejercicio.Series,
+                                                @:repeticiones: @ejercicio.Repeticiones,
+                                                @:duracion: '@Html.Raw(ejercicio.Duracion ?? "")',
+                                                @:notas: '@Html.Raw(ejercicio.Notas ?? "")'
+                                            @:},
+                                    }
+                            }
+                                    @:]
+                    @:},
+            }
+        };
+
+        function verEjercicios(rutinaId) {
+            const rutina = rutinasMap[rutinaId];
+
+            if (!rutina) {
+                alert('❌ No se encontró la rutina.');
+                return;
+            }
+
+            document.getElementById('tituloRutina').textContent = rutina.nombre;
+
+            let infoHtml = '<p class="mb-2"><strong><i class="fa fa-tag me-1"></i>Tipo:</strong> <span class="badge bg-primary">' + rutina.tipo + '</span></p>';
+            infoHtml += '<p class="mb-2"><strong><i class="fa fa-chart-line me-1"></i>Nivel:</strong> <span class="badge bg-info">' + rutina.nivel + '</span></p>';
+            infoHtml += '<p class="mb-2"><strong><i class="fa fa-calendar-alt me-1"></i>Duración:</strong> ' + rutina.duracion + ' semanas</p>';
+
+            if (rutina.descripcion) {
+                infoHtml += '<p class="mb-0"><strong><i class="fa fa-align-left me-1"></i>Descripción:</strong><br/>' + rutina.descripcion + '</p>';
+            }
+
+            document.getElementById('infoRutinaHeader').innerHTML = infoHtml;
+
+            let ejerciciosHtml = '';
+
+            if (rutina.ejercicios && rutina.ejercicios.length > 0) {
+                rutina.ejercicios.forEach(function(ej, idx) {
+                    ejerciciosHtml += '<div class="ejercicio-modal-item">';
+                    ejerciciosHtml += '<h6><span class="badge me-2">' + (idx + 1) + '</span>' + ej.nombre + '</h6>';
+                    ejerciciosHtml += '<div class="row mt-2">';
+                    ejerciciosHtml += '<div class="col-md-4"><p class="mb-1"><strong><i class="fa fa-redo me-1"></i>Series:</strong> <span class="badge bg-success">' + ej.series + '</span></p></div>';
+                    ejerciciosHtml += '<div class="col-md-4"><p class="mb-1"><strong><i class="fa fa-sort-numeric-up me-1"></i>Repeticiones:</strong> <span class="badge bg-success">' + ej.repeticiones + '</span></p></div>';
+                    ejerciciosHtml += '<div class="col-md-4"><p class="mb-1"><strong><i class="fa fa-bullseye me-1"></i>Grupo:</strong> <span class="badge bg-secondary">' + ej.grupo + '</span></p></div>';
+                    ejerciciosHtml += '</div>';
+
+                    if (ej.duracion) {
+                        ejerciciosHtml += '<p class="mb-1 mt-2"><strong><i class="fa fa-hourglass-half me-1"></i>Duración:</strong> <span class="badge" style="background: rgba(23, 162, 184, 0.8);">' + ej.duracion + '</span></p>';
+                    }
+
+                    if (ej.notas) {
+                        ejerciciosHtml += '<div class="alert alert-secondary mt-2 mb-0" style="background: rgba(108, 117, 125, 0.2); border-color: rgba(108, 117, 125, 0.3);"><small><i class="fa fa-sticky-note me-1"></i><strong>Notas:</strong> ' + ej.notas + '</small></div>';
+                    }
+
+                    ejerciciosHtml += '</div>';
+                });
+            } else {
+                ejerciciosHtml = '<div class="alert alert-warning" style="background: rgba(255, 193, 7, 0.2); border-color: rgba(255, 193, 7, 0.3);"><i class="fa fa-exclamation-triangle me-2"></i>Esta rutina aún no tiene ejercicios asignados.</div>';
+            }
+
+            document.getElementById('contenidoEjercicios').innerHTML = ejerciciosHtml;
+
+            new bootstrap.Modal(document.getElementById('modalVerEjercicios')).show();
+        }
+    </script>
+}

@@ -1,0 +1,387 @@
+﻿@model GYM.Models.PlanAlimenticio
+@{
+    ViewData["Title"] = "Editar Plan Alimenticio";
+    var cliente = ViewData["Cliente"] as GYM.Models.Usuario;
+    var evaluacion = ViewData["Evaluacion"] as GYM.Models.EvaluacionRendimiento;
+    var empleadoNombre = ViewData["EmpleadoNombre"] as string;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+        padding-bottom: 200px;
+    }
+
+    .form-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #4cff4c;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(76, 255, 76, 0.2);
+    }
+
+    .comida-card {
+        background: rgba(45, 45, 45, 0.95);
+        border: 2px solid rgba(76, 255, 76, 0.5);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+        .comida-card:hover {
+            border-color: #4cff4c;
+            box-shadow: 0 4px 15px rgba(76, 255, 76, 0.4);
+        }
+
+    .text-green {
+        color: #4cff4c !important;
+        font-weight: 600;
+        text-shadow: 0 0 5px rgba(76, 255, 76, 0.3);
+    }
+
+    .text-white-custom {
+        color: #ffffff !important;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.9);
+        border: 2px solid rgba(76, 255, 76, 0.4);
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 0.8rem;
+    }
+
+        /* ✅ SOLUCIÓN: Solo cambiar el color del valor dentro del input, NO del label */
+        .form-control:focus, .form-select:focus {
+            border-color: #4cff4c;
+            background: rgba(45, 45, 45, 1);
+            box-shadow: 0 0 10px rgba(76, 255, 76, 0.4);
+            outline: none;
+            /* ❌ REMOVIDO: color: #ffffff !important; */
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+    /* ✅ CRÍTICO: Los labels siempre deben ser verdes */
+    .form-label {
+        color: #4cff4c !important;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    /* ✅ Asegurar que los labels dentro de comida-card también sean verdes */
+    .comida-card .form-label {
+        color: #4cff4c !important;
+    }
+
+    .btn-agregar-comida {
+        background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 0.8rem 1.8rem;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-agregar-comida:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(32, 201, 151, 0.5);
+        }
+
+    .btn-eliminar-comida {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        transition: all 0.3s;
+    }
+
+        .btn-eliminar-comida:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.5);
+        }
+
+    .btn-guardar {
+        background: linear-gradient(135deg, #4cff4c 0%, #20c997 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+    }
+
+        .btn-guardar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(76, 255, 76, 0.5);
+        }
+
+    .btn-cancelar {
+        background: transparent;
+        color: #ffffff !important;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        padding: 1rem 3rem;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+    }
+
+        .btn-cancelar:hover {
+            border-color: #dc3545;
+            color: #dc3545 !important;
+            transform: scale(1.05);
+        }
+
+    .badge-numero {
+        background: linear-gradient(135deg, #4cff4c 0%, #20c997 100%);
+        color: #1a1a1a;
+        font-weight: bold;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        margin-right: 0.5rem;
+    }
+
+    .alert-info-custom {
+        background: rgba(32, 201, 151, 0.15);
+        border: 2px solid #20c997;
+        color: #ffffff;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .content-spacer {
+        height: 150px;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2 class="text-green mb-4">
+        <i class="fa fa-edit me-2"></i>Editar Plan Alimenticio
+    </h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Editar" method="post" id="formEditarPlan">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PlanAlimenticioId" />
+        <input type="hidden" asp-for="ClienteId" />
+        <input type="hidden" asp-for="EmpleadoId" />
+        <input type="hidden" asp-for="FechaCreacion" />
+
+        <!-- Información del Cliente -->
+        @if (cliente != null)
+        {
+            <div class="alert-info-custom">
+                <h5 class="text-green mb-2">
+                    <i class="fa fa-user me-2"></i>Cliente: @cliente.Nombre
+                </h5>
+                <p class="text-white-custom mb-0">
+                    <strong>Email:</strong> @cliente.Email
+                </p>
+            </div>
+        }
+
+        <!-- Información del Plan -->
+        <div class="form-container">
+            <h4 class="text-green mb-3">
+                <i class="fa fa-info-circle me-2"></i>Información del Plan
+            </h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nombre" class="form-label">Nombre *</label>
+                    <input asp-for="Nombre" class="form-control" required placeholder="Ej: Plan de Aumento de Masa" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Objetivo" class="form-label">Objetivo *</label>
+                    <input asp-for="Objetivo" class="form-control" required placeholder="Ej: Aumentar masa muscular" />
+                    <span asp-validation-for="Objetivo" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comidas -->
+        <div class="form-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-green mb-0">
+                    <i class="fa fa-apple-alt me-2"></i>Comidas del Plan
+                </h4>
+                <button type="button" class="btn-agregar-comida" onclick="agregarComida()">
+                    <i class="fa fa-plus me-2"></i>Agregar Comida
+                </button>
+            </div>
+
+            <div id="comidas-container">
+                @if (Model.Comidas != null && Model.Comidas.Any())
+                {
+                    int index = 0;
+                    foreach (var comida in Model.Comidas)
+                    {
+                        <div class="comida-card" data-index="@index">
+                            <button type="button" class="btn-eliminar-comida" onclick="eliminarComida(this)">
+                                <i class="fa fa-trash"></i>
+                            </button>
+
+                            <h5 class="text-green mb-3">
+                                <span class="badge-numero">@(index + 1)</span>
+                                Comida
+                            </h5>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" name="comidas[@index].Nombre" class="form-control"
+                                       value="@comida.Nombre" required placeholder="Ej: Desayuno" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Horario *</label>
+                                <input type="text" name="comidas[@index].Horarios" class="form-control"
+                                       value="@comida.Horarios" required placeholder="Ej: 8:00 AM" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ingredientes *</label>
+                                <textarea name="comidas[@index].Ingredientes" class="form-control"
+                                  rows="3" required placeholder="Detalla los ingredientes y preparación...">@comida.Ingredientes</textarea>
+                            </div>
+                        </div>
+                        index++;
+                    }
+                }
+                else
+                {
+                    <p class="text-white-custom text-center py-4">
+                        <i class="fa fa-info-circle me-2"></i>
+                        No hay comidas agregadas. Haz clic en "Agregar Comida" para comenzar.
+                    </p>
+                }
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="text-center mb-4">
+            <button type="submit" class="btn-guardar">
+                <i class="fa fa-save me-2"></i>Guardar Cambios
+            </button>
+            <a asp-action="Detalles" asp-route-id="@Model.PlanAlimenticioId" class="btn-cancelar">
+                <i class="fa fa-times me-2"></i>Cancelar
+            </a>
+        </div>
+    </form>
+
+    <div class="content-spacer"></div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let comidaIndex = @(Model.Comidas?.Count ?? 0);
+
+        function agregarComida() {
+            const container = document.getElementById('comidas-container');
+
+            const comidaHtml = `
+                <div class="comida-card" data-index="${comidaIndex}">
+                    <button type="button" class="btn-eliminar-comida" onclick="eliminarComida(this)">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <h5 class="text-green mb-3">
+                        <span class="badge-numero">${comidaIndex + 1}</span>
+                        Nueva Comida
+                    </h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" name="comidas[${comidaIndex}].Nombre" class="form-control"
+                               required placeholder="Ej: Almuerzo" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Horario *</label>
+                        <input type="text" name="comidas[${comidaIndex}].Horarios" class="form-control"
+                               required placeholder="Ej: 12:00 PM" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ingredientes *</label>
+                        <textarea name="comidas[${comidaIndex}].Ingredientes" class="form-control"
+                                  rows="3" required placeholder="Detalla los ingredientes y preparación..."></textarea>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', comidaHtml);
+            comidaIndex++;
+            actualizarNumeracion();
+        }
+
+        function eliminarComida(button) {
+            const comidaCard = button.closest('.comida-card');
+            comidaCard.remove();
+            actualizarNumeracion();
+        }
+
+        function actualizarNumeracion() {
+            const comidas = document.querySelectorAll('.comida-card');
+            comidas.forEach((comida, index) => {
+                const badge = comida.querySelector('.badge-numero');
+                if (badge) {
+                    badge.textContent = index + 1;
+                }
+            });
+        }
+
+        // Validación antes de enviar
+        document.getElementById('formEditarPlan').addEventListener('submit', function(e) {
+            const comidas = document.querySelectorAll('.comida-card');
+
+            if (comidas.length === 0) {
+                e.preventDefault();
+                alert('⚠️ Debes agregar al menos una comida al plan.');
+                return false;
+            }
+
+            // Validar que todos los campos estén llenos
+            let camposVacios = false;
+            comidas.forEach(comida => {
+                const inputs = comida.querySelectorAll('input[required], textarea[required]');
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        camposVacios = true;
+                        input.style.borderColor = '#dc3545';
+                    } else {
+                        input.style.borderColor = 'rgba(76, 255, 76, 0.4)';
+                    }
+                });
+            });
+
+            if (camposVacios) {
+                e.preventDefault();
+                alert('⚠️ Por favor completa todos los campos obligatorios (*)');
+                return false;
+            }
+        });
+    </script>
+}

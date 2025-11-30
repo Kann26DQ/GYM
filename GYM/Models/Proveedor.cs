@@ -2,8 +2,8 @@
 
 namespace GYM.Models
 {
-   public class Proveedor
-{
+    public class Proveedor
+    {
         public int ProveedorId { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio.")]
@@ -15,7 +15,8 @@ namespace GYM.Models
         public string Telefono { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El email es obligatorio.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.com$", ErrorMessage = "Debe ser un correo válido que termine en .com.")]
+        [EmailAddress(ErrorMessage = "Debe ser un correo electrónico válido.")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.com$", ErrorMessage = "El correo debe terminar en .com")]
         public string Email { get; set; } = string.Empty;
 
         [StringLength(250, ErrorMessage = "Máximo {1} caracteres.")]
@@ -23,8 +24,7 @@ namespace GYM.Models
 
         public bool Estado { get; set; } = true;
 
-
-        public ICollection<Producto> Productos { get; set; }
-}
-
+        // ✅ Inicializar la colección para evitar problemas
+        public ICollection<Producto> Productos { get; set; } = new List<Producto>();
+    }
 }

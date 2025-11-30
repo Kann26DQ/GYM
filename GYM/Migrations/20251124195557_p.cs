@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GYM.Migrations
 {
     /// <inheritdoc />
-    public partial class nuevo : Migration
+    public partial class p : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -130,6 +130,69 @@ namespace GYM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EvaluacionesRendimiento",
+                columns: table => new
+                {
+                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    EmpleadoId = table.Column<int>(type: "int", nullable: false),
+                    FechaEvaluacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Fuerza = table.Column<int>(type: "int", nullable: false),
+                    Resistencia = table.Column<int>(type: "int", nullable: false),
+                    Flexibilidad = table.Column<int>(type: "int", nullable: false),
+                    Tecnica = table.Column<int>(type: "int", nullable: false),
+                    NivelGeneral = table.Column<int>(type: "int", nullable: false),
+                    Peso = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Altura = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    IMC = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Observaciones = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    ObjetivoCliente = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EvaluacionesRendimiento", x => x.EvaluacionRendimientoId);
+                    table.ForeignKey(
+                        name: "FK_EvaluacionesRendimiento_Usuarios_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EvaluacionesRendimiento_Usuarios_EmpleadoId",
+                        column: x => x.EmpleadoId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HorariosFijos",
+                columns: table => new
+                {
+                    HorarioFijoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UsuarioId = table.Column<int>(type: "int", nullable: false),
+                    DiaSemana = table.Column<int>(type: "int", nullable: false),
+                    HoraInicio = table.Column<TimeSpan>(type: "time", nullable: false),
+                    HoraFin = table.Column<TimeSpan>(type: "time", nullable: false),
+                    TipoEntrenamiento = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Notas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Activo = table.Column<bool>(type: "bit", nullable: false),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HorariosFijos", x => x.HorarioFijoId);
+                    table.ForeignKey(
+                        name: "FK_HorariosFijos_Usuarios_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Membresias",
                 columns: table => new
                 {
@@ -247,46 +310,29 @@ namespace GYM.Migrations
                     HoraFin = table.Column<TimeSpan>(type: "time", nullable: false),
                     Estado = table.Column<int>(type: "int", nullable: false),
                     FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Notas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                    TipoEntrenamiento = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Notas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Asistio = table.Column<bool>(type: "bit", nullable: true),
+                    FechaMarcado = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MarcadoPorId = table.Column<int>(type: "int", nullable: true),
+                    ObservacionesAsistencia = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    DuracionHoras = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reservas", x => x.ReservaId);
+                    table.ForeignKey(
+                        name: "FK_Reservas_Usuarios_MarcadoPorId",
+                        column: x => x.MarcadoPorId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Reservas_Usuarios_UsuarioId",
                         column: x => x.UsuarioId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Rutinas",
-                columns: table => new
-                {
-                    RutinaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Tipo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DuracionSemanas = table.Column<int>(type: "int", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true),
-                    EmpleadoId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Rutinas", x => x.RutinaId);
-                    table.ForeignKey(
-                        name: "FK_Rutinas_Usuarios_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Usuarios",
-                        principalColumn: "UsuarioId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Rutinas_Usuarios_EmpleadoId",
-                        column: x => x.EmpleadoId,
-                        principalTable: "Usuarios",
-                        principalColumn: "UsuarioId",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -311,6 +357,48 @@ namespace GYM.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Ventas_Usuarios_EmpleadoId",
+                        column: x => x.EmpleadoId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Rutinas",
+                columns: table => new
+                {
+                    RutinaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Tipo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DuracionSemanas = table.Column<int>(type: "int", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    NivelDificultad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Activa = table.Column<bool>(type: "bit", nullable: false),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    EmpleadoId = table.Column<int>(type: "int", nullable: false),
+                    EvaluacionRendimientoId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rutinas", x => x.RutinaId);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_EvaluacionesRendimiento_EvaluacionRendimientoId",
+                        column: x => x.EvaluacionRendimientoId,
+                        principalTable: "EvaluacionesRendimiento",
+                        principalColumn: "EvaluacionRendimientoId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_Usuarios_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Rutinas_Usuarios_EmpleadoId",
                         column: x => x.EmpleadoId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
@@ -390,30 +478,6 @@ namespace GYM.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Ejercicios",
-                columns: table => new
-                {
-                    EjercicioId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GrupoMuscular = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Series = table.Column<int>(type: "int", nullable: false),
-                    Repeticiones = table.Column<int>(type: "int", nullable: false),
-                    Notas = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RutinaId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Ejercicios", x => x.EjercicioId);
-                    table.ForeignKey(
-                        name: "FK_Ejercicios_Rutinas_RutinaId",
-                        column: x => x.RutinaId,
-                        principalTable: "Rutinas",
-                        principalColumn: "RutinaId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DetallesVenta",
                 columns: table => new
                 {
@@ -438,6 +502,30 @@ namespace GYM.Migrations
                         column: x => x.VentaId,
                         principalTable: "Ventas",
                         principalColumn: "VentaId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Ejercicios",
+                columns: table => new
+                {
+                    EjercicioId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GrupoMuscular = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Series = table.Column<int>(type: "int", nullable: false),
+                    Repeticiones = table.Column<int>(type: "int", nullable: false),
+                    Notas = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RutinaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ejercicios", x => x.EjercicioId);
+                    table.ForeignKey(
+                        name: "FK_Ejercicios_Rutinas_RutinaId",
+                        column: x => x.RutinaId,
+                        principalTable: "Rutinas",
+                        principalColumn: "RutinaId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -498,6 +586,21 @@ namespace GYM.Migrations
                 column: "RutinaId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EvaluacionesRendimiento_ClienteId",
+                table: "EvaluacionesRendimiento",
+                column: "ClienteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EvaluacionesRendimiento_EmpleadoId",
+                table: "EvaluacionesRendimiento",
+                column: "EmpleadoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HorariosFijos_UsuarioId",
+                table: "HorariosFijos",
+                column: "UsuarioId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Membresias_UsuarioId",
                 table: "Membresias",
                 column: "UsuarioId");
@@ -548,6 +651,11 @@ namespace GYM.Migrations
                 columns: new[] { "FechaReserva", "HoraInicio", "HoraFin" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Reservas_MarcadoPorId",
+                table: "Reservas",
+                column: "MarcadoPorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reservas_UsuarioId",
                 table: "Reservas",
                 column: "UsuarioId");
@@ -561,6 +669,11 @@ namespace GYM.Migrations
                 name: "IX_Rutinas_EmpleadoId",
                 table: "Rutinas",
                 column: "EmpleadoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rutinas_EvaluacionRendimientoId",
+                table: "Rutinas",
+                column: "EvaluacionRendimientoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_ProveedorId",
@@ -602,6 +715,9 @@ namespace GYM.Migrations
                 name: "Ejercicios");
 
             migrationBuilder.DropTable(
+                name: "HorariosFijos");
+
+            migrationBuilder.DropTable(
                 name: "MembresiasUsuarios");
 
             migrationBuilder.DropTable(
@@ -627,6 +743,9 @@ namespace GYM.Migrations
 
             migrationBuilder.DropTable(
                 name: "Productos");
+
+            migrationBuilder.DropTable(
+                name: "EvaluacionesRendimiento");
 
             migrationBuilder.DropTable(
                 name: "Usuarios");

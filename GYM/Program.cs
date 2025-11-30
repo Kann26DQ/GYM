@@ -35,11 +35,12 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ?? NUEVO: Registrar servicios personalizados
+// ? Registrar servicios personalizados
 builder.Services.AddScoped<MembresiaPermisosService>();
 builder.Services.AddHostedService<MembresiaExpiradaBackgroundService>();
 
 var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
@@ -62,7 +63,25 @@ app.UseMembresiaExpiradaCheck();
 app.UseAuthorization();
 app.UseSession();
 
+// ? Rutas específicas (ANTES de la ruta por defecto)
+// ? Asegurar que las rutas estén correctamente mapeadas
+app.MapControllerRoute(
+    name: "gestionrutinas",
+    pattern: "GestionRutinas/{action=Index}/{id?}",
+    defaults: new { controller = "GestionRutinas" });
+
+app.MapControllerRoute(
+    name: "rutinas",
+    pattern: "Rutinas/{action=Index}/{id?}",
+    defaults: new { controller = "Rutinas" });
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Acceso}/{action=Login}/{id?}");
+
+// ? Ruta por defecto (ÚLTIMA)
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Acceso}/{action=Login}/{id?}");
+
 app.Run();

@@ -1,41 +1,268 @@
 ﻿@model IEnumerable<GYM.Models.Venta>
 
 @{
-    Layout = "_LayoutSuperAdmin"; // Ajusta si usas otro layout
-    ViewData["Title"] = "Ventas";
+    ViewData["Title"] = "Gestión de Ventas";
+    Layout = "_LayoutSuperAdmin";
 }
 
-<h2 class="my-4">Ventas</h2>
+<style>
+    .search-card {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
+    }
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Comprador</th>
-            <th>Total</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var venta in Model)
-        {
-            <tr>
-                <td>@venta.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>
-                    @if (venta.Cliente != null)
-                    {
-                        <span>Cliente: @venta.Cliente.Nombre</span>
-                    }
-                    else if (venta.Empleado != null)
-                    {
-                        <span>Empleado: @venta.Empleado.Nombre</span>
-                    }
-                </td>
-                <td>S/ @venta.Total.ToString("0.00")</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@venta.VentaId" class="btn btn-info btn-sm">Detalles</a>
-                </td>
-            </tr>
+    .search-input {
+        border-radius: 25px;
+        border: 2px solid #fff;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+
+        .search-input:focus {
+            border-color: #ffc107;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
         }
-    </tbody>
-</table>
+
+    .btn-search {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        border: none;
+        color: #000;
+        transition: all 0.3s;
+    }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+        }
+
+    .btn-clear {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: bold;
+    }
+
+    .filter-select {
+        border-radius: 15px;
+        border: 2px solid #fff;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+        .stats-card h3 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+    .badge-custom {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-cart-check-fill me-2"></i>Gestión de Ventas</h2>
+    </div>
+
+    <!-- ✅ Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <i class="bi bi-currency-dollar" style="font-size: 2rem;"></i>
+                <h3>S/ @ViewBag.TotalVentas.ToString("0.00")</h3>
+                <p>Total en Ventas</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="bi bi-receipt" style="font-size: 2rem;"></i>
+                <h3>@ViewBag.CantidadVentas</h3>
+                <p>Ventas Realizadas</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="bi bi-graph-up-arrow" style="font-size: 2rem;"></i>
+                <h3>S/ @ViewBag.PromedioVenta.ToString("0.00")</h3>
+                <p>Promedio por Venta</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ NUEVO: Barra de búsqueda -->
+    <div class="search-card">
+        <form asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-white fw-bold">
+                        <i class="bi bi-funnel-fill me-2"></i>Buscar por:
+                    </label>
+                    <select name="tipoFiltro" class="form-select filter-select">
+                        <option value="todos" selected="@(ViewBag.TipoFiltroActual == "todos" ? "selected" : null)">
+                            🔍 Todos
+                        </option>
+                        <option value="cliente" selected="@(ViewBag.TipoFiltroActual == "cliente" ? "selected" : null)">
+                            👤 Cliente
+                        </option>
+                        <option value="ventaid" selected="@(ViewBag.TipoFiltroActual == "ventaid" ? "selected" : null)">
+                            🔢 ID Venta
+                        </option>
+                        <option value="total" selected="@(ViewBag.TipoFiltroActual == "total" ? "selected" : null)">
+                            💰 Total Exacto
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-white fw-bold">
+                        <i class="bi bi-search me-2"></i>Término:
+                    </label>
+                    <input type="text"
+                           name="buscar"
+                           class="form-control search-input"
+                           placeholder="Buscar..."
+                           value="@ViewBag.BuscarActual"
+                           maxlength="100">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label text-white fw-bold">
+                        <i class="bi bi-calendar me-2"></i>Desde:
+                    </label>
+                    <input type="date"
+                           name="fechaDesde"
+                           class="form-control filter-select"
+                           value="@ViewBag.FechaDesde?.ToString("yyyy-MM-dd")">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label text-white fw-bold">
+                        <i class="bi bi-calendar-check me-2"></i>Hasta:
+                    </label>
+                    <input type="date"
+                           name="fechaHasta"
+                           class="form-control filter-select"
+                           value="@ViewBag.FechaHasta?.ToString("yyyy-MM-dd")">
+                </div>
+
+                <div class="col-md-2">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-search">
+                            <i class="bi bi-search me-2"></i>Buscar
+                        </button>
+                        <a asp-action="Index" class="btn btn-light btn-clear">
+                            <i class="bi bi-x-circle me-2"></i>Limpiar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ViewBag.BuscarActual) || ViewBag.FechaDesde != null || ViewBag.FechaHasta != null)
+            {
+                <div class="mt-3">
+                    <span class="badge bg-light text-dark fs-6">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Filtros activos
+                    </span>
+                </div>
+            }
+        </form>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Mostrando <strong>@Model.Count()</strong> venta(s)
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Productos</th>
+                                <th>Total</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var venta in Model)
+                            {
+                                <tr>
+                                    <td><strong>#@venta.VentaId</strong></td>
+                                    <td>
+                                        <i class="bi bi-person-fill text-primary me-1"></i>
+                                        @(venta.Cliente?.Nombre ?? "Sin cliente")
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        @venta.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info badge-custom">
+                                            @venta.Detalles?.Count productos
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-success">S/ @venta.Total.ToString("0.00")</td>
+                                    <td class="text-center">
+                                        <a asp-action="Details" asp-route-id="@venta.VentaId"
+                                           class="btn btn-info btn-sm">
+                                            <i class="bi bi-eye-fill me-1"></i>Ver Detalle
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center py-5">
+                    <i class="bi bi-inbox fa-3x mb-3"></i>
+                    <h4>No se encontraron ventas</h4>
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.BuscarActual) || ViewBag.FechaDesde != null)
+                    {
+                        <p>Intenta con otros filtros de búsqueda.</p>
+                        <a asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Ver todas las ventas
+                        </a>
+                    }
+                    else
+                    {
+                        <p>No hay ventas registradas en el sistema.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

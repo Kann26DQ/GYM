@@ -1,0 +1,97 @@
+﻿@model List<GYM.Models.EvaluacionRendimiento>
+@{
+    ViewData["Title"] = "Resumen del Grupo Evaluado";
+    var empleadoNombre = (string)ViewData["EmpleadoNombre"];
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+    }
+
+    .evaluacion-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(40, 167, 69, 0.5);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="alert alert-success text-center mb-4">
+        <i class="fa fa-check-circle me-2" style="font-size: 2rem;"></i>
+        <h3>¡Grupo Evaluado Exitosamente!</h3>
+        <p class="mb-0">Has completado la evaluación de <strong>@Model.Count cliente(s)</strong></p>
+    </div>
+
+    <h2 class="text-yellow mb-4">
+        <i class="fa fa-clipboard-check me-2"></i>Resumen de Evaluaciones
+    </h2>
+
+    <div class="row">
+        @foreach (var evaluacion in Model)
+        {
+            <div class="col-md-6">
+                <div class="evaluacion-card">
+                    <h5 class="text-yellow mb-2">
+                        <i class="fa fa-user me-2"></i>@evaluacion.Cliente?.Nombre
+                    </h5>
+                    <p class="text-white-custom mb-2">
+                        <strong>Promedio de Rendimiento:</strong>
+                        <span class="badge bg-info">@evaluacion.PromedioRendimiento.ToString("F1")/10</span>
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="fa fa-calendar me-1"></i>@evaluacion.FechaEvaluacion.ToString("dd/MM/yyyy HH:mm")
+                    </p>
+
+                    <div class="row text-white-custom small">
+                        <div class="col-6">Fuerza: @evaluacion.Fuerza/10</div>
+                        <div class="col-6">Resistencia: @evaluacion.Resistencia/10</div>
+                        <div class="col-6">Flexibilidad: @evaluacion.Flexibilidad/10</div>
+                        <div class="col-6">Técnica: @evaluacion.Tecnica/10</div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <a asp-controller="GestionRutinas"
+                           asp-action="CrearRutina"
+                           asp-route-clienteId="@evaluacion.ClienteId"
+                           asp-route-evaluacionId="@evaluacion.EvaluacionRendimientoId"
+                           class="btn btn-sm btn-warning">
+                            <i class="fa fa-dumbbell me-1"></i>Crear Rutina
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-controller="GestionRutinas" asp-action="Index" class="btn btn-yellow btn-lg">
+            <i class="fa fa-home me-2"></i>Volver al Panel Principal
+        </a>
+        <a asp-controller="GestionRutinas" asp-action="SeleccionarClientes" class="btn btn-outline-warning btn-lg ms-2">
+            <i class="fa fa-users me-2"></i>Evaluar Otro Grupo
+        </a>
+    </div>
+</div>
+
+<div style="height: 150px;"></div>

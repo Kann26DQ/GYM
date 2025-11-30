@@ -1,0 +1,353 @@
+﻿@model GYM.Models.Rutina
+@{
+    ViewData["Title"] = "Crear Rutina Específica";
+    var cliente = ViewData["Cliente"] as GYM.Models.Usuario;
+    var evaluacion = ViewData["Evaluacion"] as GYM.Models.EvaluacionRendimiento;
+    var empleadoNombre = ViewData["EmpleadoNombre"] as string;
+    var diaSemana = ViewData["DiaSemana"] as string;
+    var horaInicio = ViewData["HoraInicio"] as string;
+    var horaFin = ViewData["HoraFin"] as string;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+        padding-bottom: 150px;
+    }
+
+    .form-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .ejercicio-row {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .text-yellow {
+        color: #ffc107 !important;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa !important;
+    }
+
+    .form-control, .form-select {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+
+    .form-label {
+        color: #ffc107;
+        font-weight: 600;
+    }
+
+    .btn-agregar {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 15px;
+        font-weight: bold;
+    }
+
+    .btn-eliminar {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow">
+            <i class="fa fa-dumbbell me-2"></i>Crear Rutina @Model.Tipo para @cliente?.Nombre
+        </h2>
+        <a asp-action="CalendarioSemanal" class="btn btn-outline-warning">
+            <i class="fa fa-arrow-left me-2"></i>Volver al Calendario
+        </a>
+    </div>
+
+    <!-- Info del Horario -->
+    <div class="alert alert-info mb-4">
+        <h5 class="text-white-custom"><i class="fa fa-info-circle me-2"></i>Horario Seleccionado</h5>
+        <p class="mb-0 text-white-custom">
+            <strong>Día:</strong> @diaSemana<br />
+            <strong>Hora:</strong> @horaInicio - @horaFin<br />
+            <strong>Tipo de Rutina:</strong> @Model.Tipo
+        </p>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="CrearRutinaEspecifica" method="post" id="formRutina">
+        @Html.AntiForgeryToken()
+
+        <!-- ✅ CAMPOS OCULTOS CON TODA LA INFO -->
+        <input type="hidden" asp-for="ClienteId" />
+        <input type="hidden" asp-for="EvaluacionRendimientoId" />
+        <input type="hidden" asp-for="DiaSemana" />
+        <input type="hidden" asp-for="HoraInicio" />
+        <input type="hidden" asp-for="HoraFin" />
+        <input type="hidden" asp-for="Nombre" />
+        <input type="hidden" asp-for="Tipo" />
+        <input type="hidden" asp-for="NivelDificultad" />
+        <input type="hidden" asp-for="DuracionSemanas" />
+        <input type="hidden" asp-for="FechaEspecifica" />
+
+        <!-- Información de la Rutina -->
+        <div class="form-container">
+            <h4 class="text-yellow mb-3">
+                <i class="fa fa-info-circle me-2"></i>Información de la Rutina
+            </h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre de la Rutina</label>
+                    <input type="text" class="form-control" value="@Model.Nombre" readonly />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nivel de Dificultad</label>
+                    <input type="text" class="form-control" value="@Model.NivelDificultad" readonly />
+                </div>
+            </div>
+        </div>
+
+        <!-- Ejercicios -->
+        <div class="form-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-yellow mb-0">
+                    <i class="fa fa-list-ol me-2"></i>Ejercicios
+                </h4>
+                <button type="button" class="btn-agregar" onclick="agregarEjercicio()">
+                    <i class="fa fa-plus me-2"></i>Agregar Ejercicio
+                </button>
+            </div>
+
+            <div id="ejercicios-container">
+                <!-- Los ejercicios se agregarán dinámicamente aquí -->
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a asp-action="CalendarioSemanal" class="btn btn-outline-secondary btn-lg me-3">
+                <i class="fa fa-times me-2"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-warning btn-lg">
+                <i class="fa fa-save me-2"></i>Guardar Rutina con Ejercicios
+            </button>
+        </div>
+    </form>
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    <script>
+        let ejercicioIndex = 0;
+
+        function agregarEjercicio() {
+            const container = document.getElementById('ejercicios-container');
+
+            // ✅ SIN CAMPO "GRUPO MUSCULAR" - Se asigna automáticamente
+            const ejercicioHtml = `
+                <div class="ejercicio-row" id="ejercicio-${ejercicioIndex}">
+                    <button type="button" class="btn-eliminar" onclick="eliminarEjercicio(${ejercicioIndex})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+
+                    <h5 class="text-yellow mb-3">
+                        <span class="badge bg-warning text-dark me-2">${ejercicioIndex + 1}</span>
+                        Ejercicio ${ejercicioIndex + 1}
+                    </h5>
+
+                    <div class="row">
+                        <!-- ✅ Campo Nombre COMPLETO (col-12) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Nombre del Ejercicio *</label>
+                            <input type="text"
+                                   name="ejercicios[${ejercicioIndex}].Nombre"
+                                   class="form-control ejercicio-nombre"
+                                   placeholder="Ej: Press de banca, Sentadillas, Curl de bíceps"
+                                   required
+                                   onblur="validarNombreDuplicado(this, ${ejercicioIndex})" />
+                            <small class="text-white-custom">El cliente decide qué entrenar ese día</small>
+                            <small class="text-danger d-none" id="error-${ejercicioIndex}">
+                                ⚠️ Este ejercicio ya existe en esta rutina
+                            </small>
+                        </div>
+
+                        <!-- ✅ Campo OCULTO para GrupoMuscular (se envía automáticamente) -->
+                        <input type="hidden" name="ejercicios[${ejercicioIndex}].GrupoMuscular" value="@Model.Tipo" />
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Duración/Descanso</label>
+                            <input type="text"
+                                   name="ejercicios[${ejercicioIndex}].Duracion"
+                                   class="form-control"
+                                   placeholder="Ej: 60 seg" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Series *</label>
+                            <input type="number"
+                                   name="ejercicios[${ejercicioIndex}].Series"
+                                   class="form-control"
+                                   value="3"
+                                   min="1"
+                                   max="20"
+                                   required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Repeticiones *</label>
+                            <input type="number"
+                                   name="ejercicios[${ejercicioIndex}].Repeticiones"
+                                   class="form-control"
+                                   value="10"
+                                   min="1"
+                                   max="100"
+                                   required />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Notas (Opcional)</label>
+                            <textarea name="ejercicios[${ejercicioIndex}].Notas"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Instrucciones especiales..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', ejercicioHtml);
+            ejercicioIndex++;
+
+            setTimeout(() => {
+                const nuevoEjercicio = document.getElementById(`ejercicio-${ejercicioIndex - 1}`);
+                nuevoEjercicio?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        // ✅ Validar nombres duplicados en tiempo real
+        function validarNombreDuplicado(input, currentIndex) {
+            const nombre = input.value.trim().toLowerCase();
+            const errorElement = document.getElementById(`error-${currentIndex}`);
+
+            if (!nombre) {
+                errorElement?.classList.add('d-none');
+                return;
+            }
+
+            const inputsNombre = document.querySelectorAll('.ejercicio-nombre');
+            let contador = 0;
+
+            inputsNombre.forEach(inp => {
+                if (inp.value.trim().toLowerCase() === nombre) {
+                    contador++;
+                }
+            });
+
+            if (contador > 1) {
+                errorElement?.classList.remove('d-none');
+                input.style.borderColor = '#dc3545';
+            } else {
+                errorElement?.classList.add('d-none');
+                input.style.borderColor = 'rgba(255, 193, 7, 0.3)';
+            }
+        }
+
+        function eliminarEjercicio(index) {
+            const ejercicio = document.getElementById(`ejercicio-${index}`);
+            if (ejercicio) {
+                ejercicio.style.transition = 'all 0.3s';
+                ejercicio.style.opacity = '0';
+                ejercicio.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    ejercicio.remove();
+                    actualizarNumeracion();
+                }, 300);
+            }
+        }
+
+        function actualizarNumeracion() {
+            const ejercicios = document.querySelectorAll('.ejercicio-row');
+            ejercicios.forEach((ejercicio, index) => {
+                const badge = ejercicio.querySelector('.badge');
+                const titulo = ejercicio.querySelector('h5');
+                if (badge && titulo) {
+                    badge.textContent = index + 1;
+                    titulo.childNodes[2].textContent = `Ejercicio ${index + 1}`;
+                }
+            });
+        }
+
+        // ✅ Validación COMPLETA antes de enviar
+        document.getElementById('formRutina')?.addEventListener('submit', function(e) {
+            const ejercicios = document.querySelectorAll('.ejercicio-row');
+
+            if (ejercicios.length === 0) {
+                e.preventDefault();
+                alert('⚠️ Debes agregar al menos un ejercicio a la rutina.');
+                return false;
+            }
+
+            // Validar duplicados
+            const nombres = [];
+            let hayDuplicados = false;
+
+            document.querySelectorAll('.ejercicio-nombre').forEach(input => {
+                const nombre = input.value.trim().toLowerCase();
+                if (nombre) {
+                    if (nombres.includes(nombre)) {
+                        hayDuplicados = true;
+                        input.style.borderColor = '#dc3545';
+                    } else {
+                        nombres.push(nombre);
+                    }
+                }
+            });
+
+            if (hayDuplicados) {
+                e.preventDefault();
+                alert('⚠️ Hay ejercicios con nombres duplicados. Cada ejercicio debe tener un nombre único.');
+                return false;
+            }
+        });
+
+        // Agregar primer ejercicio automáticamente
+        window.addEventListener('DOMContentLoaded', function() {
+            agregarEjercicio();
+        });
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,35 +1,159 @@
 ﻿@model IEnumerable<GYM.Models.Venta>
 
-<div class="card position-sticky" style="top: 1rem;">
-    <div class="card-header">
-        <strong>Historial de compras</strong>
+<style>
+    .historial-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 20px;
+        overflow: hidden;
+        position: sticky;
+        top: 1rem;
+    }
+
+    .historial-header {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 237, 74, 0.1) 100%);
+        padding: 1rem;
+        border-bottom: 2px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .historial-body {
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+        .historial-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .historial-body::-webkit-scrollbar-track {
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 10px;
+        }
+
+        .historial-body::-webkit-scrollbar-thumb {
+            background: #ffc107;
+            border-radius: 10px;
+        }
+
+    .historial-item {
+        background: rgba(255, 193, 7, 0.05);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+        border-radius: 12px;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s;
+    }
+
+        .historial-item:hover {
+            border-color: #ffc107;
+            box-shadow: 0 3px 15px rgba(255, 193, 7, 0.3);
+            transform: translateX(3px);
+        }
+
+    .historial-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+        .historial-empty i {
+            font-size: 3rem;
+            color: rgba(255, 193, 7, 0.3);
+            margin-bottom: 1rem;
+        }
+
+    .historial-footer {
+        background: rgba(255, 193, 7, 0.05);
+        padding: 0.75rem 1rem;
+        border-top: 2px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .text-yellow {
+        color: #ffc107;
+        text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .btn-yellow-sm {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-yellow-sm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.5);
+            color: #000 !important;
+        }
+
+    .btn-link-yellow {
+        color: #ffc107 !important;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+        .btn-link-yellow:hover {
+            color: #ffed4e !important;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+        }
+</style>
+
+<div class="historial-container">
+    <div class="historial-header">
+        <h6 class="text-yellow mb-0 fw-bold">
+            <i class="fa fa-history me-2"></i>Historial de Compras
+        </h6>
     </div>
 
-    <div class="card-body p-2">
+    <div class="historial-body">
         @if (Model == null || !Model.Any())
         {
-            <div class="text-muted small">Aún no tienes compras.</div>
+            <div class="historial-empty">
+                <i class="fa fa-shopping-bag"></i>
+                <p class="text-white-custom mb-0 small">Aún no tienes compras registradas</p>
+            </div>
         }
         else
         {
-            <ul class="list-group list-group-flush">
-                @foreach (var v in Model)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-start">
+            @foreach (var v in Model)
+            {
+                <div class="historial-item">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <div class="fw-semibold">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
-                            <div class="small text-muted">Total: S/ @v.Total.ToString("0.00")</div>
+                            <p class="text-yellow mb-1 small fw-bold">
+                                <i class="fa fa-calendar me-1"></i>
+                                @v.Fecha.ToString("dd/MM/yyyy")
+                            </p>
+                            <p class="text-white-custom mb-0" style="font-size: 0.75rem;">
+                                <i class="fa fa-clock me-1"></i>@v.Fecha.ToString("HH:mm")
+                            </p>
                         </div>
-                        <a asp-controller="MisCompras" asp-action="Details" asp-route-id="@v.VentaId" class="btn btn-sm btn-outline-primary">
-                            Ver
-                        </a>
-                    </li>
-                }
-            </ul>
+                        <div class="text-end">
+                            <p class="text-yellow mb-0 fw-bold">S/ @v.Total.ToString("0.00")</p>
+                        </div>
+                    </div>
+                    <a asp-controller="MisCompras" asp-action="Details" asp-route-id="@v.VentaId" class="btn btn-yellow-sm w-100">
+                        <i class="fa fa-eye me-1"></i>Ver Detalle
+                    </a>
+                </div>
+            }
         }
     </div>
 
-    <div class="card-footer text-end p-2">
-        <a asp-controller="MisCompras" asp-action="Index" class="btn btn-sm btn-link">Ver todo</a>
+    <div class="historial-footer text-end">
+        <a asp-controller="MisCompras" asp-action="Index" class="btn-link-yellow">
+            Ver todo <i class="fa fa-arrow-right ms-1"></i>
+        </a>
     </div>
 </div>

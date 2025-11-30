@@ -1,0 +1,306 @@
+﻿@model GYM.Models.EvaluacionRendimiento
+@{
+    ViewData["Title"] = "Evaluar Cliente";
+    var cliente = ViewData["Cliente"] as GYM.Models.Usuario;
+    var ultimaEvaluacion = ViewData["UltimaEvaluacion"] as GYM.Models.EvaluacionRendimiento;
+    var totalAsistencias = (int?)ViewData["TotalAsistencias"] ?? 0;
+    var empleadoNombre = (string?)ViewData["EmpleadoNombre"] ?? "Empleado";
+    var esEdicion = (bool?)ViewData["EsEdicion"] ?? false;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+        padding-bottom: 120px;
+    }
+
+    .evaluacion-card {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .text-yellow {
+        color: #ffc107;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa;
+    }
+
+    .form-label {
+        color: #ffc107;
+        font-weight: 600;
+    }
+
+    .form-control, .form-select, .form-range {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus, .form-select:focus, .form-range:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+
+    .btn-yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-yellow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.5);
+        }
+
+    .slider-value {
+        display: inline-block;
+        background: #ffc107;
+        color: #1a1a1a;
+        padding: 0.3rem 0.8rem;
+        border-radius: 10px;
+        font-weight: bold;
+        min-width: 40px;
+        text-align: center;
+    }
+
+    .alert-custom {
+        border-radius: 15px;
+        border: 2px solid;
+    }
+</style>
+
+<div class="container mt-4">
+    @if (cliente == null)
+    {
+        <div class="alert alert-danger alert-custom">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            Error: No se pudo cargar la información del cliente. Por favor, intenta nuevamente.
+        </div>
+        <a asp-controller="GestionRutinas" asp-action="SeleccionarClientes" class="btn btn-warning">
+            <i class="fa fa-arrow-left me-2"></i>Volver a Clientes
+        </a>
+    }
+    else
+    {
+        <div class="text-end mb-3">
+            <a asp-controller="GestionRutinas" asp-action="SeleccionarClientes" class="btn btn-outline-warning">
+                <i class="fa fa-arrow-left me-2"></i>Volver a Clientes
+            </a>
+        </div>
+
+        <div class="evaluacion-card">
+            <h2 class="text-yellow mb-4">
+                <i class="fa fa-chart-bar me-2"></i>@(esEdicion ? "Editar" : "Evaluar") Rendimiento
+            </h2>
+
+            <!-- Info del Cliente -->
+            <div class="alert alert-info alert-custom mb-4" style="background: rgba(23, 162, 184, 0.2); border-color: #17a2b8;">
+                <h5 class="text-yellow mb-2">
+                    <i class="fa fa-user me-2"></i>@cliente.Nombre
+                </h5>
+                <p class="text-white-custom mb-1">
+                    <strong>Email:</strong> @cliente.Email
+                </p>
+                <p class="text-white-custom mb-0">
+                    <strong>Total de Asistencias:</strong> @totalAsistencias sesiones completadas
+                </p>
+            </div>
+
+            @if (ultimaEvaluacion != null)
+            {
+                <div class="alert alert-warning alert-custom mb-4" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107;">
+                    <h6 class="text-yellow">
+                        <i class="fa fa-history me-2"></i>Última Evaluación (@ultimaEvaluacion.FechaEvaluacion.ToString("dd/MM/yyyy"))
+                    </h6>
+                    <p class="text-white-custom small mb-0">
+                        <strong>Promedio anterior:</strong> @ultimaEvaluacion.PromedioRendimiento.ToString("F1")/10
+                    </p>
+                </div>
+            }
+
+            <!-- Formulario de Evaluación -->
+            <form asp-controller="GestionRutinas" asp-action="@(esEdicion ? "ActualizarEvaluacion" : "GuardarEvaluacion")" method="post" id="formEvaluacion">
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.ClienteId)
+                @Html.HiddenFor(m => m.EvaluacionRendimientoId)
+
+                <div class="row">
+                    <!-- Fuerza -->
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label">
+                            <i class="fa fa-dumbbell me-2"></i>Fuerza (1-10)
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-3" min="1" max="10" asp-for="Fuerza" oninput="updateValue('fuerza', this.value)" />
+                            <span class="slider-value" id="fuerza-value">@Model.Fuerza</span>
+                        </div>
+                        <span asp-validation-for="Fuerza" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Resistencia -->
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label">
+                            <i class="fa fa-heartbeat me-2"></i>Resistencia (1-10)
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-3" min="1" max="10" asp-for="Resistencia" oninput="updateValue('resistencia', this.value)" />
+                            <span class="slider-value" id="resistencia-value">@Model.Resistencia</span>
+                        </div>
+                        <span asp-validation-for="Resistencia" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Flexibilidad -->
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label">
+                            <i class="fa fa-arrows-alt me-2"></i>Flexibilidad (1-10)
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-3" min="1" max="10" asp-for="Flexibilidad" oninput="updateValue('flexibilidad', this.value)" />
+                            <span class="slider-value" id="flexibilidad-value">@Model.Flexibilidad</span>
+                        </div>
+                        <span asp-validation-for="Flexibilidad" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Técnica -->
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label">
+                            <i class="fa fa-check-circle me-2"></i>Técnica (1-10)
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-3" min="1" max="10" asp-for="Tecnica" oninput="updateValue('tecnica', this.value)" />
+                            <span class="slider-value" id="tecnica-value">@Model.Tecnica</span>
+                        </div>
+                        <span asp-validation-for="Tecnica" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Nivel General -->
+                    <div class="col-md-12 mb-4">
+                        <label class="form-label">
+                            <i class="fa fa-star me-2"></i>Nivel General (1-10)
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <input type="range" class="form-range me-3" min="1" max="10" asp-for="NivelGeneral" oninput="updateValue('nivelgeneral', this.value)" />
+                            <span class="slider-value" id="nivelgeneral-value">@Model.NivelGeneral</span>
+                        </div>
+                        <span asp-validation-for="NivelGeneral" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <hr style="border-color: rgba(255, 193, 7, 0.3);">
+
+                <!-- ✅ DATOS FÍSICOS ACTUALIZADOS -->
+                <div class="row">
+                    <!-- ✅ Peso: mínimo 40 kg, sin límite superior -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fa fa-weight me-2"></i>Peso (kg) - Opcional
+                        </label>
+                        <input type="number" step="0.1" min="40" asp-for="Peso" class="form-control" placeholder="Ej: 75.5" />
+                        <small class="text-white-custom">Debe ser mayor a 40 kg</small>
+                        <span asp-validation-for="Peso" class="text-danger small d-block"></span>
+                    </div>
+
+                    <!-- ✅ Altura: mínimo 140 cm (1.40 m), sin límite superior -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fa fa-ruler-vertical me-2"></i>Altura (cm) - Opcional
+                        </label>
+                        <input type="number" step="0.1" min="140" asp-for="Altura" class="form-control" placeholder="Ej: 175" />
+                        <small class="text-white-custom">Recomendado: mayor a 140 cm (1.40 m)</small>
+                        <span asp-validation-for="Altura" class="text-danger small d-block"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fa fa-bullseye me-2"></i>Objetivo del Cliente - Opcional
+                    </label>
+                    <input type="text" asp-for="ObjetivoCliente" class="form-control" placeholder="Ej: Aumentar masa muscular" maxlength="500" />
+                    <span asp-validation-for="ObjetivoCliente" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="fa fa-comment-alt me-2"></i>Observaciones - Opcional
+                    </label>
+                    <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas adicionales sobre el rendimiento del cliente..." maxlength="1000"></textarea>
+                    <span asp-validation-for="Observaciones" class="text-danger small"></span>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-yellow btn-lg">
+                        <i class="fa fa-save me-2"></i>@(esEdicion ? "Actualizar Evaluación" : "Guardar Evaluación y Continuar")
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+<div style="height: 150px;"></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateValue(id, value) {
+            document.getElementById(id + '-value').textContent = value;
+        }
+
+        // ✅ VALIDACIÓN ACTUALIZADA COMPLETA
+        document.getElementById('formEvaluacion')?.addEventListener('submit', function (e) {
+            const pesoInput = document.querySelector('input[name="Peso"]');
+            const alturaInput = document.querySelector('input[name="Altura"]');
+
+            const peso = pesoInput.value ? parseFloat(pesoInput.value) : null;
+            const altura = alturaInput.value ? parseFloat(alturaInput.value) : null;
+
+            // ✅ Validación de Peso: mínimo 40 kg (sin máximo)
+            if (peso !== null && peso < 40) {
+                e.preventDefault();
+                alert('⚠️ El peso debe ser mayor a 40 kg');
+                pesoInput.focus();
+                return false;
+            }
+
+            // ✅ Validación de Altura: mínimo 140 cm recomendado (sin máximo)
+            if (altura !== null && altura < 140) {
+                e.preventDefault();
+                alert('⚠️ La altura recomendada es mayor a 140 cm (1.40 m)');
+                alturaInput.focus();
+                return false;
+            }
+
+            // ✅ Validación adicional: valores razonables
+            if (peso !== null && peso > 500) {
+                const confirmar = confirm('⚠️ Has ingresado un peso de ' + peso + ' kg. ¿Es correcto?');
+                if (!confirmar) {
+                    e.preventDefault();
+                    pesoInput.focus();
+                    return false;
+                }
+            }
+
+            if (altura !== null && altura > 250) {
+                const confirmar = confirm('⚠️ Has ingresado una altura de ' + altura + ' cm. ¿Es correcto?');
+                if (!confirmar) {
+                    e.preventDefault();
+                    alturaInput.focus();
+                    return false;
+                }
+            }
+        });
+    </script>
+}

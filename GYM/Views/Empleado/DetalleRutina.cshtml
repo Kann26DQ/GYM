@@ -1,0 +1,388 @@
+﻿@model GYM.Models.Rutina
+@{
+    ViewData["Title"] = "Detalle de Rutina";
+    var empleadoNombre = (string?)ViewData["EmpleadoNombre"];
+
+    var diasSemana = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Lunes" },
+        { DayOfWeek.Tuesday, "Martes" },
+        { DayOfWeek.Wednesday, "Miércoles" },
+        { DayOfWeek.Thursday, "Jueves" },
+        { DayOfWeek.Friday, "Viernes" },
+        { DayOfWeek.Saturday, "Sábado" },
+        { DayOfWeek.Sunday, "Domingo" }
+    };
+
+    var diaSemanaTexto = Model.DiaSemana.HasValue ? diasSemana[Model.DiaSemana.Value] : "No especificado";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+        min-height: 100vh;
+        padding-bottom: 150px;
+    }
+
+    .rutina-container {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border: 2px solid #ffc107;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .ejercicio-item {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+        .ejercicio-item:hover {
+            border-color: #ffc107;
+            transform: translateX(5px);
+        }
+
+    .text-yellow {
+        color: #ffc107 !important;
+    }
+
+    .text-white-custom {
+        color: #f8f9fa !important;
+    }
+
+    .badge-duracion {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+    }
+
+    .btn-editar-ejercicio {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-editar-ejercicio:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(255, 193, 7, 0.5);
+        }
+
+    .btn-eliminar-ejercicio {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-eliminar-ejercicio:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(220, 53, 69, 0.5);
+        }
+
+    .btn-agregar-ejercicio {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+        .btn-agregar-ejercicio:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.5);
+        }
+
+    .acciones-ejercicio {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .badge {
+        color: white !important;
+    }
+
+    .badge-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ffed4e 100%);
+        color: #1a1a1a !important;
+    }
+
+    .form-control {
+        background: rgba(45, 45, 45, 0.8);
+        border: 2px solid rgba(255, 193, 7, 0.3);
+        color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+        .form-control:focus {
+            background: rgba(45, 45, 45, 0.9);
+            border-color: #ffc107;
+            color: #f8f9fa;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-yellow">
+            <i class="fa fa-dumbbell me-2"></i>@Model.Nombre
+        </h2>
+        <div>
+            <a asp-action="CalendarioSemanal" class="btn btn-outline-warning">
+                <i class="fa fa-arrow-left me-2"></i>Volver
+            </a>
+            <form asp-controller="GestionRutinas" asp-action="EliminarRutina" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar esta rutina y todos sus ejercicios?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="rutinaId" value="@Model.RutinaId" />
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fa fa-trash me-2"></i>Eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Información General -->
+    <div class="rutina-container">
+        <h4 class="text-yellow mb-3">
+            <i class="fa fa-info-circle me-2"></i>Información General
+        </h4>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-user me-2"></i>Cliente:</strong> @Model.Cliente?.Nombre
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-flag me-2"></i>Tipo:</strong>
+                    <span class="badge bg-primary">@Model.Tipo</span>
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-chart-line me-2"></i>Nivel:</strong>
+                    <span class="badge bg-info">@Model.NivelDificultad</span>
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-calendar-day me-2"></i>Día:</strong> @diaSemanaTexto
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-clock me-2"></i>Horario:</strong>
+                    @if (Model.HoraInicio.HasValue && Model.HoraFin.HasValue)
+                    {
+                        <text>@Model.HoraInicio.Value.ToString(@"hh\:mm") - @Model.HoraFin.Value.ToString(@"hh\:mm")</text>
+                    }
+                    else
+                    {
+                        <text>No especificado</text>
+                    }
+                </p>
+                <p class="text-white-custom mb-2">
+                    <strong class="text-yellow"><i class="fa fa-calendar-alt me-2"></i>Duración:</strong> @Model.DuracionSemanas semanas
+                </p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Descripcion))
+        {
+            <hr style="border-color: rgba(255, 193, 7, 0.3);" />
+            <p class="text-white-custom mb-0">
+                <strong class="text-yellow"><i class="fa fa-align-left me-2"></i>Descripción:</strong><br />
+                @Model.Descripcion
+            </p>
+        }
+    </div>
+
+    <!-- Lista de Ejercicios -->
+    <div class="rutina-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-yellow mb-0">
+                <i class="fa fa-list-ol me-2"></i>Ejercicios (@(Model.Ejercicios?.Count ?? 0))
+            </h4>
+            <button type="button" class="btn-agregar-ejercicio" data-bs-toggle="modal" data-bs-target="#modalAgregarEjercicio">
+                <i class="fa fa-plus me-2"></i>Agregar Ejercicio
+            </button>
+        </div>
+
+        @if (Model.Ejercicios != null && Model.Ejercicios.Any())
+        {
+            int index = 1;
+            foreach (var ejercicio in Model.Ejercicios)
+            {
+                <div class="ejercicio-item">
+                    <div class="acciones-ejercicio">
+                        <a asp-action="EditarEjercicio" asp-route-ejercicioId="@ejercicio.EjercicioId" class="btn-editar-ejercicio">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <form asp-action="EliminarEjercicio" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar \'@ejercicio.Nombre\'?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ejercicioId" value="@ejercicio.EjercicioId" />
+                            <input type="hidden" name="rutinaId" value="@Model.RutinaId" />
+                            <button type="submit" class="btn-eliminar-ejercicio">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <h5 class="text-yellow mb-2">
+                            <span class="badge badge-warning me-2">@index</span>
+                            @ejercicio.Nombre
+                        </h5>
+
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <p class="text-white-custom mb-1">
+                                    <i class="fa fa-redo me-1 text-yellow"></i><strong class="text-yellow">Series:</strong>
+                                    <span class="badge bg-success">@ejercicio.Series</span>
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="text-white-custom mb-1">
+                                    <i class="fa fa-sort-numeric-up me-1 text-yellow"></i><strong class="text-yellow">Repeticiones:</strong>
+                                    <span class="badge bg-success">@ejercicio.Repeticiones</span>
+                                </p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(ejercicio.Duracion))
+                            {
+                                <div class="col-md-4">
+                                    <p class="text-white-custom mb-1">
+                                        <i class="fa fa-hourglass-half me-1 text-yellow"></i><strong class="text-yellow">Duración:</strong>
+                                        <span class="badge-duracion">@ejercicio.Duracion</span>
+                                    </p>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ejercicio.Notas))
+                        {
+                            <div class="alert alert-secondary mt-3 mb-0" style="background: rgba(108, 117, 125, 0.2); border-color: rgba(108, 117, 125, 0.3);">
+                                <small class="text-white-custom">
+                                    <i class="fa fa-sticky-note me-1 text-yellow"></i><strong class="text-yellow">Notas:</strong> @ejercicio.Notas
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+                index++;
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fa fa-clipboard-list text-yellow mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                <p class="text-white-custom">No hay ejercicios en esta rutina.</p>
+                <button type="button" class="btn-agregar-ejercicio mt-3" data-bs-toggle="modal" data-bs-target="#modalAgregarEjercicio">
+                    <i class="fa fa-plus me-2"></i>Agregar Primer Ejercicio
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- Información del Empleado -->
+    <div class="rutina-container">
+        <h6 class="text-white-custom">
+            <i class="fa fa-user-tie me-2 text-yellow"></i>Creada por: <strong class="text-yellow">@Model.Empleado?.Nombre</strong>
+        </h6>
+        <p class="text-white-custom small mb-0">
+            <i class="fa fa-calendar me-2 text-yellow"></i>Creada el: @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+        </p>
+    </div>
+</div>
+
+<!-- ✅ Modal SIN campo "Grupo Muscular" -->
+<div class="modal fade" id="modalAgregarEjercicio" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #2d2d2d; border: 2px solid #ffc107;">
+            <form asp-action="AgregarEjercicio" method="post" id="formAgregarEjercicio">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="rutinaId" value="@Model.RutinaId" />
+                @* ✅ CAMBIO: GrupoMuscular oculto con valor automático *@
+                <input type="hidden" name="GrupoMuscular" value="@Model.Tipo" />
+
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 193, 7, 0.3);">
+                    <h5 class="modal-title text-yellow">
+                        <i class="fa fa-plus-circle me-2"></i>Agregar Ejercicio
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-yellow">Nombre del Ejercicio *</label>
+                            <input type="text"
+                                   name="Nombre"
+                                   id="nombreEjercicioModal"
+                                   class="form-control"
+                                   placeholder="Ej: Sentadillas, Press de banca, Curl de bíceps"
+                                   required />
+                            <small class="text-white-custom">El cliente decide qué entrenar ese día</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-yellow">Series *</label>
+                            <input type="number" name="Series" class="form-control" min="1" max="20" value="3" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-yellow">Repeticiones *</label>
+                            <input type="number" name="Repeticiones" class="form-control" min="1" max="100" value="10" required />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label text-yellow">Duración</label>
+                            <input type="text"
+                                   name="Duracion"
+                                   id="duracionModal"
+                                   class="form-control"
+                                   placeholder="Ej: 60 seg, 2 min" />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-yellow">Notas (Opcional)</label>
+                            <textarea name="Notas" class="form-control" rows="2" placeholder="Ej: Descanso 60 segundos entre series"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 193, 7, 0.3);">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-agregar-ejercicio">
+                        <i class="fa fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

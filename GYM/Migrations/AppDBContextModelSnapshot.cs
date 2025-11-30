@@ -80,15 +80,18 @@ namespace GYM.Migrations
 
                     b.Property<string>("Horarios")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Ingredientes")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("PlanAlimenticioId")
                         .HasColumnType("int");
@@ -138,16 +141,23 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EjercicioId"));
 
+                    b.Property<string>("Duracion")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("GrupoMuscular")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Repeticiones")
                         .HasColumnType("int");
@@ -163,6 +173,148 @@ namespace GYM.Migrations
                     b.HasIndex("RutinaId");
 
                     b.ToTable("Ejercicios");
+                });
+
+            modelBuilder.Entity("GYM.Models.EvaluacionRendimiento", b =>
+                {
+                    b.Property<int>("EvaluacionRendimientoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EvaluacionRendimientoId"));
+
+                    b.Property<decimal?>("Altura")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmpleadoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaEvaluacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Flexibilidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Fuerza")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GrupoClientesId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("IMC")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("NivelGeneral")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ObjetivoCliente")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal?>("Peso")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Resistencia")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tecnica")
+                        .HasColumnType("int");
+
+                    b.HasKey("EvaluacionRendimientoId");
+
+                    b.HasIndex("ClienteId");
+
+                    b.HasIndex("EmpleadoId");
+
+                    b.HasIndex("GrupoClientesId");
+
+                    b.ToTable("EvaluacionesRendimiento");
+                });
+
+            modelBuilder.Entity("GYM.Models.GrupoClientes", b =>
+                {
+                    b.Property<int>("GrupoClientesId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GrupoClientesId"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<int>("EmpleadoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("GrupoClientesId");
+
+                    b.HasIndex("EmpleadoId");
+
+                    b.ToTable("GruposClientes");
+                });
+
+            modelBuilder.Entity("GYM.Models.HorarioFijo", b =>
+                {
+                    b.Property<int>("HorarioFijoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HorarioFijoId"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("DiaSemana")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("HoraFin")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("HoraInicio")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Notas")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TipoEntrenamiento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("HorarioFijoId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("HorariosFijos");
                 });
 
             modelBuilder.Entity("GYM.Models.MembresiaPlan", b =>
@@ -340,19 +492,24 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlanAlimenticioId"));
 
-                    b.Property<int?>("ClienteId")
+                    b.Property<int>("ClienteId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmpleadoId")
+                    b.Property<int>("EmpleadoId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Objetivo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("PlanAlimenticioId");
 
@@ -477,10 +634,19 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservaId"));
 
+                    b.Property<bool?>("Asistio")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("DuracionHoras")
+                        .HasColumnType("int");
+
                     b.Property<int>("Estado")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaMarcado")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("FechaReserva")
@@ -492,14 +658,27 @@ namespace GYM.Migrations
                     b.Property<TimeSpan>("HoraInicio")
                         .HasColumnType("time");
 
+                    b.Property<int?>("MarcadoPorId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Notas")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ObservacionesAsistencia")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TipoEntrenamiento")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int");
 
                     b.HasKey("ReservaId");
+
+                    b.HasIndex("MarcadoPorId");
 
                     b.HasIndex("UsuarioId");
 
@@ -550,28 +729,67 @@ namespace GYM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RutinaId"));
 
-                    b.Property<int?>("ClienteId")
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("DiaSemana")
                         .HasColumnType("int");
 
                     b.Property<int>("DuracionSemanas")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EmpleadoId")
+                    b.Property<int>("EmpleadoId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("EvaluacionRendimientoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaEspecifica")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan?>("HoraFin")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("HoraInicio")
+                        .HasColumnType("time");
+
+                    b.Property<string>("NivelDificultad")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("RutinaId");
 
                     b.HasIndex("ClienteId");
 
                     b.HasIndex("EmpleadoId");
+
+                    b.HasIndex("EvaluacionRendimientoId");
 
                     b.ToTable("Rutinas");
                 });
@@ -726,6 +944,54 @@ namespace GYM.Migrations
                     b.Navigation("Rutina");
                 });
 
+            modelBuilder.Entity("GYM.Models.EvaluacionRendimiento", b =>
+                {
+                    b.HasOne("GYM.Models.Usuario", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GYM.Models.Usuario", "Empleado")
+                        .WithMany()
+                        .HasForeignKey("EmpleadoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GYM.Models.GrupoClientes", "Grupo")
+                        .WithMany("Evaluaciones")
+                        .HasForeignKey("GrupoClientesId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Empleado");
+
+                    b.Navigation("Grupo");
+                });
+
+            modelBuilder.Entity("GYM.Models.GrupoClientes", b =>
+                {
+                    b.HasOne("GYM.Models.Usuario", "Empleado")
+                        .WithMany()
+                        .HasForeignKey("EmpleadoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("GYM.Models.HorarioFijo", b =>
+                {
+                    b.HasOne("GYM.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("GYM.Models.MembresiaPlan", b =>
                 {
                     b.HasOne("GYM.Models.Usuario", null)
@@ -775,12 +1041,14 @@ namespace GYM.Migrations
                     b.HasOne("GYM.Models.Usuario", "Cliente")
                         .WithMany("PlanesAlimenticios")
                         .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("GYM.Models.Usuario", "Empleado")
                         .WithMany()
                         .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Cliente");
 
@@ -810,11 +1078,18 @@ namespace GYM.Migrations
 
             modelBuilder.Entity("GYM.Models.Reserva", b =>
                 {
+                    b.HasOne("GYM.Models.Usuario", "MarcadoPor")
+                        .WithMany()
+                        .HasForeignKey("MarcadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("GYM.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("MarcadoPor");
 
                     b.Navigation("Usuario");
                 });
@@ -824,16 +1099,25 @@ namespace GYM.Migrations
                     b.HasOne("GYM.Models.Usuario", "Cliente")
                         .WithMany("Rutinas")
                         .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("GYM.Models.Usuario", "Empleado")
                         .WithMany()
                         .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GYM.Models.EvaluacionRendimiento", "EvaluacionBase")
+                        .WithMany("Rutinas")
+                        .HasForeignKey("EvaluacionRendimientoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Cliente");
 
                     b.Navigation("Empleado");
+
+                    b.Navigation("EvaluacionBase");
                 });
 
             modelBuilder.Entity("GYM.Models.Usuario", b =>
@@ -868,6 +1152,16 @@ namespace GYM.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("GYM.Models.EvaluacionRendimiento", b =>
+                {
+                    b.Navigation("Rutinas");
+                });
+
+            modelBuilder.Entity("GYM.Models.GrupoClientes", b =>
+                {
+                    b.Navigation("Evaluaciones");
                 });
 
             modelBuilder.Entity("GYM.Models.PlanAlimenticio", b =>
